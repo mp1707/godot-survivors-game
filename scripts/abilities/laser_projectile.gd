@@ -4,9 +4,11 @@ extends Area2D
 @export var damage: int = 1
 @export var lifetime: float = 1.2
 @export var visual_scale: float = 0.7
+@export var pierces_enemies: bool = false
 
 var direction: Vector2 = Vector2.RIGHT
 var _life_left: float = 0.0
+var _hit_enemy_ids: Dictionary[int, bool] = {}
 
 func _ready() -> void:
 	_life_left = lifetime
@@ -21,6 +23,19 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _on_body_entered(body: Node) -> void:
+	var enemy_id: int = body.get_instance_id()
+	if _hit_enemy_ids.has(enemy_id):
+		return
+		
+	_hit_enemy_ids[enemy_id] = true
+	
 	if body.is_in_group("enemies") and body.has_method("apply_damage"):
 		body.apply_damage(damage)
-		queue_free()
+		if pierces_enemies == false:
+			queue_free()
+
+func configure(new_damage: int, new_speed: float, new_visual_scale: float, new_pierces_enemies: bool ) -> void:
+	damage = new_damage
+	speed = new_speed
+	visual_scale = new_visual_scale
+	pierces_enemies = new_pierces_enemies
