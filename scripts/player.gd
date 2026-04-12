@@ -21,20 +21,26 @@ func _process(delta: float) -> void:
 	
 	if velocity.length() > 0:
 		velocity = velocity.normalized() * speed
+		
+		if velocity.x != 0:
+			$AnimatedSprite2D.animation = "walk_side"
+			$AnimatedSprite2D.flip_v = false
+			$AnimatedSprite2D.flip_h = velocity.x > 0
+		elif velocity.y != 0:
+			if velocity.y > 0:
+				$AnimatedSprite2D.animation = "walk_down"
+			else:
+				$AnimatedSprite2D.animation = "walk_up"
+			$AnimatedSprite2D.flip_v = false
+			
 		$AnimatedSprite2D.play()
 	else:
-		$AnimatedSprite2D.stop()
+		if $AnimatedSprite2D.animation.begins_with("walk_"):
+			$AnimatedSprite2D.animation = $AnimatedSprite2D.animation.replace("walk_", "idle_")
+		elif not $AnimatedSprite2D.animation.begins_with("idle_"):
+			$AnimatedSprite2D.animation = "idle_down"
+			
+		$AnimatedSprite2D.play()
 		
 	position += velocity * delta
-	position = position.clamp(Vector2.ZERO, screen_size)	
-
-	# animate all 4 directtions and idle states. there is idle_up, idle_side, idle_down, walk_up, walk_side, walk_down
-	
-	if velocity.x != 0:
-		$AnimatedSprite2D.animation = "walk_up"
-		$AnimatedSprite2D.flip_v = false
-		# See the note below about the following boolean assignment.
-		$AnimatedSprite2D.flip_h = velocity.x < 0
-	elif velocity.y != 0:
-		$AnimatedSprite2D.animation = "up"
-		$AnimatedSprite2D.flip_v = velocity.y > 0
+	position = position.clamp(Vector2.ZERO, screen_size)
