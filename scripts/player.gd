@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 const LASER_SCENE: PackedScene = preload("res://scenes/abilities/laser_projectile.tscn")
 const CHARGED_BLAST_SCENE: PackedScene = preload("res://scenes/abilities/charged_laser_blast.tscn")
+const CHARGING_LASER_BALL_SCENE: PackedScene = preload("res://scenes/abilities/charging_laser_ball.tscn")
 
 @export var charge_max_time: float = 1.8
 @export var charged_min_damage: int = 3
@@ -17,6 +18,8 @@ var _shoot_anim_time_left: float = 0.0
 var _is_charging: bool = false
 var _charge_time: float = 0.0
 var _aim_direction: Vector2 = Vector2.DOWN
+var _charge_vfx: Area2D = null
+var _charge_vfx_sprite: AnimatedSprite2D
 
 func _physics_process(delta: float) -> void:
 	
@@ -30,7 +33,7 @@ func _physics_process(delta: float) -> void:
 	if _is_charging:
 		velocity = Vector2.ZERO
 		# aim dir berechnen (z. B. nearest enemy / mouse / last dir)
-		_aim_direction = _get_aim_direction()
+		_aim_direction = _get_mouse_aim_direction()
 		_set_shoot_animation(_aim_direction)
 		$AnimatedSprite2D.play()
 		# shooting anim auf aim dir setzen
@@ -137,12 +140,15 @@ func _handle_charge_input(delta: float) -> void:
 	if Input.is_action_just_pressed("active_ability"):
 		_is_charging = true
 		_charge_time = 0.0
+		_start_charge_vfx()
 
 	if _is_charging and Input.is_action_pressed("active_ability"):
 		_charge_time = min(_charge_time + delta, charge_max_time)
+		_update_charge_vfx()
 
 	if _is_charging and Input.is_action_just_released("active_ability"):
 		_fire_charged_blast()
+		_stop_charge_vfx()
 		_is_charging = false
 		_charge_time = 0.0
 		
@@ -153,7 +159,7 @@ func _fire_charged_blast() -> void:
 
 	var dir: Vector2 = _aim_direction.normalized()
 	if dir == Vector2.ZERO:
-		dir = _get_aim_direction()
+		dir = _get_mouse_aim_direction()
 	var blast: Area2D = CHARGED_BLAST_SCENE.instantiate() as Area2D
 	blast.global_position = _get_muzzle_world_position(dir)
 	blast.direction = dir
@@ -172,13 +178,43 @@ func _set_shoot_animation(dir: Vector2) -> void:
 	else:
 		$AnimatedSprite2D.animation = "shoot_down"
 
-func _get_aim_direction() -> Vector2:
-	var target: Node2D = _get_nearest_enemy()
-	if target != null:
-		return global_position.direction_to(target.global_position)
-
+func _get_mouse_aim_direction() -> Vector2:
 	var to_mouse: Vector2 = get_global_mouse_position() - global_position
 	if to_mouse.length_squared() > 0.0001:
 		return to_mouse.normalized()
-
 	return _aim_direction
+	
+func _start_charge_vfx() -> void:
+	if _charge_vfx != null:
+		return
+	_charge_vfx = CHARGING_LASER_BALL_SCENE.instantiate() as Area2D
+	add_child(_charge_vfx)
+	_charge_vfx_sprite = _charge_vfx.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	_charge_vfx_sprite.play("charging")
+	_charge_vfx_sprite.animation_finished.connect(_on_charge_vfx_anim_finished)
+
+func _on_charge_vfx_anim_finished() -> void:
+	if _is_charging and _charge_vfx_sprite.animation == "charging":
+		_charge_vfx_sprite.play("max_charge") # läuft dann dauerhaft in Loop
+
+func _update_charge_vfx() -> void:
+	if _charge_vfx == null:
+		return
+	var dir: Vector2 = _aim_direction.normalized()
+	if dir == Vector2.ZERO:
+		dir = _get_mouse_aim_direction()
+	_charge_vfx.global_position = _get_muzzle_world_position(dir)
+	
+	$AnimatedSprite2D.play()
+
+	#var ratio: float = clamp(_charge_time / charge_max_time, 0.0, 1.0)
+	#var anim: StringName = &"max_charge" if ratio >= 0.999 else &"charging"
+	#var sprite: AnimatedSprite2D = _charge_vfx.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	#if sprite.animation != anim:
+		#sprite.play(anim)
+
+func _stop_charge_vfx() -> void:
+	if _charge_vfx == null:
+		return
+	_charge_vfx.queue_free()
+	_charge_vfx = null

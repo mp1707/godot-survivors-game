@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 @export var move_speed: float = 40.0
+@export var stop_distance: float = 12.0
 var target: Node2D
 
 @export var max_hp: int = 3
@@ -15,11 +16,17 @@ func _physics_process(_delta: float) -> void:
 	if target == null:
 		velocity = Vector2.ZERO
 		return
-	var dir: Vector2 = global_position.direction_to(target.global_position)
-	velocity = dir * move_speed
-	
-	# target links vom ghoul -> nach links schauen
-	$AnimatedSprite2D.flip_h = dir.x < 0.0
+
+	var to_target: Vector2 = target.global_position - global_position
+	var dist: float = to_target.length()
+
+	if dist <= stop_distance:
+		velocity = Vector2.ZERO
+	else:
+		var dir: Vector2 = to_target / dist
+		velocity = dir * move_speed
+		# target links vom ghoul -> nach links schauen
+		$AnimatedSprite2D.flip_h = dir.x < 0.0
 	
 	move_and_slide()
 

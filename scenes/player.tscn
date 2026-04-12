@@ -156,7 +156,7 @@ wait_time = 2.0
 autostart = true
 
 [node name="MuzzleUp" type="Marker2D" parent="." unique_id=2132753439]
-position = Vector2(4.5, -4.87)
+position = Vector2(4, -9)
 
 [node name="MuzzleDown" type="Marker2D" parent="." unique_id=1212052443]
 position = Vector2(1.5, 7)
