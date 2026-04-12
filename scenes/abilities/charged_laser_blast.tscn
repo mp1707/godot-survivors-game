@@ -1,31 +1,31 @@
 [gd_scene format=3 uid="uid://d33d8jn5vfqnk"]
 
 [ext_resource type="Script" uid="uid://dgah7h1luk3h1" path="res://scripts/abilities/laser_projectile.gd" id="1_iycgb"]
-[ext_resource type="Texture2D" uid="uid://cq1mgwyj0pcfp" path="res://art/effects/P1 Bullet_BermudaGreen.png" id="2_iycgb"]
+[ext_resource type="Texture2D" uid="uid://eka8sb7d0uan" path="res://art/weapons/charged_blast.png" id="2_iycgb"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_iycgb"]
+atlas = ExtResource("2_iycgb")
+region = Rect2(0, 0, 6, 17)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_348n8"]
 atlas = ExtResource("2_iycgb")
-region = Rect2(0, 0, 6, 21)
+region = Rect2(6, 0, 6, 17)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_4y81p"]
 atlas = ExtResource("2_iycgb")
-region = Rect2(6, 0, 6, 21)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ih1il"]
-atlas = ExtResource("2_iycgb")
-region = Rect2(12, 0, 6, 21)
+region = Rect2(12, 0, 6, 17)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_4uut5"]
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_iycgb")
+}, {
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_348n8")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_4y81p")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_ih1il")
 }],
 "loop": true,
 "name": &"default",

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://s465xiay1qwc"]
 
-[ext_resource type="Texture2D" uid="uid://dpvengycn0u6d" path="res://art/effects/charging_laser_ball.png" id="1_ni860"]
+[ext_resource type="Texture2D" uid="uid://d1ryjv3cbou58" path="res://art/weapons/charging_laser_ball.png" id="1_ni860"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_27wu0"]
 atlas = ExtResource("1_ni860")
@@ -16,11 +16,11 @@ region = Rect2(32, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0rs15"]
 atlas = ExtResource("1_ni860")
-region = Rect2(16, 16, 16, 16)
+region = Rect2(0, 16, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_108e6"]
 atlas = ExtResource("1_ni860")
-region = Rect2(0, 16, 16, 16)
+region = Rect2(16, 16, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_sacuk"]
 atlas = ExtResource("1_ni860")
@@ -89,4 +89,4 @@ animations = [{
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2087024273]
 sprite_frames = SubResource("SpriteFrames_87v0r")
-animation = &"charging"
+animation = &"max_charge"

@@ -1,19 +1,19 @@
 [gd_scene format=3 uid="uid://442djdt3jfdt"]
 
 [ext_resource type="Script" uid="uid://dgah7h1luk3h1" path="res://scripts/abilities/laser_projectile.gd" id="1_6y1el"]
-[ext_resource type="Texture2D" uid="uid://dl4md8j88pecg" path="res://art/effects/P1 Bullet _Thinier_BermudaGreen.png" id="2_asjm4"]
+[ext_resource type="Texture2D" uid="uid://dm4wsao25dpwr" path="res://art/weapons/small_blast.png" id="2_ovl1w"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ovl1w"]
-atlas = ExtResource("2_asjm4")
-region = Rect2(0, 0, 6, 21)
+atlas = ExtResource("2_ovl1w")
+region = Rect2(0, 0, 5, 19)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_66huc"]
-atlas = ExtResource("2_asjm4")
-region = Rect2(6, 0, 6, 21)
+atlas = ExtResource("2_ovl1w")
+region = Rect2(6, 0, 5, 19)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jcfwp"]
-atlas = ExtResource("2_asjm4")
-region = Rect2(12, 0, 6, 21)
+atlas = ExtResource("2_ovl1w")
+region = Rect2(12, 0, 5, 19)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_4uut5"]
 animations = [{
