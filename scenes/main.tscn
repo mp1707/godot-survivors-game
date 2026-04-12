@@ -43,7 +43,7 @@ position = Vector2(-1104.5, 87.5)
 shape = SubResource("RectangleShape2D_jyhfs")
 
 [node name="rechts" type="CollisionShape2D" parent="Borders" unique_id=1042011324]
-position = Vector2(-1104.5, 87.5)
+position = Vector2(1504.5, 87.5)
 shape = SubResource("RectangleShape2D_jyhfs")
 
 [node name="Player" parent="." unique_id=42483423 instance=ExtResource("2_sugp2")]

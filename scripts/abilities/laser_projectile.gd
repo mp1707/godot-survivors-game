@@ -26,15 +26,15 @@ func _on_body_entered(body: Node) -> void:
 	var enemy_id: int = body.get_instance_id()
 	if _hit_enemy_ids.has(enemy_id):
 		return
-		
 	_hit_enemy_ids[enemy_id] = true
-	
-	if body.is_in_group("enemies") and body.has_method("apply_damage"):
-		body.apply_damage(damage, global_position)
+
+	var damageable: DamageableBody2D = body as DamageableBody2D
+	if damageable != null and damageable.is_in_group("enemies"):
+		damageable.apply_damage(damage, global_position)
 		if pierces_enemies == false:
 			queue_free()
 
-func configure(new_damage: int, new_speed: float, new_visual_scale: float, new_pierces_enemies: bool ) -> void:
+func configure(new_damage: int, new_speed: float, new_visual_scale: float, new_pierces_enemies: bool) -> void:
 	damage = new_damage
 	speed = new_speed
 	visual_scale = new_visual_scale
