@@ -103,12 +103,14 @@ animations = [{
 radius = 7.0
 height = 16.0
 
-[node name="CharacterBody2D" type="CharacterBody2D" unique_id=42483423]
+[node name="Player" type="CharacterBody2D" unique_id=42483423]
 script = ExtResource("1_g2els")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1569534084]
 sprite_frames = SubResource("SpriteFrames_qhqgy")
-animation = &"walk_up"
+animation = &"idle_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1390324268]
 shape = SubResource("CapsuleShape2D_dqkch")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1541109477]
