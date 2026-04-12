@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dq48jguigr31d" path="res://art/background/grass.png" id="1_0wfyh"]
 [ext_resource type="Script" uid="uid://8cfqd0q3wtel" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="PackedScene" uid="uid://bn7407jwxtjdb" path="res://scenes/player.tscn" id="2_sugp2"]
+[ext_resource type="Theme" path="res://scenes/ui/game_ui_theme.tres" id="4_ui_theme"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0wfyh"]
 texture = ExtResource("1_0wfyh")
@@ -50,4 +51,51 @@ shape = SubResource("RectangleShape2D_jyhfs")
 
 [node name="Enemies" type="Node2D" parent="." unique_id=991429024]
 
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 120.0
+offset_bottom = 35.0
+theme = ExtResource("4_ui_theme")
+text = "Kills: 0"
+
+[node name="GameOverPanel" type="Panel" parent="UI"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = -52.0
+offset_right = 90.0
+offset_bottom = 52.0
+theme = ExtResource("4_ui_theme")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/GameOverPanel"]
+offset_right = 180.0
+offset_bottom = 104.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameOverPanel/MarginContainer"]
+offset_right = 156.0
+offset_bottom = 80.0
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="UI/GameOverPanel/MarginContainer/VBoxContainer"]
+text = "Game Over"
+horizontal_alignment = 1
+
+[node name="KillsLabel" type="Label" parent="UI/GameOverPanel/MarginContainer/VBoxContainer"]
+text = "Kills: 0"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="UI/GameOverPanel/MarginContainer/VBoxContainer"]
+text = "Neustart"
+
 [connection signal="timeout" from="WaveSpawnTimer" to="." method="_on_wave_spawn_timer_timeout"]
+[connection signal="pressed" from="UI/GameOverPanel/MarginContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]

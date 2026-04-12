@@ -12,6 +12,7 @@ var target: DamageableBody2D
 var _attack_cooldown_left: float = 0.0
 
 signal damage_taken(amount: int, world_position: Vector2)
+signal died()
 
 @export var max_hp: int = 3
 @export var knockback_strength: float = 70.0
@@ -63,4 +64,5 @@ func apply_damage(amount: int, hit_world_position: Vector2) -> void:
 	_hit_reaction.apply_hit(global_position, hit_world_position, knockback_strength, hit_flash_time)
 
 	if _hp <= 0:
+		died.emit()
 		queue_free()

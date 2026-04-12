@@ -22,6 +22,7 @@ signal died()
 var _shoot_anim_time_left: float = 0.0
 var _health: int = 0
 var _damage_invuln_left: float = 0.0
+var _is_dead: bool = false
 
 func _ready() -> void:
 	_health = max_health
@@ -31,6 +32,11 @@ func _ready() -> void:
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
 
 func _physics_process(delta: float) -> void:
+	if _is_dead:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
 	if _damage_invuln_left > 0.0:
 		_damage_invuln_left = max(_damage_invuln_left - delta, 0.0)
 
@@ -108,6 +114,10 @@ func apply_damage(amount: int, source_world_position: Vector2) -> void:
 	health_changed.emit(_health, max_health)
 
 	if _health == 0:
+		_is_dead = true
+		var attack_timer: Timer = $AttackTimer as Timer
+		if attack_timer != null:
+			attack_timer.stop()
 		died.emit()
 
 	_hit_reaction.apply_hit(global_position, source_world_position, knockback_strength, hit_flash_time)
