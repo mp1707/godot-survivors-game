@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://8esgyqo6dgmc" path="res://art/character/player.png" id="1_3vyb7"]
 [ext_resource type="Script" uid="uid://c0te4bt2fcja7" path="res://scripts/player.gd" id="1_g2els"]
+[ext_resource type="Script" uid="uid://c71jwhh35wv3u" path="res://scripts/player_health_bar.gd" id="3_qhqgy"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
 atlas = ExtResource("1_3vyb7")
@@ -163,5 +164,8 @@ position = Vector2(1.5, 7)
 
 [node name="MuzzleSide" type="Marker2D" parent="." unique_id=2059080708]
 position = Vector2(6, 4)
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=952384356]
+script = ExtResource("3_qhqgy")
 
 [connection signal="timeout" from="AttackTimer" to="." method="_on_attack_timer_timeout"]

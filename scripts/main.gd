@@ -56,5 +56,5 @@ func _on_enemy_damage_taken(amount: int, world_position: Vector2) -> void:
 		push_error("Failed to instantiate floating damage number scene.")
 		return
 	number.global_position = world_position
-	number.setup(amount)
 	add_child(number) # auf Main-Ebene, damit es im World-Space mit Kamera läuft
+	number.setup(amount)

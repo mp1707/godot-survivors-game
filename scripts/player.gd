@@ -1,5 +1,8 @@
 extends CharacterBody2D
 
+signal health_changed(current: int, max: int)
+signal died()
+
 const LASER_SCENE: PackedScene = preload("res://scenes/abilities/laser_projectile.tscn")
 const CHARGED_BLAST_SCENE: PackedScene = preload("res://scenes/abilities/charged_laser_blast.tscn")
 const CHARGING_LASER_BALL_SCENE: PackedScene = preload("res://scenes/abilities/charging_laser_ball.tscn")
@@ -9,6 +12,13 @@ const CHARGING_LASER_BALL_SCENE: PackedScene = preload("res://scenes/abilities/c
 @export var charged_max_damage: int = 14
 @export var charged_min_scale: float = 1.0
 @export var charged_max_scale: float = 3.0
+
+@export var max_health: int = 100
+@export var damage_invuln_time: float = 0.25
+@onready var _health_bar: PlayerHealthBar = $HealthBar as PlayerHealthBar
+@export var knockback_strength: float = 90.0
+@export var knockback_decay: float = 700.0
+@export var hit_flash_time: float = 0.08
 
 @export var speed: float = 150.0
 @export var shoot_anim_duration: float = 0.3
@@ -20,8 +30,20 @@ var _charge_time: float = 0.0
 var _aim_direction: Vector2 = Vector2.DOWN
 var _charge_vfx: Area2D = null
 var _charge_vfx_sprite: AnimatedSprite2D
+var _health: int = 0
+var _damage_invuln_left: float = 0.0
+var _knockback_velocity: Vector2 = Vector2.ZERO
+
+
+func _ready() -> void:
+	_health = max_health
+	health_changed.connect(_on_health_changed)
+	health_changed.emit(_health, max_health)
 
 func _physics_process(delta: float) -> void:
+	
+	if _damage_invuln_left > 0.0:
+		_damage_invuln_left = max(_damage_invuln_left - delta, 0.0)
 	
 	_handle_charge_input(delta)
 
@@ -29,9 +51,11 @@ func _physics_process(delta: float) -> void:
 		_shoot_anim_time_left -= delta
 		if _shoot_anim_time_left < 0.0:
 			_shoot_anim_time_left = 0.0
+
+	_knockback_velocity = _knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
 	
 	if _is_charging:
-		velocity = Vector2.ZERO
+		velocity = _knockback_velocity
 		# aim dir berechnen (z. B. nearest enemy / mouse / last dir)
 		_aim_direction = _get_mouse_aim_direction()
 		_set_shoot_animation(_aim_direction)
@@ -43,6 +67,8 @@ func _physics_process(delta: float) -> void:
 	var input_vector: Vector2 = _get_movement_input_vector()
 
 	velocity = input_vector.normalized() * speed
+	
+	velocity += _knockback_velocity
 	
 	move_and_slide()
 	
@@ -86,6 +112,35 @@ func _get_movement_input_vector() -> Vector2:
 		if to_mouse.length_squared() > mouse_move_deadzone * mouse_move_deadzone:
 			return to_mouse.normalized()
 	return _get_keyboard_input_vector()
+	
+func apply_damage(amount: int, source_world_position: Vector2) -> void:
+	if amount <= 0:
+		return
+	if _damage_invuln_left > 0.0:
+		return
+
+	_health = maxi(_health - amount, 0)
+	_damage_invuln_left = damage_invuln_time
+	health_changed.emit(_health, max_health)
+
+	if _health == 0:
+		died.emit()
+	
+	var dir: Vector2 = (global_position - source_world_position).normalized()
+	if dir == Vector2.ZERO:
+		dir = Vector2.UP
+	_knockback_velocity = dir * knockback_strength
+	_play_hit_flash()
+		
+func _play_hit_flash() -> void:
+	var sprite: AnimatedSprite2D = $AnimatedSprite2D
+	sprite.modulate = Color(2.0, 2.0, 2.0, 1.0)
+	var tw: Tween = create_tween()
+	tw.tween_property(sprite, "modulate", Color(1, 1, 1, 1), hit_flash_time)
+
+func _on_health_changed(current: int, max_value: int) -> void:
+	var ratio: float = float(current) / float(max_value)
+	_health_bar.set_ratio(ratio)	
 	
 func _play_shoot_animation(dir: Vector2) -> void:
 	_set_shoot_animation(dir)
