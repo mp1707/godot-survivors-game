@@ -4,6 +4,7 @@ const LASER_SCENE: PackedScene = preload("res://scenes/abilities/laser_projectil
 
 @export var speed: float = 150.0
 @export var shoot_anim_duration: float = 0.3
+@export var mouse_move_deadzone: float = 6.0
 var _shoot_anim_time_left: float = 0.0
 
 func _physics_process(delta: float) -> void:
@@ -15,16 +16,7 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 	
-	var input_vector := Vector2.ZERO
-	
-	if Input.is_action_pressed("move_right"):
-		input_vector.x += 1
-	if Input.is_action_pressed("move_left"):
-		input_vector.x -= 1
-	if Input.is_action_pressed("move_down"):
-		input_vector.y += 1
-	if Input.is_action_pressed("move_up"):
-		input_vector.y -= 1
+	var input_vector: Vector2 = _get_movement_input_vector()
 
 	velocity = input_vector.normalized() * speed
 
@@ -49,6 +41,25 @@ func _physics_process(delta: float) -> void:
 	
 	
 	move_and_slide()
+
+func _get_keyboard_input_vector() -> Vector2:
+	var input_vector: Vector2 = Vector2.ZERO
+	if Input.is_action_pressed("move_right"):
+		input_vector.x += 1.0
+	if Input.is_action_pressed("move_left"):
+		input_vector.x -= 1.0
+	if Input.is_action_pressed("move_down"):
+		input_vector.y += 1.0
+	if Input.is_action_pressed("move_up"):
+		input_vector.y -= 1.0
+	return input_vector
+
+func _get_movement_input_vector() -> Vector2:
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		var to_mouse: Vector2 = get_global_mouse_position() - global_position
+		if to_mouse.length_squared() > mouse_move_deadzone * mouse_move_deadzone:
+			return to_mouse.normalized()
+	return _get_keyboard_input_vector()
 	
 func _play_shoot_animation(dir: Vector2) -> void:
 	if abs(dir.x) > abs(dir.y):
