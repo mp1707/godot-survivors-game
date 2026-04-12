@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://bp13vpuc4w6yd"]
+
+[ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/ghoul.gd" id="1_8ni7i"]
+[ext_resource type="Texture2D" uid="uid://t6swvep0nwc0" path="res://art/enemies/Sand Ghoul/SandGhoul.png" id="2_so73h"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hg70l"]
+atlas = ExtResource("2_so73h")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8f62q"]
+atlas = ExtResource("2_so73h")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d6xth"]
+atlas = ExtResource("2_so73h")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gxrs0"]
+atlas = ExtResource("2_so73h")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_euqfn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hg70l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8f62q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d6xth")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gxrs0")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rhry4"]
+radius = 5.0
+height = 16.0
+
+[node name="Ghoul" type="CharacterBody2D" unique_id=560951609]
+script = ExtResource("1_8ni7i")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1041669266]
+sprite_frames = SubResource("SpriteFrames_euqfn")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=270982335]
+position = Vector2(1, 1)
+shape = SubResource("CapsuleShape2D_rhry4")
