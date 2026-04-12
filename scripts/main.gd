@@ -32,7 +32,10 @@ func _on_wave_spawn_timer_timeout() -> void:
 	_spawned_in_wave1 += 1
 
 func _spawn_enemy() -> void:
-	var enemy: CharacterBody2D = ENEMY_SCENE.instantiate() as CharacterBody2D
+	var enemy: Ghoul = ENEMY_SCENE.instantiate() as Ghoul
+	if enemy == null:
+		push_error("Failed to instantiate enemy as Ghoul.")
+		return
 	var player: Node2D = $Player
 
 	var angle: float = randf_range(0.0, TAU)
@@ -48,7 +51,10 @@ func _spawn_enemy() -> void:
 	$Enemies.add_child(enemy)
 	
 func _on_enemy_damage_taken(amount: int, world_position: Vector2) -> void:
-	var number: Node2D = DAMAGE_NUMBER_SCENE.instantiate() as Node2D
+	var number: FloatingDamageNumber = DAMAGE_NUMBER_SCENE.instantiate() as FloatingDamageNumber
+	if number == null:
+		push_error("Failed to instantiate floating damage number scene.")
+		return
 	number.global_position = world_position
 	number.setup(amount)
 	add_child(number) # auf Main-Ebene, damit es im World-Space mit Kamera läuft

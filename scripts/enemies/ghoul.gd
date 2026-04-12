@@ -1,4 +1,5 @@
 extends CharacterBody2D
+class_name Ghoul
 
 @export var move_speed: float = 40.0
 @export var stop_distance: float = 12.0

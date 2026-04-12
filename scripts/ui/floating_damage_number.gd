@@ -1,14 +1,10 @@
 extends Node2D
+class_name FloatingDamageNumber
 
 @export var float_speed: float = 40.0
 @onready var life_timer: Timer = $LifeTimer
+@onready var label: Label = $Label
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	pass
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	position.y -= float_speed * delta
 	
@@ -17,7 +13,7 @@ func _process(delta: float) -> void:
 	
 
 func setup(amount: int) -> void:
-	$Label.text = str(amount)
+	label.text = str(amount)
 
 
 func _on_timer_timeout() -> void:
