@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const LASER_SCENE: PackedScene = preload("res://scenes/abilities/laser_projectile.tscn")
+
 @export var speed: float = 150.0
 
 func _physics_process(delta: float) -> void:
@@ -36,3 +38,34 @@ func _physics_process(delta: float) -> void:
 		$AnimatedSprite2D.play()
 
 	move_and_slide()
+
+
+func _on_attack_timer_timeout() -> void:
+	var target: Node2D = _get_nearest_enemy()
+	if target == null:
+		return
+
+	var laser: Area2D = LASER_SCENE.instantiate() as Area2D
+	laser.global_position = global_position
+
+	var dir: Vector2 = global_position.direction_to(target.global_position)
+	laser.direction = dir
+	laser.rotation = dir.angle() + deg_to_rad(90.0)
+
+
+	get_tree().current_scene.add_child(laser)
+
+func _get_nearest_enemy() -> Node2D:
+	var nearest: Node2D = null
+	var best_dist_sq: float = INF
+
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy: Node2D = node as Node2D
+		if enemy == null:
+			continue
+		var d: float = global_position.distance_squared_to(enemy.global_position)
+		if d < best_dist_sq:
+			best_dist_sq = d
+			nearest = enemy
+
+	return nearest

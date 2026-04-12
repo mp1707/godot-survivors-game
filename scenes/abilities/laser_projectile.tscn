@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://442djdt3jfdt"]
+
+[ext_resource type="Script" uid="uid://dgah7h1luk3h1" path="res://scripts/abilities/laser_projectile.gd" id="1_6y1el"]
+[ext_resource type="Texture2D" uid="uid://dl4md8j88pecg" path="res://art/effects/P1 Bullet _Thinier_BermudaGreen.png" id="2_asjm4"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ovl1w"]
+atlas = ExtResource("2_asjm4")
+region = Rect2(0, 0, 6, 21)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_66huc"]
+atlas = ExtResource("2_asjm4")
+region = Rect2(6, 0, 6, 21)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jcfwp"]
+atlas = ExtResource("2_asjm4")
+region = Rect2(12, 0, 6, 21)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4uut5"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ovl1w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_66huc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jcfwp")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ovl1w"]
+radius = 2.0
+height = 22.0
+
+[node name="LaserProjectile" type="Area2D" unique_id=1072849068]
+script = ExtResource("1_6y1el")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1500871247]
+sprite_frames = SubResource("SpriteFrames_4uut5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1475243151]
+shape = SubResource("CapsuleShape2D_ovl1w")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="." unique_id=493334101]
