@@ -1,6 +1,7 @@
 extends Node2D
 
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/ghoul.tscn")
+const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/ui/floating_damage_number.tscn")
 
 @export var wave1_enemy_total: int = 20
 @export var spawn_radius_min: float = 260.0
@@ -40,7 +41,14 @@ func _spawn_enemy() -> void:
 
 	enemy.global_position = player.global_position + offset
 
+	enemy.damage_taken.connect(_on_enemy_damage_taken)
 	# enemy.gd braucht: var target: Node2D
 	enemy.target = player
 
 	$Enemies.add_child(enemy)
+	
+func _on_enemy_damage_taken(amount: int, world_position: Vector2) -> void:
+	var number: Node2D = DAMAGE_NUMBER_SCENE.instantiate() as Node2D
+	number.global_position = world_position
+	number.setup(amount)
+	add_child(number) # auf Main-Ebene, damit es im World-Space mit Kamera läuft

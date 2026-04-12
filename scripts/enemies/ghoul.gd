@@ -4,6 +4,8 @@ extends CharacterBody2D
 @export var stop_distance: float = 12.0
 var target: Node2D
 
+signal damage_taken(amount: int, world_position: Vector2)
+
 @export var max_hp: int = 3
 var _hp: int = 0
 
@@ -30,7 +32,8 @@ func _physics_process(_delta: float) -> void:
 	
 	move_and_slide()
 
-func apply_damage(amount: int) -> void:
+func apply_damage(amount: int, hit_world_position: Vector2) -> void:
 	_hp -= amount
+	damage_taken.emit(amount, hit_world_position)
 	if _hp <= 0:
 		queue_free()

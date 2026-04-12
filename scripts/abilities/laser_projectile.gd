@@ -30,7 +30,7 @@ func _on_body_entered(body: Node) -> void:
 	_hit_enemy_ids[enemy_id] = true
 	
 	if body.is_in_group("enemies") and body.has_method("apply_damage"):
-		body.apply_damage(damage)
+		body.apply_damage(damage, global_position)
 		if pierces_enemies == false:
 			queue_free()
 
