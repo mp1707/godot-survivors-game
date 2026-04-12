@@ -3,6 +3,7 @@ extends Area2D
 @export var speed: float = 360.0
 @export var damage: int = 1
 @export var lifetime: float = 1.2
+@export var visual_scale: float = 0.7
 
 var direction: Vector2 = Vector2.RIGHT
 var _life_left: float = 0.0
@@ -10,6 +11,7 @@ var _life_left: float = 0.0
 func _ready() -> void:
 	_life_left = lifetime
 	body_entered.connect(_on_body_entered)
+	scale = Vector2.ONE * visual_scale
 	$AnimatedSprite2D.play("default")
 
 func _physics_process(delta: float) -> void:
