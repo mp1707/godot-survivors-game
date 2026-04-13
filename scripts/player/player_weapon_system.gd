@@ -2,6 +2,7 @@ extends Node
 class_name PlayerWeaponSystem
 
 signal shoot_animation_requested(dir: Vector2)
+signal charging_state_changed(is_charging: bool)
 
 const LASER_SCENE: PackedScene = preload("res://scenes/abilities/laser_projectile.tscn")
 const CHARGED_BLAST_SCENE: PackedScene = preload("res://scenes/abilities/charged_laser_blast.tscn")
@@ -12,6 +13,7 @@ const CHARGING_LASER_BALL_SCENE: PackedScene = preload("res://scenes/abilities/c
 @export var charged_max_damage: int = 14
 @export var charged_min_scale: float = 1.0
 @export var charged_max_scale: float = 3.0
+@export var charged_mana_cost: int = 30
 
 var _is_charging: bool = false
 var _charge_time: float = 0.0
@@ -77,7 +79,10 @@ func _get_muzzle_world_position(dir: Vector2) -> Vector2:
 
 func _handle_charge_input(delta: float) -> void:
 	if Input.is_action_just_pressed("active_ability"):
+		if not _player.has_mana(charged_mana_cost): 
+			return
 		_is_charging = true
+		charging_state_changed.emit(_is_charging)
 		_charge_time = 0.0
 		_start_charge_vfx()
 
@@ -87,9 +92,11 @@ func _handle_charge_input(delta: float) -> void:
 		_update_charge_vfx()
 
 	if _is_charging and Input.is_action_just_released("active_ability"):
+		_player.consume_mana(charged_mana_cost)
 		_fire_charged_blast()
 		_stop_charge_vfx()
 		_is_charging = false
+		charging_state_changed.emit(_is_charging)
 		_charge_time = 0.0
 
 func _fire_charged_blast() -> void:

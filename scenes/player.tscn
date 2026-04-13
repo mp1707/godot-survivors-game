@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://c0te4bt2fcja7" path="res://scripts/player/player.gd" id="1_g2els"]
 [ext_resource type="Script" uid="uid://c71jwhh35wv3u" path="res://scripts/player/player_health_bar.gd" id="3_qhqgy"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="4_hitreaction"]
+[ext_resource type="Script" uid="uid://ne63cm1e4tlt" path="res://scripts/player/player_mana_bar.gd" id="4_tuyoq"]
 [ext_resource type="Script" uid="uid://bndpiyx3ivqye" path="res://scripts/player/player_weapon_system.gd" id="5_weaponsys"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
@@ -169,6 +170,9 @@ position = Vector2(6, 4)
 
 [node name="HealthBar" type="Node2D" parent="." unique_id=952384356]
 script = ExtResource("3_qhqgy")
+
+[node name="ManaBar" type="Node2D" parent="." unique_id=561761482]
+script = ExtResource("4_tuyoq")
 
 [node name="HitReaction" type="Node" parent="." unique_id=1994737622]
 script = ExtResource("4_hitreaction")

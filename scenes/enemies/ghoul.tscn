@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/ghoul.gd" id="1_8ni7i"]
 [ext_resource type="Texture2D" uid="uid://t6swvep0nwc0" path="res://art/enemies/Sand Ghoul/SandGhoul.png" id="2_so73h"]
-[ext_resource type="Script" path="res://scripts/combat/hit_reaction_2d.gd" id="3_hitreaction"]
+[ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="3_hitreaction"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hg70l"]
 atlas = ExtResource("2_so73h")
@@ -54,5 +54,5 @@ sprite_frames = SubResource("SpriteFrames_euqfn")
 position = Vector2(1, 1)
 shape = SubResource("CapsuleShape2D_rhry4")
 
-[node name="HitReaction" type="Node" parent="."]
+[node name="HitReaction" type="Node" parent="." unique_id=850013347]
 script = ExtResource("3_hitreaction")

@@ -2,7 +2,9 @@ extends DamageableBody2D
 class_name Player
 
 signal health_changed(current: int, max: int)
+signal mana_changed(current: float, max: int)
 signal died()
+
 
 @export var max_health: int = 100
 @export var damage_invuln_time: float = 0.25
@@ -10,28 +12,38 @@ signal died()
 @export var knockback_decay: float = 700.0
 @export var hit_flash_time: float = 0.08
 
+@export var max_mana: int = 100
+@export var mana_regen_per_second: float = 1.0
+
 @export var speed: float = 150.0
 @export var shoot_anim_duration: float = 0.3
 @export var mouse_move_deadzone: float = 6.0
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
 @onready var _health_bar: PlayerHealthBar = $HealthBar as PlayerHealthBar
+@onready var _mana_bar: PlayerManaBar = $ManaBar as PlayerManaBar
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
 @onready var _weapon_system: PlayerWeaponSystem = $WeaponSystem as PlayerWeaponSystem
 
 var _shoot_anim_time_left: float = 0.0
 var _health: int = 0
 var _damage_invuln_left: float = 0.0
+var _mana: float = 0.0
 var _is_dead: bool = false
 
 func _ready() -> void:
 	_health = max_health
+	_mana = float(max_mana)
 	_hit_reaction.knockback_decay = knockback_decay
 	health_changed.connect(_on_health_changed)
+	mana_changed.connect(_on_mana_changed)
+	_weapon_system.charging_state_changed.connect(_on_charging_state_changed)
 	health_changed.emit(_health, max_health)
+	mana_changed.emit(_mana, max_mana)
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
-
+	
 func _physics_process(delta: float) -> void:
+		
 	if _is_dead:
 		velocity = Vector2.ZERO
 		move_and_slide()
@@ -41,6 +53,11 @@ func _physics_process(delta: float) -> void:
 		_damage_invuln_left = max(_damage_invuln_left - delta, 0.0)
 
 	_weapon_system.physics_update(delta)
+
+	if _weapon_system.is_charging() == false:
+		_mana = min(_mana + mana_regen_per_second * delta, float(max_mana))
+		mana_changed.emit(_mana, max_mana)
+
 	_hit_reaction.physics_step(delta)
 	_update_shoot_anim_timer(delta)
 
@@ -126,6 +143,13 @@ func _on_health_changed(current: int, max_value: int) -> void:
 	var ratio: float = float(current) / float(max_value)
 	_health_bar.set_ratio(ratio)
 
+func _on_mana_changed(current: float, max_value: int) -> void:
+	var ratio: float = float(current) / float(max_value)
+	_mana_bar.set_ratio(ratio)
+	
+func _on_charging_state_changed(is_charging: bool) -> void:
+	_mana_bar.set_preview(is_charging, _weapon_system.charged_mana_cost, max_mana)
+
 func _play_shoot_animation(dir: Vector2) -> void:
 	_set_shoot_animation(dir)
 	_animated_sprite.play()
@@ -142,3 +166,20 @@ func _set_shoot_animation(dir: Vector2) -> void:
 
 func _on_attack_timer_timeout() -> void:
 	_weapon_system.fire_basic_attack()
+	
+func has_mana(amount: int) -> bool:
+	if amount <= _mana:
+		return true
+	else:
+		return false
+
+func consume_mana(amount: int) -> bool:
+	if has_mana(amount) == false:
+		return false
+	
+	_mana = _mana - amount
+	mana_changed.emit(_mana, max_mana)
+	return true
+		
+func get_mana_ratio() -> float:
+	return _mana / max_mana

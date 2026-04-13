@@ -3,7 +3,7 @@ class_name PlayerHealthBar
 
 @export var bar_width: float = 18.0
 @export var bar_height: float = 2.0
-@export var y_offset: float = -12.0
+@export var y_offset: float = -16.0
 
 var _ratio: float = 1.0
 
