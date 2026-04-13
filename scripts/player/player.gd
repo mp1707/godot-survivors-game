@@ -11,6 +11,7 @@ signal died()
 @export var knockback_strength: float = 90.0
 @export var knockback_decay: float = 700.0
 @export var hit_flash_time: float = 0.08
+@export var ki_charge_regen_per_second: float = 15.0
 
 @export var max_mana: int = 100
 @export var mana_regen_per_second: float = 1.0
@@ -20,6 +21,7 @@ signal died()
 @export var mouse_move_deadzone: float = 6.0
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
+@onready var _aura_sprite: AnimatedSprite2D = $AuraSprite as AnimatedSprite2D
 @onready var _health_bar: PlayerHealthBar = $HealthBar as PlayerHealthBar
 @onready var _mana_bar: PlayerManaBar = $ManaBar as PlayerManaBar
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
@@ -30,6 +32,7 @@ var _health: int = 0
 var _damage_invuln_left: float = 0.0
 var _mana: float = 0.0
 var _is_dead: bool = false
+var _is_ki_charging: bool = false
 
 func _ready() -> void:
 	_health = max_health
@@ -48,17 +51,46 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
-
+		
 	if _damage_invuln_left > 0.0:
 		_damage_invuln_left = max(_damage_invuln_left - delta, 0.0)
 
-	_weapon_system.physics_update(delta)
+	_hit_reaction.physics_step(delta)
 
-	if _weapon_system.is_charging() == false:
+	_is_ki_charging = Input.is_action_pressed("charging") and not _weapon_system.is_charging()
+	
+	if _is_ki_charging:
+		_aura_sprite.visible = true
+		_aura_sprite.play("default") # oder dein Aura-Anim-Name
+
+		_animated_sprite.animation = "charging"
+		_animated_sprite.play()
+
+		var old_mana: float = _mana
+		_mana = min(_mana + ki_charge_regen_per_second * delta, float(max_mana))
+		
+		if _mana != old_mana:
+			mana_changed.emit(_mana, max_mana)
+		_mana_bar.set_preview(true, roundi(_mana), max_mana)
+
+		velocity = _hit_reaction.add_to_velocity(Vector2.ZERO)
+		move_and_slide()
+		return
+	else:
+		_aura_sprite.visible = false
+		if not _weapon_system.is_charging():
+			_mana_bar.set_preview(false, 0, max_mana)
+		
+		if _animated_sprite.animation == "charging":
+			_animated_sprite.animation = "idle_down"
+			_animated_sprite.play()
+		
 		_mana = min(_mana + mana_regen_per_second * delta, float(max_mana))
 		mana_changed.emit(_mana, max_mana)
+	
 
-	_hit_reaction.physics_step(delta)
+	if not _is_ki_charging:
+		_weapon_system.physics_update(delta)
 	_update_shoot_anim_timer(delta)
 
 	if _weapon_system.is_charging():
@@ -149,7 +181,7 @@ func _on_mana_changed(current: float, max_value: int) -> void:
 	
 func _on_charging_state_changed(is_charging: bool) -> void:
 	_mana_bar.set_preview(is_charging, _weapon_system.charged_mana_cost, max_mana)
-
+	
 func _play_shoot_animation(dir: Vector2) -> void:
 	_set_shoot_animation(dir)
 	_animated_sprite.play()
@@ -165,6 +197,8 @@ func _set_shoot_animation(dir: Vector2) -> void:
 		_animated_sprite.animation = "shoot_down"
 
 func _on_attack_timer_timeout() -> void:
+	if _is_ki_charging:
+		return
 	_weapon_system.fire_basic_attack()
 	
 func has_mana(amount: int) -> bool:
