@@ -3,6 +3,7 @@ class_name Player
 
 signal health_changed(current: int, max: int)
 signal mana_changed(current: float, max: int)
+signal mana_preview_changed(active: bool, preview_cost: int, max: int)
 signal died()
 
 
@@ -22,8 +23,6 @@ signal died()
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
 @onready var _aura_sprite: AnimatedSprite2D = $AuraSprite as AnimatedSprite2D
-@onready var _health_bar: PlayerHealthBar = $HealthBar as PlayerHealthBar
-@onready var _mana_bar: PlayerManaBar = $ManaBar as PlayerManaBar
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
 @onready var _weapon_system: PlayerWeaponSystem = $WeaponSystem as PlayerWeaponSystem
 
@@ -38,11 +37,9 @@ func _ready() -> void:
 	_health = max_health
 	_mana = float(max_mana)
 	_hit_reaction.knockback_decay = knockback_decay
-	health_changed.connect(_on_health_changed)
-	mana_changed.connect(_on_mana_changed)
-	_weapon_system.charging_state_changed.connect(_on_charging_state_changed)
 	health_changed.emit(_health, max_health)
 	mana_changed.emit(_mana, max_mana)
+	mana_preview_changed.emit(false, 0, max_mana)
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
 	
 func _physics_process(delta: float) -> void:
@@ -71,7 +68,7 @@ func _physics_process(delta: float) -> void:
 		
 		if _mana != old_mana:
 			mana_changed.emit(_mana, max_mana)
-		_mana_bar.set_preview(true, roundi(_mana), max_mana)
+		mana_preview_changed.emit(true, roundi(_mana), max_mana)
 
 		velocity = _hit_reaction.add_to_velocity(Vector2.ZERO)
 		move_and_slide()
@@ -79,7 +76,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		_aura_sprite.visible = false
 		if not _weapon_system.is_charging():
-			_mana_bar.set_preview(false, 0, max_mana)
+			mana_preview_changed.emit(false, 0, max_mana)
 		
 		if _animated_sprite.animation == "charging":
 			_animated_sprite.animation = "idle_down"
@@ -173,17 +170,6 @@ func apply_damage(amount: int, source_world_position: Vector2) -> void:
 
 	_hit_reaction.apply_hit(global_position, source_world_position, knockback_strength, hit_flash_time)
 
-func _on_health_changed(current: int, max_value: int) -> void:
-	var ratio: float = float(current) / float(max_value)
-	_health_bar.set_ratio(ratio)
-
-func _on_mana_changed(current: float, max_value: int) -> void:
-	var ratio: float = float(current) / float(max_value)
-	_mana_bar.set_ratio(ratio)
-	
-func _on_charging_state_changed(is_charging: bool) -> void:
-	_mana_bar.set_preview(is_charging, _weapon_system.charged_mana_cost, max_mana)
-	
 func _play_shoot_animation(dir: Vector2) -> void:
 	_set_shoot_animation(dir)
 	_animated_sprite.play()
