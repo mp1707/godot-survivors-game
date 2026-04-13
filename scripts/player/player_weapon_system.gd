@@ -92,7 +92,12 @@ func _handle_charge_input(delta: float) -> void:
 		_update_charge_vfx()
 
 	if _is_charging and Input.is_action_just_released("active_ability"):
-		_player.consume_mana(charged_mana_cost)
+		if not _player.consume_mana(charged_mana_cost):
+			_stop_charge_vfx()
+			_is_charging = false
+			charging_state_changed.emit(_is_charging)
+			_charge_time = 0.0
+			return
 		_fire_charged_blast()
 		_stop_charge_vfx()
 		_is_charging = false

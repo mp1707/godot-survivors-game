@@ -85,8 +85,10 @@ func _physics_process(delta: float) -> void:
 			_animated_sprite.animation = "idle_down"
 			_animated_sprite.play()
 		
+		var old_mana: float = _mana
 		_mana = min(_mana + mana_regen_per_second * delta, float(max_mana))
-		mana_changed.emit(_mana, max_mana)
+		if _mana != old_mana:
+			mana_changed.emit(_mana, max_mana)
 	
 
 	if not _is_ki_charging:
