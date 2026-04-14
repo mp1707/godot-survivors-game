@@ -25,9 +25,17 @@ var _charge_vfx_sprite: AnimatedSprite2D = null
 @onready var _muzzle_up: Marker2D = $"../MuzzleUp" as Marker2D
 @onready var _muzzle_down: Marker2D = $"../MuzzleDown" as Marker2D
 @onready var _muzzle_side: Marker2D = $"../MuzzleSide" as Marker2D
+@onready var _weapon_charge_loop_player: AudioStreamPlayer = $"../WeaponChargeLoopPlayer" as AudioStreamPlayer
+@onready var _small_laser_shot_player: AudioStreamPlayer = $"../SmallLaserShotPlayer" as AudioStreamPlayer
+@onready var _big_laser_shot_player: AudioStreamPlayer = $"../BigLaserShotPlayer" as AudioStreamPlayer
 
 func physics_update(delta: float) -> void:
 	_handle_charge_input(delta)
+
+func cancel_charge() -> void:
+	if not _is_charging:
+		return
+	_finish_charge()
 
 func is_charging() -> bool:
 	return _is_charging
@@ -51,6 +59,7 @@ func fire_basic_attack() -> void:
 
 	shoot_animation_requested.emit(dir)
 	get_tree().current_scene.add_child(laser)
+	_play_if_available(_small_laser_shot_player)
 
 func _get_nearest_enemy() -> DamageableBody2D:
 	var nearest: DamageableBody2D = null
@@ -79,12 +88,9 @@ func _get_muzzle_world_position(dir: Vector2) -> Vector2:
 
 func _handle_charge_input(delta: float) -> void:
 	if Input.is_action_just_pressed("active_ability"):
-		if not _player.has_mana(charged_mana_cost): 
+		if not _player.has_mana(charged_mana_cost):
 			return
-		_is_charging = true
-		charging_state_changed.emit(_is_charging)
-		_charge_time = 0.0
-		_start_charge_vfx()
+		_begin_charge()
 
 	if _is_charging and Input.is_action_pressed("active_ability"):
 		_charge_time = min(_charge_time + delta, charge_max_time)
@@ -93,16 +99,10 @@ func _handle_charge_input(delta: float) -> void:
 
 	if _is_charging and Input.is_action_just_released("active_ability"):
 		if not _player.consume_mana(charged_mana_cost):
-			_stop_charge_vfx()
-			_is_charging = false
-			charging_state_changed.emit(_is_charging)
-			_charge_time = 0.0
+			_finish_charge()
 			return
 		_fire_charged_blast()
-		_stop_charge_vfx()
-		_is_charging = false
-		charging_state_changed.emit(_is_charging)
-		_charge_time = 0.0
+		_finish_charge()
 
 func _fire_charged_blast() -> void:
 	var ratio: float = clamp(_charge_time / charge_max_time, 0.0, 1.0)
@@ -121,6 +121,7 @@ func _fire_charged_blast() -> void:
 
 	shoot_animation_requested.emit(dir)
 	get_tree().current_scene.add_child(blast)
+	_play_if_available(_big_laser_shot_player)
 
 func _get_mouse_aim_direction() -> Vector2:
 	var to_mouse: Vector2 = _player.get_global_mouse_position() - _player.global_position
@@ -136,6 +137,7 @@ func _start_charge_vfx() -> void:
 	_charge_vfx_sprite = _charge_vfx.get_node("AnimatedSprite2D") as AnimatedSprite2D
 	_charge_vfx_sprite.play("charging")
 	_charge_vfx_sprite.animation_finished.connect(_on_charge_vfx_anim_finished)
+	_play_loop_if_stopped(_weapon_charge_loop_player)
 
 func _on_charge_vfx_anim_finished() -> void:
 	if _is_charging and _charge_vfx_sprite != null and _charge_vfx_sprite.animation == "charging":
@@ -150,8 +152,33 @@ func _update_charge_vfx() -> void:
 	_charge_vfx.global_position = _get_muzzle_world_position(dir)
 
 func _stop_charge_vfx() -> void:
+	_stop_if_playing(_weapon_charge_loop_player)
 	if _charge_vfx == null:
 		return
 	_charge_vfx.queue_free()
 	_charge_vfx = null
 	_charge_vfx_sprite = null
+
+func _begin_charge() -> void:
+	_is_charging = true
+	charging_state_changed.emit(_is_charging)
+	_charge_time = 0.0
+	_start_charge_vfx()
+
+func _finish_charge() -> void:
+	_is_charging = false
+	charging_state_changed.emit(_is_charging)
+	_charge_time = 0.0
+	_stop_charge_vfx()
+
+func _play_if_available(player: AudioStreamPlayer) -> void:
+	if player != null:
+		player.play()
+
+func _play_loop_if_stopped(player: AudioStreamPlayer) -> void:
+	if player != null and not player.playing:
+		player.play()
+
+func _stop_if_playing(player: AudioStreamPlayer) -> void:
+	if player != null and player.playing:
+		player.stop()

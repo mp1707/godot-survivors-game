@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://h6ihl6sdh73w"
+path="res://.godot/imported/FGHTClth_Anime Swing 3.wav-ed8e92570440d2b0f7f0e90dc92d0fd8.sample"
+
+[deps]
+
+source_file="res://art/audio/anime/FGHTClth_Anime Swing 3.wav"
+dest_files=["res://.godot/imported/FGHTClth_Anime Swing 3.wav-ed8e92570440d2b0f7f0e90dc92d0fd8.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

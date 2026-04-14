@@ -25,6 +25,7 @@ signal died()
 @onready var _aura_sprite: AnimatedSprite2D = $AuraSprite as AnimatedSprite2D
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
 @onready var _weapon_system: PlayerWeaponSystem = $WeaponSystem as PlayerWeaponSystem
+@onready var _mana_charge_loop_player: AudioStreamPlayer = $ChargeLoopPlayer as AudioStreamPlayer
 
 var _shoot_anim_time_left: float = 0.0
 var _health: int = 0
@@ -41,6 +42,7 @@ func _ready() -> void:
 	mana_changed.emit(_mana, max_mana)
 	mana_preview_changed.emit(false, 0, max_mana)
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
+	_set_mana_charge_loop_playing(false)
 	
 func _physics_process(delta: float) -> void:
 		
@@ -58,7 +60,8 @@ func _physics_process(delta: float) -> void:
 	
 	if _is_ki_charging:
 		_aura_sprite.visible = true
-		_aura_sprite.play("default") # oder dein Aura-Anim-Name
+		_aura_sprite.play("default")
+		_set_mana_charge_loop_playing(true)
 
 		_animated_sprite.animation = "charging"
 		_animated_sprite.play()
@@ -75,6 +78,7 @@ func _physics_process(delta: float) -> void:
 		return
 	else:
 		_aura_sprite.visible = false
+		_set_mana_charge_loop_playing(false)
 		if not _weapon_system.is_charging():
 			mana_preview_changed.emit(false, 0, max_mana)
 		
@@ -163,6 +167,8 @@ func apply_damage(amount: int, source_world_position: Vector2) -> void:
 
 	if _health == 0:
 		_is_dead = true
+		_set_mana_charge_loop_playing(false)
+		_weapon_system.cancel_charge()
 		var attack_timer: Timer = $AttackTimer as Timer
 		if attack_timer != null:
 			attack_timer.stop()
@@ -188,20 +194,24 @@ func _on_attack_timer_timeout() -> void:
 	if _is_ki_charging:
 		return
 	_weapon_system.fire_basic_attack()
+
+func _set_mana_charge_loop_playing(should_play: bool) -> void:
+	if _mana_charge_loop_player == null:
+		return
+	if should_play:
+		if not _mana_charge_loop_player.playing:
+			_mana_charge_loop_player.play()
+		return
+	if _mana_charge_loop_player.playing:
+		_mana_charge_loop_player.stop()
 	
 func has_mana(amount: int) -> bool:
-	if amount <= _mana:
-		return true
-	else:
-		return false
+	return amount <= _mana
 
 func consume_mana(amount: int) -> bool:
-	if has_mana(amount) == false:
+	if not has_mana(amount):
 		return false
 	
 	_mana = _mana - amount
 	mana_changed.emit(_mana, max_mana)
 	return true
-		
-func get_mana_ratio() -> float:
-	return _mana / max_mana
