@@ -1,0 +1,191 @@
+[gd_scene format=3 uid="uid://b8kclgpb5std0"]
+
+[ext_resource type="Script" uid="uid://d2m7l2rv3g8xf" path="res://scripts/ui/action_button_bar.gd" id="1_action_bar_script"]
+[ext_resource type="Theme" path="res://scenes/ui/game_ui_theme.tres" id="2_ui_theme"]
+[ext_resource type="Texture2D" uid="uid://jk5yaxhd86d7" path="res://art/effects/P1 Bullet_Yellow.png" id="3_7wxsi"]
+[ext_resource type="Texture2D" uid="uid://dmvub21w825vo" path="res://art/weapons/blue_energy_ball.png" id="4_energy_ball_icon"]
+[ext_resource type="Texture2D" uid="uid://8esgyqo6dgmc" path="res://art/character/player.png" id="5_player_icon"]
+[ext_resource type="Texture2D" uid="uid://brp0px88fdp63" path="res://art/character/aura.png" id="6_aura_icon"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
+bg_color = Color(0.168627, 0.223529, 0.152941, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.345098, 0.419608, 0.301961, 0.65)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kcsnd"]
+atlas = ExtResource("3_7wxsi")
+region = Rect2(0, 0, 6.664814, 17.214384)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_energy_ball_icon"]
+atlas = ExtResource("4_energy_ball_icon")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_side_icon"]
+atlas = ExtResource("5_player_icon")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aura_icon"]
+atlas = ExtResource("6_aura_icon")
+region = Rect2(0, 0, 32, 32)
+
+[node name="ActionButtonBar" type="Control" unique_id=242793187]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -170.0
+offset_top = -66.0
+offset_right = 170.0
+offset_bottom = -2.0
+grow_horizontal = 2
+scale = Vector2(0.5, 0.5)
+pivot_offset = Vector2(170, 64)
+theme = ExtResource("2_ui_theme")
+script = ExtResource("1_action_bar_script")
+
+[node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1068187891]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="EButton" type="VBoxContainer" parent="ButtonRow" unique_id=441589738]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="IconPanel" type="Panel" parent="ButtonRow/EButton" unique_id=1003587315]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/EButton/IconPanel" unique_id=382893318]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Icon" type="TextureRect" parent="ButtonRow/EButton/IconPanel/CenterContainer" unique_id=233576921]
+layout_mode = 2
+texture = SubResource("AtlasTexture_kcsnd")
+
+[node name="KeyLabel" type="Label" parent="ButtonRow/EButton" unique_id=1401843199]
+layout_mode = 2
+text = "E"
+horizontal_alignment = 1
+
+[node name="QButton" type="VBoxContainer" parent="ButtonRow" unique_id=706241066]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="IconPanel" type="Panel" parent="ButtonRow/QButton" unique_id=849919542]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="KeyLabel" type="Label" parent="ButtonRow/QButton" unique_id=35387389]
+layout_mode = 2
+text = "Q"
+horizontal_alignment = 1
+
+[node name="FButton" type="VBoxContainer" parent="ButtonRow" unique_id=1926136211]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="IconPanel" type="Panel" parent="ButtonRow/FButton" unique_id=1162372509]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/FButton/IconPanel" unique_id=1011856709]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Icon" type="TextureRect" parent="ButtonRow/FButton/IconPanel/CenterContainer" unique_id=790827239]
+layout_mode = 2
+texture = SubResource("AtlasTexture_energy_ball_icon")
+
+[node name="KeyLabel" type="Label" parent="ButtonRow/FButton" unique_id=1662976071]
+layout_mode = 2
+text = "F"
+horizontal_alignment = 1
+
+[node name="SpaceButton" type="VBoxContainer" parent="ButtonRow" unique_id=1893971437]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="IconPanel" type="Panel" parent="ButtonRow/SpaceButton" unique_id=901735568]
+custom_minimum_size = Vector2(58, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="AfterImageIcon" type="Control" parent="ButtonRow/SpaceButton/IconPanel" unique_id=813699494]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TrailA" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/AfterImageIcon" unique_id=1084083579]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 13.0
+offset_right = 25.0
+offset_bottom = 29.0
+texture = SubResource("AtlasTexture_player_side_icon")
+
+[node name="TrailB" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/AfterImageIcon" unique_id=1394409848]
+modulate = Color(1, 1, 1, 0.5)
+layout_mode = 0
+offset_left = 19.0
+offset_top = 13.0
+offset_right = 35.0
+offset_bottom = 29.0
+texture = SubResource("AtlasTexture_player_side_icon")
+
+[node name="Main" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/AfterImageIcon" unique_id=1156172727]
+modulate = Color(1, 1, 1, 0.26)
+layout_mode = 0
+offset_left = 29.0
+offset_top = 13.0
+offset_right = 45.0
+offset_bottom = 29.0
+texture = SubResource("AtlasTexture_player_side_icon")
+
+[node name="KeyLabel" type="Label" parent="ButtonRow/SpaceButton" unique_id=819887975]
+layout_mode = 2
+text = "Space"
+horizontal_alignment = 1
+
+[node name="RButton" type="VBoxContainer" parent="ButtonRow" unique_id=1709794617]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="IconPanel" type="Panel" parent="ButtonRow/RButton" unique_id=1474668565]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/RButton/IconPanel" unique_id=1153103744]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Icon" type="TextureRect" parent="ButtonRow/RButton/IconPanel/CenterContainer" unique_id=653716250]
+layout_mode = 2
+texture = SubResource("AtlasTexture_aura_icon")
+
+[node name="KeyLabel" type="Label" parent="ButtonRow/RButton" unique_id=2013700775]
+layout_mode = 2
+text = "R"
+horizontal_alignment = 1
