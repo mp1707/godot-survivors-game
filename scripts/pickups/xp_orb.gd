@@ -1,6 +1,8 @@
 extends Node2D
 class_name XPOrb
 
+signal collected(orb: XPOrb, amount: int)
+
 @export var xp_value: int = 1
 @export var collect_radius: float = 10.0
 @export var magnet_speed: float = 210.0
@@ -9,12 +11,30 @@ class_name XPOrb
 
 var _player: Player
 var _velocity: Vector2 = Vector2.ZERO
+var _is_active: bool = false
 
-func setup(player: Player, value: int = 1) -> void:
+func _ready() -> void:
+	deactivate()
+
+func activate(player: Player, value: int, world_position: Vector2) -> void:
 	_player = player
 	xp_value = maxi(value, 1)
+	global_position = world_position
+	_velocity = Vector2.ZERO
+	_is_active = true
+	visible = true
+	set_physics_process(true)
+
+func deactivate() -> void:
+	_is_active = false
+	_player = null
+	_velocity = Vector2.ZERO
+	visible = false
+	set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
+	if not _is_active:
+		return
 	if _player == null or not is_instance_valid(_player):
 		return
 
@@ -22,8 +42,9 @@ func _physics_process(delta: float) -> void:
 	var distance: float = to_player.length()
 
 	if distance <= collect_radius:
-		_player.collect_xp(xp_value)
-		queue_free()
+		_is_active = false
+		set_physics_process(false)
+		collected.emit(self, xp_value)
 		return
 
 	var magnet_radius: float = _player.get_xp_magnet_radius()

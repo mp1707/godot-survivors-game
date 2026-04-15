@@ -2,7 +2,6 @@ extends Node2D
 
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/ghoul.tscn")
 const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/ui/floating_damage_number.tscn")
-const XP_ORB_SCENE: PackedScene = preload("res://scenes/pickups/xp_orb.tscn")
 
 @export var wave1_enemy_total: int = 20
 @export var spawn_radius_min: float = 260.0
@@ -13,7 +12,7 @@ var _kills: int = 0
 
 @onready var _player: Player = $Player as Player
 @onready var _wave_spawn_timer: Timer = $WaveSpawnTimer as Timer
-@onready var _pickups: Node2D = $Pickups as Node2D
+@onready var _xp_orb_manager: XPOrbManager = $Pickups as XPOrbManager
 @onready var _score_label: Label = $UI/ScoreLabel as Label
 @onready var _xp_bar: XPProgressBar = $UI/XPBar as XPProgressBar
 @onready var _power_level_value_label: Label = $UI/PowerLevelValue as Label
@@ -40,6 +39,8 @@ func _ready() -> void:
 
 	_player.died.connect(_on_player_died)
 	_player.xp_changed.connect(_on_player_xp_changed)
+	if _xp_orb_manager != null:
+		_xp_orb_manager.setup(_player)
 	_update_score_label()
 	_refresh_xp_ui()
 	_game_over_panel.hide()
@@ -82,22 +83,13 @@ func _on_enemy_damage_taken(amount: int, world_position: Vector2) -> void:
 	number.setup(amount)
 
 func _on_enemy_died(enemy: Ghoul) -> void:
-	if enemy != null and is_instance_valid(enemy):
-		_spawn_xp_orb(enemy.global_position, enemy.xp_drop_value)
+	if enemy != null and is_instance_valid(enemy) and _xp_orb_manager != null:
+		_xp_orb_manager.spawn_orb(enemy.global_position, enemy.xp_drop_value)
 	_kills += 1
 	_update_score_label()
 
 func _update_score_label() -> void:
 	_score_label.text = "Kills:\n%d" % _kills
-
-func _spawn_xp_orb(world_position: Vector2, xp_value: int) -> void:
-	var orb: XPOrb = XP_ORB_SCENE.instantiate() as XPOrb
-	if orb == null:
-		push_error("Failed to instantiate XP orb scene.")
-		return
-	orb.global_position = world_position + Vector2(randf_range(-4.0, 4.0), randf_range(-4.0, 4.0))
-	orb.setup(_player, xp_value)
-	_pickups.add_child(orb)
 
 func _on_player_xp_changed(current: int, required: int, level: int) -> void:
 	if required <= 0:
@@ -115,6 +107,8 @@ func _refresh_xp_ui() -> void:
 
 func _on_player_died() -> void:
 	_wave_spawn_timer.stop()
+	if _xp_orb_manager != null:
+		_xp_orb_manager.clear_orbs()
 	var enemies_root: Node = $Enemies
 	for child: Node in enemies_root.get_children():
 		var enemy: Ghoul = child as Ghoul

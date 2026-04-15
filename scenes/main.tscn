@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://bn7407jwxtjdb" path="res://scenes/player.tscn" id="2_sugp2"]
 [ext_resource type="Theme" path="res://scenes/ui/game_ui_theme.tres" id="4_ui_theme"]
 [ext_resource type="Script" uid="uid://wujuxb6c2tyw" path="res://scripts/ui/xp_progress_bar.gd" id="5_xp_bar"]
+[ext_resource type="Script" path="res://scripts/pickups/xp_orb_manager.gd" id="6_xp_orb_manager"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0wfyh"]
 texture = ExtResource("1_0wfyh")
@@ -53,6 +54,7 @@ shape = SubResource("RectangleShape2D_jyhfs")
 [node name="Enemies" type="Node2D" parent="." unique_id=991429024]
 
 [node name="Pickups" type="Node2D" parent="." unique_id=1991247854]
+script = ExtResource("6_xp_orb_manager")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1001396299]
 
