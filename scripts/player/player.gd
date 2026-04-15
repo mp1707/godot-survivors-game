@@ -98,8 +98,12 @@ func _physics_process(delta: float) -> void:
 
 	if _weapon_system.is_charging():
 		velocity = _hit_reaction.add_to_velocity(Vector2.ZERO)
-		_set_shoot_animation(_weapon_system.get_aim_direction())
-		_animated_sprite.play()
+		if _weapon_system.is_charging_energy_ball():
+			_animated_sprite.animation = "hands_up"
+			_animated_sprite.play()
+		else:
+			_set_shoot_animation(_weapon_system.get_aim_direction())
+			_animated_sprite.play()
 		move_and_slide()
 		return
 

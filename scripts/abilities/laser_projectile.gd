@@ -14,7 +14,11 @@ func _ready() -> void:
 	_life_left = lifetime
 	body_entered.connect(_on_body_entered)
 	scale = Vector2.ONE * visual_scale
-	$AnimatedSprite2D.play("default")
+	var sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
+	if sprite != null and sprite.sprite_frames != null and sprite.sprite_frames.has_animation(&"flying"):
+		sprite.play("flying")
+	else:
+		sprite.play("default")
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta

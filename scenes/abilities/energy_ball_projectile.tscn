@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://djcgplxob42tk"]
+
+[ext_resource type="Script" uid="uid://dgah7h1luk3h1" path="res://scripts/abilities/laser_projectile.gd" id="1_energy"]
+[ext_resource type="Texture2D" uid="uid://dmvub21w825vo" path="res://art/weapons/blue_energy_ball.png" id="2_energy"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ovthq"]
+atlas = ExtResource("2_energy")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3qon1"]
+atlas = ExtResource("2_energy")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_73yps"]
+atlas = ExtResource("2_energy")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_energy"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ovthq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3qon1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_73yps")
+}],
+"loop": true,
+"name": &"flying",
+"speed": 10.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_energy"]
+radius = 13.038404
+
+[node name="EnergyBallProjectile" type="Area2D" unique_id=190184716]
+script = ExtResource("1_energy")
+lifetime = 10.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1943044247]
+sprite_frames = SubResource("SpriteFrames_energy")
+animation = &"flying"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=86600743]
+shape = SubResource("CircleShape2D_energy")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="." unique_id=1867363064]

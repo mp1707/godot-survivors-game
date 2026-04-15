@@ -6,12 +6,14 @@
 [ext_resource type="Script" uid="uid://c71jwhh35wv3u" path="res://scripts/player/player_health_bar.gd" id="3_qhqgy"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="4_hitreaction"]
 [ext_resource type="Script" uid="uid://ne63cm1e4tlt" path="res://scripts/player/player_mana_bar.gd" id="4_tuyoq"]
-[ext_resource type="Script" path="res://scripts/player/player_ui_controller.gd" id="5_a0uic"]
+[ext_resource type="Script" uid="uid://b0d0cwll5ixrt" path="res://scripts/player/player_ui_controller.gd" id="5_a0uic"]
 [ext_resource type="Script" uid="uid://bndpiyx3ivqye" path="res://scripts/player/player_weapon_system.gd" id="5_weaponsys"]
 [ext_resource type="AudioStream" uid="uid://8xarplpl1jj6" path="res://art/audio/aura/aura_loop.wav" id="9_3v2ag"]
 [ext_resource type="AudioStream" uid="uid://cxdyxse5yl426" path="res://art/audio/weapons/laser_charging.wav" id="10_jej6c"]
 [ext_resource type="AudioStream" uid="uid://cku2veck1v4hf" path="res://art/audio/weapons/small_laser_shot.wav" id="11_f1ej7"]
 [ext_resource type="AudioStream" uid="uid://c3ejiwxyuk5om" path="res://art/audio/weapons/big_laser_shot.wav" id="12_oprun"]
+[ext_resource type="AudioStream" uid="uid://cbnfm0ru42opc" path="res://art/audio/weapons/charge_energy_ball.wav" id="13_8kq1o"]
+[ext_resource type="AudioStream" uid="uid://dkthi61xavequ" path="res://art/audio/weapons/energy_ball_release.wav" id="14_eq8we"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fulsm"]
 atlas = ExtResource("2_fjrip")
@@ -64,6 +66,10 @@ region = Rect2(32, 48, 16, 16)
 [sub_resource type="AtlasTexture" id="AtlasTexture_qfm1y"]
 atlas = ExtResource("1_3vyb7")
 region = Rect2(0, 64, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a38lo"]
+atlas = ExtResource("1_3vyb7")
+region = Rect2(16, 64, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_g2els"]
 atlas = ExtResource("1_3vyb7")
@@ -130,6 +136,14 @@ animations = [{
 }],
 "loop": true,
 "name": &"charging",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a38lo")
+}],
+"loop": true,
+"name": &"hands_up",
 "speed": 5.0
 }, {
 "frames": [{
@@ -238,6 +252,9 @@ shape = SubResource("CapsuleShape2D_dqkch")
 wait_time = 2.0
 autostart = true
 
+[node name="MuzzleUpMiddle" type="Marker2D" parent="." unique_id=143600569]
+position = Vector2(0, -31)
+
 [node name="MuzzleUp" type="Marker2D" parent="." unique_id=2132753439]
 position = Vector2(4, -9)
 
@@ -270,6 +287,10 @@ volume_db = -8.0
 stream = ExtResource("10_jej6c")
 volume_db = -15.532
 
+[node name="EnergyBallChargeLoopPlayer" type="AudioStreamPlayer" parent="." unique_id=1369180017]
+stream = ExtResource("13_8kq1o")
+volume_db = -15.532
+
 [node name="SmallLaserShotPlayer" type="AudioStreamPlayer" parent="." unique_id=212136071]
 stream = ExtResource("11_f1ej7")
 volume_db = -10.0
@@ -277,6 +298,11 @@ max_polyphony = 4
 
 [node name="BigLaserShotPlayer" type="AudioStreamPlayer" parent="." unique_id=1581308996]
 stream = ExtResource("12_oprun")
+volume_db = -8.0
+max_polyphony = 2
+
+[node name="EnergyBallReleasePlayer" type="AudioStreamPlayer" parent="." unique_id=584367155]
+stream = ExtResource("14_eq8we")
 volume_db = -8.0
 max_polyphony = 2
 

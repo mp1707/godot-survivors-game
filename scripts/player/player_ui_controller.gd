@@ -40,4 +40,4 @@ func _on_mana_preview_changed(active: bool, preview_cost: int, max_value: int) -
 	_mana_bar.set_preview(active, preview_cost, max_value)
 
 func _on_weapon_charging_state_changed(is_charging: bool) -> void:
-	_mana_bar.set_preview(is_charging, _weapon_system.charged_mana_cost, _player.max_mana)
+	_mana_bar.set_preview(is_charging, _weapon_system.get_current_charge_mana_cost(), _player.max_mana)
