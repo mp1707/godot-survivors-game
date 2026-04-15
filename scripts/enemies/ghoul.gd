@@ -9,6 +9,7 @@ var target: DamageableBody2D
 
 @export var attack_damage: int = 10
 @export var attack_interval: float = 0.8
+@export var xp_drop_value: int = 1
 var _attack_cooldown_left: float = 0.0
 
 signal damage_taken(amount: int, world_position: Vector2)

@@ -4,6 +4,8 @@ class_name Player
 signal health_changed(current: int, max: int)
 signal mana_changed(current: float, max: int)
 signal mana_preview_changed(active: bool, preview_cost: int, max: int)
+signal xp_changed(current: int, required: int, level: int)
+signal leveled_up(new_level: int)
 signal died()
 
 
@@ -16,6 +18,7 @@ signal died()
 
 @export var max_mana: int = 100
 @export var mana_regen_per_second: float = 1.0
+@export var xp_magnet_radius: float = 80.0
 
 @export var speed: float = 150.0
 @export var shoot_anim_duration: float = 0.3
@@ -26,6 +29,7 @@ signal died()
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
 @onready var _weapon_system: PlayerWeaponSystem = $WeaponSystem as PlayerWeaponSystem
 @onready var _mana_charge_loop_player: AudioStreamPlayer = $ChargeLoopPlayer as AudioStreamPlayer
+@onready var _progression: PlayerProgression = $Progression as PlayerProgression
 
 var _shoot_anim_time_left: float = 0.0
 var _health: int = 0
@@ -42,6 +46,10 @@ func _ready() -> void:
 	mana_changed.emit(_mana, max_mana)
 	mana_preview_changed.emit(false, 0, max_mana)
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
+	if _progression != null:
+		_progression.xp_changed.connect(_on_progression_xp_changed)
+		_progression.leveled_up.connect(_on_progression_leveled_up)
+		_progression.emit_state()
 	_set_mana_charge_loop_playing(false)
 	
 func _physics_process(delta: float) -> void:
@@ -219,3 +227,35 @@ func consume_mana(amount: int) -> bool:
 	_mana = _mana - amount
 	mana_changed.emit(_mana, max_mana)
 	return true
+
+func collect_xp(amount: int) -> void:
+	if _progression == null:
+		return
+	_progression.add_xp(amount)
+
+func get_power_level() -> int:
+	if _progression == null:
+		return 1
+	return _progression.get_level()
+
+func get_current_xp() -> int:
+	if _progression == null:
+		return 0
+	return _progression.get_current_xp()
+
+func get_xp_to_next_level() -> int:
+	if _progression == null:
+		return 1
+	return _progression.get_xp_to_next_level()
+
+func get_xp_magnet_radius() -> float:
+	return xp_magnet_radius
+
+func set_xp_magnet_radius(new_radius: float) -> void:
+	xp_magnet_radius = max(new_radius, 0.0)
+
+func _on_progression_xp_changed(current: int, required: int, level: int) -> void:
+	xp_changed.emit(current, required, level)
+
+func _on_progression_leveled_up(new_level: int) -> void:
+	leveled_up.emit(new_level)

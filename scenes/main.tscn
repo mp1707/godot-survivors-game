@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://8cfqd0q3wtel" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="PackedScene" uid="uid://bn7407jwxtjdb" path="res://scenes/player.tscn" id="2_sugp2"]
 [ext_resource type="Theme" path="res://scenes/ui/game_ui_theme.tres" id="4_ui_theme"]
+[ext_resource type="Script" uid="uid://wujuxb6c2tyw" path="res://scripts/ui/xp_progress_bar.gd" id="5_xp_bar"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0wfyh"]
 texture = ExtResource("1_0wfyh")
@@ -51,18 +52,74 @@ shape = SubResource("RectangleShape2D_jyhfs")
 
 [node name="Enemies" type="Node2D" parent="." unique_id=991429024]
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="Pickups" type="Node2D" parent="." unique_id=1991247854]
 
-[node name="ScoreLabel" type="Label" parent="UI"]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1001396299]
+
+[node name="ScoreLabel" type="Label" parent="UI" unique_id=1401865104]
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 120.0
+offset_bottom = 57.0
+theme = ExtResource("4_ui_theme")
+text = "Kills:
+0"
+
+[node name="XPBar" type="Control" parent="UI" unique_id=541488360]
+layout_mode = 3
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -138.5
+offset_top = 15.0
+offset_right = 138.5
+offset_bottom = 27.0
+grow_horizontal = 2
+size_flags_horizontal = 4
+script = ExtResource("5_xp_bar")
+metadata/_edit_group_ = true
+
+[node name="Background" type="ColorRect" parent="UI/XPBar" unique_id=921102945]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+
+[node name="Fill" type="ColorRect" parent="UI/XPBar" unique_id=267397230]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.176471, 0.596078, 0.960784, 1)
+
+[node name="PowerLevelTitle" type="Label" parent="UI" unique_id=1237006868]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 12.0
+offset_right = -12.0
 offset_bottom = 35.0
 theme = ExtResource("4_ui_theme")
-text = "Kills: 0"
+text = "Level:"
+horizontal_alignment = 2
 
-[node name="GameOverPanel" type="Panel" parent="UI"]
-visible = false
+[node name="PowerLevelValue" type="Label" parent="UI" unique_id=823962980]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 34.0
+offset_right = -12.0
+offset_bottom = 57.0
+theme = ExtResource("4_ui_theme")
+text = "1"
+horizontal_alignment = 2
+
+[node name="GameOverPanel" type="Panel" parent="UI" unique_id=2069566265]
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -73,7 +130,8 @@ offset_right = 90.0
 offset_bottom = 52.0
 theme = ExtResource("4_ui_theme")
 
-[node name="MarginContainer" type="MarginContainer" parent="UI/GameOverPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="UI/GameOverPanel" unique_id=913006476]
+layout_mode = 0
 offset_right = 180.0
 offset_bottom = 104.0
 theme_override_constants/margin_left = 12
@@ -81,20 +139,22 @@ theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameOverPanel/MarginContainer"]
-offset_right = 156.0
-offset_bottom = 80.0
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameOverPanel/MarginContainer" unique_id=313415125]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="UI/GameOverPanel/MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="UI/GameOverPanel/MarginContainer/VBoxContainer" unique_id=1001305961]
+layout_mode = 2
 text = "Game Over"
 horizontal_alignment = 1
 
-[node name="KillsLabel" type="Label" parent="UI/GameOverPanel/MarginContainer/VBoxContainer"]
+[node name="KillsLabel" type="Label" parent="UI/GameOverPanel/MarginContainer/VBoxContainer" unique_id=792257169]
+layout_mode = 2
 text = "Kills: 0"
 horizontal_alignment = 1
 
-[node name="RestartButton" type="Button" parent="UI/GameOverPanel/MarginContainer/VBoxContainer"]
+[node name="RestartButton" type="Button" parent="UI/GameOverPanel/MarginContainer/VBoxContainer" unique_id=1884136102]
+layout_mode = 2
 text = "Neustart"
 
 [connection signal="timeout" from="WaveSpawnTimer" to="." method="_on_wave_spawn_timer_timeout"]

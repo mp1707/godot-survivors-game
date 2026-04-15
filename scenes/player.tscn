@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://ne63cm1e4tlt" path="res://scripts/player/player_mana_bar.gd" id="4_tuyoq"]
 [ext_resource type="Script" uid="uid://b0d0cwll5ixrt" path="res://scripts/player/player_ui_controller.gd" id="5_a0uic"]
 [ext_resource type="Script" uid="uid://bndpiyx3ivqye" path="res://scripts/player/player_weapon_system.gd" id="5_weaponsys"]
+[ext_resource type="Script" uid="uid://dspmw2hwcg8xv" path="res://scripts/player/player_progression.gd" id="6_progression"]
 [ext_resource type="AudioStream" uid="uid://8xarplpl1jj6" path="res://art/audio/aura/aura_loop.wav" id="9_3v2ag"]
 [ext_resource type="AudioStream" uid="uid://cxdyxse5yl426" path="res://art/audio/weapons/laser_charging.wav" id="10_jej6c"]
 [ext_resource type="AudioStream" uid="uid://cku2veck1v4hf" path="res://art/audio/weapons/small_laser_shot.wav" id="11_f1ej7"]
@@ -278,6 +279,9 @@ script = ExtResource("4_hitreaction")
 
 [node name="WeaponSystem" type="Node" parent="." unique_id=1643880367]
 script = ExtResource("5_weaponsys")
+
+[node name="Progression" type="Node" parent="." unique_id=813944325]
+script = ExtResource("6_progression")
 
 [node name="ChargeLoopPlayer" type="AudioStreamPlayer" parent="." unique_id=798859231]
 stream = ExtResource("9_3v2ag")
