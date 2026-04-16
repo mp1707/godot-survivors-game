@@ -5,33 +5,38 @@ const LIGHT_UP_SPEED: float = 16.0
 const DIM_SPEED: float = 10.0
 const MAX_LIGHT_BOOST: float = 0.1
 
-@onready var _e_panel: Panel = $ButtonRow/EButton/IconPanel as Panel
-@onready var _q_panel: Panel = $ButtonRow/QButton/IconPanel as Panel
-@onready var _f_panel: Panel = $ButtonRow/FButton/IconPanel as Panel
-@onready var _space_panel: Panel = $ButtonRow/SpaceButton/IconPanel as Panel
-@onready var _r_panel: Panel = $ButtonRow/RButton/IconPanel as Panel
+@onready var _action_1_panel: Panel = $"ButtonRow/1Button/IconPanel" as Panel
+@onready var _action_2_panel: Panel = $"ButtonRow/2Button/IconPanel" as Panel
+@onready var _action_3_panel: Panel = $"ButtonRow/3Button/IconPanel" as Panel
+@onready var _dash_panel: Panel = $"ButtonRow/SpaceButton/IconPanel" as Panel
+@onready var _charge_panel: Panel = $"ButtonRow/RButton/IconPanel" as Panel
 
-var _e_light: float = 0.0
-var _q_light: float = 0.0
-var _f_light: float = 0.0
-var _space_light: float = 0.0
-var _r_light: float = 0.0
+var _action_1_light: float = 0.0
+var _action_2_light: float = 0.0
+var _action_3_light: float = 0.0
+var _dash_light: float = 0.0
+var _charge_light: float = 0.0
 
 func _ready() -> void:
-	_center_panel_pivot(_e_panel)
-	_center_panel_pivot(_q_panel)
-	_center_panel_pivot(_f_panel)
-	_center_panel_pivot(_space_panel)
-	_center_panel_pivot(_r_panel)
+	_center_panel_pivot(_action_1_panel)
+	_center_panel_pivot(_action_2_panel)
+	_center_panel_pivot(_action_3_panel)
+	_center_panel_pivot(_dash_panel)
+	_center_panel_pivot(_charge_panel)
 	_apply_lighting()
 
 func _process(delta: float) -> void:
-	_e_light = _update_light(_e_light, Input.is_physical_key_pressed(KEY_E), delta)
-	_q_light = _update_light(_q_light, Input.is_physical_key_pressed(KEY_Q), delta)
-	_f_light = _update_light(_f_light, Input.is_physical_key_pressed(KEY_F), delta)
-	_space_light = _update_light(_space_light, Input.is_physical_key_pressed(KEY_SPACE), delta)
-	_r_light = _update_light(_r_light, Input.is_physical_key_pressed(KEY_R), delta)
+	_action_1_light = _update_light(_action_1_light, _is_action_pressed("action1"), delta)
+	_action_2_light = _update_light(_action_2_light, _is_action_pressed("action2"), delta)
+	_action_3_light = _update_light(_action_3_light, _is_action_pressed("action3"), delta)
+	_dash_light = _update_light(_dash_light, _is_action_pressed("dash"), delta)
+	_charge_light = _update_light(_charge_light, _is_action_pressed("charging"), delta)
 	_apply_lighting()
+
+func _is_action_pressed(action: StringName) -> bool:
+	if not InputMap.has_action(action):
+		return false
+	return Input.is_action_pressed(action)
 
 func _update_light(current: float, pressed: bool, delta: float) -> float:
 	var target: float = 1.0 if pressed else 0.0
@@ -39,11 +44,11 @@ func _update_light(current: float, pressed: bool, delta: float) -> float:
 	return move_toward(current, target, speed * delta)
 
 func _apply_lighting() -> void:
-	_apply_panel_light(_e_panel, _e_light)
-	_apply_panel_light(_q_panel, _q_light)
-	_apply_panel_light(_f_panel, _f_light)
-	_apply_panel_light(_space_panel, _space_light)
-	_apply_panel_light(_r_panel, _r_light)
+	_apply_panel_light(_action_1_panel, _action_1_light)
+	_apply_panel_light(_action_2_panel, _action_2_light)
+	_apply_panel_light(_action_3_panel, _action_3_light)
+	_apply_panel_light(_dash_panel, _dash_light)
+	_apply_panel_light(_charge_panel, _charge_light)
 
 func _apply_panel_light(panel: Panel, amount: float) -> void:
 	var boost: float = amount * MAX_LIGHT_BOOST

@@ -118,11 +118,11 @@ func _get_muzzle_world_position(dir: Vector2) -> Vector2:
 
 func _handle_charge_input(delta: float) -> void:
 	if _charging_weapon == ChargeWeaponType.NONE:
-		if Input.is_action_just_pressed("active_ability"):
+		if Input.is_action_just_pressed("action1"):
 			if not _player.has_mana(charged_mana_cost):
 				return
 			_begin_charge(ChargeWeaponType.LASER)
-		elif Input.is_action_just_pressed("charging_2"):
+		elif Input.is_action_just_pressed("action2"):
 			if not _player.has_mana(energy_ball_mana_cost):
 				return
 			_begin_charge(ChargeWeaponType.ENERGY_BALL)
@@ -246,13 +246,13 @@ func _get_current_charge_max_time() -> float:
 
 func _is_active_charge_pressed() -> bool:
 	if _charging_weapon == ChargeWeaponType.ENERGY_BALL:
-		return Input.is_action_pressed("charging_2")
-	return Input.is_action_pressed("active_ability")
+		return Input.is_action_pressed("action2")
+	return Input.is_action_pressed("action1")
 
 func _is_active_charge_just_released() -> bool:
 	if _charging_weapon == ChargeWeaponType.ENERGY_BALL:
-		return Input.is_action_just_released("charging_2")
-	return Input.is_action_just_released("active_ability")
+		return Input.is_action_just_released("action2")
+	return Input.is_action_just_released("action1")
 
 func _get_charge_loop_animation_name() -> StringName:
 	if _charging_weapon == ChargeWeaponType.ENERGY_BALL:

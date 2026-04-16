@@ -62,64 +62,64 @@ grow_vertical = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="EButton" type="VBoxContainer" parent="ButtonRow" unique_id=441589738]
+[node name="1Button" type="VBoxContainer" parent="ButtonRow" unique_id=441589738]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="IconPanel" type="Panel" parent="ButtonRow/EButton" unique_id=1003587315]
+[node name="IconPanel" type="Panel" parent="ButtonRow/1Button" unique_id=1003587315]
 custom_minimum_size = Vector2(42, 42)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
-[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/EButton/IconPanel" unique_id=382893318]
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/1Button/IconPanel" unique_id=382893318]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="Icon" type="TextureRect" parent="ButtonRow/EButton/IconPanel/CenterContainer" unique_id=233576921]
+[node name="Icon" type="TextureRect" parent="ButtonRow/1Button/IconPanel/CenterContainer" unique_id=233576921]
 layout_mode = 2
 texture = SubResource("AtlasTexture_kcsnd")
 
-[node name="KeyLabel" type="Label" parent="ButtonRow/EButton" unique_id=1401843199]
+[node name="KeyLabel" type="Label" parent="ButtonRow/1Button" unique_id=1401843199]
 layout_mode = 2
-text = "E"
+text = "1"
 horizontal_alignment = 1
 
-[node name="QButton" type="VBoxContainer" parent="ButtonRow" unique_id=706241066]
+[node name="2Button" type="VBoxContainer" parent="ButtonRow" unique_id=1926136211]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="IconPanel" type="Panel" parent="ButtonRow/QButton" unique_id=849919542]
+[node name="IconPanel" type="Panel" parent="ButtonRow/2Button" unique_id=1162372509]
 custom_minimum_size = Vector2(42, 42)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
-[node name="KeyLabel" type="Label" parent="ButtonRow/QButton" unique_id=35387389]
-layout_mode = 2
-text = "Q"
-horizontal_alignment = 1
-
-[node name="FButton" type="VBoxContainer" parent="ButtonRow" unique_id=1926136211]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="IconPanel" type="Panel" parent="ButtonRow/FButton" unique_id=1162372509]
-custom_minimum_size = Vector2(42, 42)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
-
-[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/FButton/IconPanel" unique_id=1011856709]
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/2Button/IconPanel" unique_id=1011856709]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="Icon" type="TextureRect" parent="ButtonRow/FButton/IconPanel/CenterContainer" unique_id=790827239]
+[node name="Icon" type="TextureRect" parent="ButtonRow/2Button/IconPanel/CenterContainer" unique_id=790827239]
 layout_mode = 2
 texture = SubResource("AtlasTexture_energy_ball_icon")
 
-[node name="KeyLabel" type="Label" parent="ButtonRow/FButton" unique_id=1662976071]
+[node name="KeyLabel" type="Label" parent="ButtonRow/2Button" unique_id=1662976071]
 layout_mode = 2
-text = "F"
+text = "2"
+horizontal_alignment = 1
+
+[node name="3Button" type="VBoxContainer" parent="ButtonRow" unique_id=706241066]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="IconPanel" type="Panel" parent="ButtonRow/3Button" unique_id=849919542]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
+
+[node name="KeyLabel" type="Label" parent="ButtonRow/3Button" unique_id=35387389]
+layout_mode = 2
+text = "3"
 horizontal_alignment = 1
 
 [node name="SpaceButton" type="VBoxContainer" parent="ButtonRow" unique_id=1893971437]
