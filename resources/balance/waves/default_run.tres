@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WaveDefinition" format=3 uid="uid://dlv2luwt6eyej"]
+
+[ext_resource type="Script" uid="uid://btts4hin5rw5k" path="res://scripts/data/balance/wave_definition.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://fikysnc6pykc" path="res://scripts/data/balance/enemy_definition.gd" id="1_vk4te"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/ghoul.tres" id="2_ghoul"]
+
+[sub_resource type="Curve" id="Curve_wave_size"]
+_limits = [1.0, 6.0, 0.0, 1.0]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 6), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[resource]
+script = ExtResource("1_script")
+wave_size_curve = SubResource("Curve_wave_size")
+max_waves_for_curve = 50
+enemy_pool = Array[ExtResource("1_vk4te")]([ExtResource("2_ghoul")])

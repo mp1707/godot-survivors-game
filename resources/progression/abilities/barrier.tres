@@ -6,7 +6,6 @@
 [resource]
 script = ExtResource("1_1t1qh")
 id = &"barrier"
-progression_domain = &"weapon"
 display_name = "Barrier"
 action_bar_icon = ExtResource("2_7faba")
 level_up_icon = ExtResource("2_7faba")
@@ -16,10 +15,9 @@ unlock_description = "Absorbiert Schaden und kann spaeter reflektieren."
 behavior = &"barrier"
 base_cost = 30
 cost_upgrade_step = 2
-min_cost = 1
-barrier_base_absorb = 5
-barrier_absorb_upgrade_step = 2
+barrier_base_absorb = 30
+barrier_absorb_upgrade_step = 10
 barrier_base_lifetime = 10.0
 barrier_lifetime_upgrade_step = 2.0
-upgrade_ids = [&"cost", &"absorb", &"lifetime", &"reflect"]
+upgrade_ids = Array[StringName]([&"cost", &"absorb", &"lifetime", &"reflect"])
 metadata/_custom_type_script = "uid://c8b6af4npusis"

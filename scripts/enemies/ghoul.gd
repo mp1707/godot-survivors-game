@@ -1,24 +1,26 @@
 extends DamageableBody2D
 class_name Ghoul
 
-@export var move_speed: float = 40.0
-@export var stop_distance: float = 12.0
-@export var attack_range: float = 18.0
+@export var definition: EnemyDefinition
+
+var move_speed: float = 40.0
+var stop_distance: float = 12.0
+var attack_range: float = 18.0
 
 var target: DamageableBody2D
 
-@export var attack_damage: int = 10
-@export var attack_interval: float = 0.8
-@export var xp_drop_value: int = 1
+var attack_damage: int = 10
+var attack_interval: float = 0.8
+var xp_drop_value: int = 1
 var _attack_cooldown_left: float = 0.0
 
 signal damage_taken(amount: int, world_position: Vector2)
 signal died()
 
-@export var max_hp: int = 1
-@export var knockback_strength: float = 70.0
-@export var knockback_decay: float = 650.0
-@export var hit_flash_time: float = 0.07
+var max_hp: int = 1
+var knockback_strength: float = 70.0
+var knockback_decay: float = 650.0
+var hit_flash_time: float = 0.07
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
@@ -26,10 +28,25 @@ signal died()
 var _hp: int = 0
 
 func _ready() -> void:
+	_apply_definition()
 	_hp = max_hp
 	_hit_reaction.knockback_decay = knockback_decay
 	_animated_sprite.play("default")
 	add_to_group("enemies")
+
+func _apply_definition() -> void:
+	if definition == null:
+		return
+	move_speed = definition.move_speed
+	stop_distance = definition.stop_distance
+	attack_range = definition.attack_range
+	attack_damage = definition.attack_damage
+	attack_interval = definition.attack_interval
+	xp_drop_value = definition.xp_drop_value
+	max_hp = definition.max_hp
+	knockback_strength = definition.knockback_strength
+	knockback_decay = definition.knockback_decay
+	hit_flash_time = definition.hit_flash_time
 
 func _physics_process(delta: float) -> void:
 	_hit_reaction.physics_step(delta)

@@ -5,6 +5,7 @@ signal xp_changed(current: int, required: int, level: int)
 signal leveled_up(new_level: int)
 
 @export var start_level: int = 1
+@export var progression: LevelProgression
 
 var _level: int = 1
 var _xp_in_level: int = 0
@@ -42,4 +43,6 @@ func get_xp_to_next_level() -> int:
 	return _xp_to_next_level
 
 func _required_xp_for_level(level: int) -> int:
+	if progression != null:
+		return progression.get_xp_required(level)
 	return maxi(level + 1, 1)

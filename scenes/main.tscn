@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scripts/pickups/xp_orb_manager.gd" id="6_xp_orb_manager"]
 [ext_resource type="PackedScene" path="res://scenes/ui/action_button_bar.tscn" id="7_action_button_bar"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_up_popup.tscn" id="8_level_up_popup"]
+[ext_resource type="Resource" path="res://resources/balance/waves/default_run.tres" id="9_wave"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0wfyh"]
 texture = ExtResource("1_0wfyh")
@@ -24,6 +25,7 @@ size = Vector2(1, 1807)
 
 [node name="main" type="Node2D" unique_id=1994849488]
 script = ExtResource("1_sugp2")
+wave = ExtResource("9_wave")
 
 [node name="WaveSpawnTimer" type="Timer" parent="." unique_id=930766260]
 wait_time = 1.2

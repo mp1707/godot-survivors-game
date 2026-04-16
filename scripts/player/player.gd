@@ -22,28 +22,30 @@ const DASH_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/player.
 const CHARGE_KI_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/aura.png")
 const ENEMY_COLLISION_LAYER_MASK: int = 1 << 2
 
-@export var max_health: int = 100
-@export var damage_invuln_time: float = 0.25
-@export var knockback_strength: float = 90.0
-@export var knockback_decay: float = 700.0
-@export var hit_flash_time: float = 0.08
-@export var ki_charge_regen_per_second: float = 10.0
-@export var ki_release_radius: float = 72.0
+@export var definition: PlayerDefinition
 
-@export var max_mana: int = 100
-@export var mana_regen_per_second: float = 1.0
-@export var xp_magnet_radius: float = 80.0
+var max_health: int = 100
+var damage_invuln_time: float = 0.25
+var knockback_strength: float = 90.0
+var knockback_decay: float = 700.0
+var hit_flash_time: float = 0.08
+var ki_charge_regen_per_second: float = 10.0
+var ki_release_radius: float = 72.0
 
-@export var speed: float = 150.0
-@export var shoot_anim_duration: float = 0.3
-@export var mouse_move_deadzone: float = 6.0
-@export var dash_distance: float = 40.0
-@export var dash_speed: float = 700.0
-@export var dash_cooldown: float = 5.0
-@export var dash_afterimage_interval: float = 0.02
-@export var dash_afterimage_lifetime: float = 0.12
-@export var dash_afterimage_alpha: float = 0.6
-@export var dash_afterimage_tint: Color = Color(0.8, 0.9, 1.0, 1.0)
+var max_mana: int = 100
+var mana_regen_per_second: float = 1.0
+var xp_magnet_radius: float = 80.0
+
+var speed: float = 150.0
+var shoot_anim_duration: float = 0.3
+var mouse_move_deadzone: float = 6.0
+var dash_distance: float = 40.0
+var dash_speed: float = 700.0
+var dash_cooldown: float = 5.0
+var dash_afterimage_interval: float = 0.02
+var dash_afterimage_lifetime: float = 0.12
+var dash_afterimage_alpha: float = 0.6
+var dash_afterimage_tint: Color = Color(0.8, 0.9, 1.0, 1.0)
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
 @onready var _aura_sprite: AnimatedSprite2D = $AuraSprite as AnimatedSprite2D
@@ -88,6 +90,7 @@ var _barrier_reflect_damage: bool = false
 var _base_collision_mask: int = 0
 
 func _ready() -> void:
+	_apply_definition()
 	_health = max_health
 	_mana = float(max_mana)
 	_hit_reaction.knockback_decay = knockback_decay
@@ -456,79 +459,36 @@ func _clear_barrier() -> void:
 
 func get_utility_upgrade_options() -> Array[LevelUpOption]:
 	var options: Array[LevelUpOption] = []
+	if definition == null:
+		return options
 
-	if dash_cooldown > 1.0:
+	for upgrade: UpgradeDefinition in definition.utility_upgrades:
+		if upgrade == null:
+			continue
+		if not _is_utility_upgrade_available(upgrade.id):
+			continue
+		var icon: Texture2D = upgrade.icon if upgrade.icon != null else _icon_for_utility_upgrade(upgrade.id)
 		options.append(
 			LevelUpOption.make_player_upgrade(
-				UPGRADE_DASH_COOLDOWN,
-				"Dash: Cooldown",
-				"Cooldown -1s (mind. 1s)",
-				_dash_upgrade_icon
+				upgrade.id,
+				upgrade.title,
+				upgrade.description,
+				icon
 			)
 		)
-
-	options.append(
-		LevelUpOption.make_player_upgrade(
-			UPGRADE_DASH_DISTANCE,
-			"Dash: Distance",
-			"Dash-Distanz +5",
-			_dash_upgrade_icon
-		)
-	)
-
-	if not _dash_invulnerable:
-		options.append(
-			LevelUpOption.make_player_upgrade(
-				UPGRADE_DASH_INVULNERABLE,
-				"Dash: Invulnerability",
-				"Unverwundbar waehrend Dash",
-				_dash_upgrade_icon
-			)
-		)
-
-	if not _dash_phase_through_enemies:
-		options.append(
-			LevelUpOption.make_player_upgrade(
-				UPGRADE_DASH_PHASE,
-				"Dash: Phase",
-				"Dash durch Enemies",
-				_dash_upgrade_icon
-			)
-		)
-
-	options.append(
-		LevelUpOption.make_player_upgrade(
-			UPGRADE_CHARGE_KI_REGEN,
-			"Charge-Ki: Regen",
-			"Ki pro Sekunde +2",
-			_charge_ki_upgrade_icon
-		)
-	)
-	options.append(
-		LevelUpOption.make_player_upgrade(
-			UPGRADE_CHARGE_KI_KNOCKBACK,
-			"Charge-Ki: Knockback",
-			"Release-Knockback +10",
-			_charge_ki_upgrade_icon
-		)
-	)
-	options.append(
-		LevelUpOption.make_player_upgrade(
-			UPGRADE_CHARGE_KI_AOE_DAMAGE,
-			"Charge-Ki: AOE",
-			"Release-AOE-Damage +1",
-			_charge_ki_upgrade_icon
-		)
-	)
 
 	return options
 
 func apply_utility_upgrade(upgrade_id: StringName) -> bool:
+	var upgrade: UpgradeDefinition = _find_utility_upgrade(upgrade_id)
+	if upgrade == null:
+		return false
+
 	match upgrade_id:
 		UPGRADE_DASH_COOLDOWN:
-			dash_cooldown = max(dash_cooldown - 1.0, 1.0)
+			dash_cooldown = clampf(dash_cooldown + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
 		UPGRADE_DASH_DISTANCE:
-			dash_distance += 5.0
+			dash_distance = clampf(dash_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
 		UPGRADE_DASH_INVULNERABLE:
 			_dash_invulnerable = true
 		UPGRADE_DASH_PHASE:
@@ -536,14 +496,38 @@ func apply_utility_upgrade(upgrade_id: StringName) -> bool:
 			if _is_dashing:
 				_apply_dash_collision_mask()
 		UPGRADE_CHARGE_KI_REGEN:
-			ki_charge_regen_per_second += 2.0
+			ki_charge_regen_per_second = clampf(ki_charge_regen_per_second + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
 		UPGRADE_CHARGE_KI_KNOCKBACK:
-			_ki_release_knockback_distance += 10.0
+			_ki_release_knockback_distance = clampf(_ki_release_knockback_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
 		UPGRADE_CHARGE_KI_AOE_DAMAGE:
-			_ki_release_aoe_damage += 1
+			_ki_release_aoe_damage = int(clampf(float(_ki_release_aoe_damage) + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp))
 		_:
 			return false
 	return true
+
+func _is_utility_upgrade_available(upgrade_id: StringName) -> bool:
+	match upgrade_id:
+		UPGRADE_DASH_COOLDOWN:
+			return dash_cooldown > 1.0
+		UPGRADE_DASH_INVULNERABLE:
+			return not _dash_invulnerable
+		UPGRADE_DASH_PHASE:
+			return not _dash_phase_through_enemies
+	return true
+
+func _find_utility_upgrade(upgrade_id: StringName) -> UpgradeDefinition:
+	if definition == null:
+		return null
+	for upgrade: UpgradeDefinition in definition.utility_upgrades:
+		if upgrade != null and upgrade.id == upgrade_id:
+			return upgrade
+	return null
+
+func _icon_for_utility_upgrade(upgrade_id: StringName) -> Texture2D:
+	var name: String = String(upgrade_id)
+	if name.begins_with("charge_ki"):
+		return _charge_ki_upgrade_icon
+	return _dash_upgrade_icon
 
 func collect_xp(amount: int) -> void:
 	if _progression == null:
@@ -605,3 +589,27 @@ func _on_progression_xp_changed(current: int, required: int, level: int) -> void
 
 func _on_progression_leveled_up(new_level: int) -> void:
 	leveled_up.emit(new_level)
+
+func _apply_definition() -> void:
+	if definition == null:
+		return
+	max_health = definition.max_health
+	damage_invuln_time = definition.damage_invuln_time
+	knockback_strength = definition.knockback_strength
+	knockback_decay = definition.knockback_decay
+	hit_flash_time = definition.hit_flash_time
+	ki_charge_regen_per_second = definition.ki_charge_regen_per_second
+	ki_release_radius = definition.ki_release_radius
+	max_mana = definition.max_mana
+	mana_regen_per_second = definition.mana_regen_per_second
+	xp_magnet_radius = definition.xp_magnet_radius
+	speed = definition.speed
+	shoot_anim_duration = definition.shoot_anim_duration
+	mouse_move_deadzone = definition.mouse_move_deadzone
+	dash_distance = definition.dash_distance
+	dash_speed = definition.dash_speed
+	dash_cooldown = definition.dash_cooldown
+	dash_afterimage_interval = definition.dash_afterimage_interval
+	dash_afterimage_lifetime = definition.dash_afterimage_lifetime
+	dash_afterimage_alpha = definition.dash_afterimage_alpha
+	dash_afterimage_tint = definition.dash_afterimage_tint

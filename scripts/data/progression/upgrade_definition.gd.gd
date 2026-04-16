@@ -9,3 +9,10 @@ class_name UpgradeDefinition
 @export_multiline var description: String
 # Optional override. If empty, UI uses ability upgrade icon.
 @export var icon: Texture2D
+
+# Numeric payload for data-driven utility upgrades.
+# Ignored by weapon-upgrade pipeline, which uses dedicated step fields on AbilityDefinition.
+@export_group("Numeric Payload")
+@export var numeric_value: float = 0.0
+@export var min_clamp: float = -INF
+@export var max_clamp: float = INF

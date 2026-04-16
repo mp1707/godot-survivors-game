@@ -17,6 +17,8 @@
 [ext_resource type="AudioStream" uid="uid://c3ejiwxyuk5om" path="res://art/audio/weapons/big_laser_shot.wav" id="12_oprun"]
 [ext_resource type="AudioStream" uid="uid://cbnfm0ru42opc" path="res://art/audio/weapons/charge_energy_ball.wav" id="13_8kq1o"]
 [ext_resource type="AudioStream" uid="uid://dkthi61xavequ" path="res://art/audio/weapons/energy_ball_release.wav" id="14_eq8we"]
+[ext_resource type="Resource" path="res://resources/balance/player_default.tres" id="15_player_def"]
+[ext_resource type="Resource" path="res://resources/balance/level_progression_default.tres" id="16_level_prog"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fulsm"]
 atlas = ExtResource("2_fjrip")
@@ -261,6 +263,7 @@ height = 16.0
 script = ExtResource("1_g2els")
 collision_layer = 2
 collision_mask = 5
+definition = ExtResource("15_player_def")
 
 [node name="AuraSprite" type="AnimatedSprite2D" parent="." unique_id=1180086724]
 position = Vector2(0, -3)
@@ -313,6 +316,7 @@ script = ExtResource("5_weaponsys")
 
 [node name="Progression" type="Node" parent="." unique_id=813944325]
 script = ExtResource("6_progression")
+progression = ExtResource("16_level_prog")
 
 [node name="DashAfterimageVfx" type="Node" parent="." unique_id=1563321840]
 script = ExtResource("8_dash_vfx")

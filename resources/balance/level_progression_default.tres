@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="LevelProgression" format=3 uid="uid://dmhiwrgtbahhs"]
+
+[ext_resource type="Script" uid="uid://ccsg64jhsa2lw" path="res://scripts/data/balance/level_progression.gd" id="1_script"]
+
+[sub_resource type="Curve" id="Curve_xp"]
+_limits = [1.0, 200.0, 0.0, 1.0]
+_data = [Vector2(0, 2), 0.0, 0.0, 0, 0, Vector2(1, 101), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[resource]
+script = ExtResource("1_script")
+xp_curve = SubResource("Curve_xp")

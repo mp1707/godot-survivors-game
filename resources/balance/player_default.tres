@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PlayerDefinition" format=3 uid="uid://shh3oypos1fg"]
+
+[ext_resource type="Script" uid="uid://ctlx8uhsa6y3y" path="res://scripts/data/balance/player_definition.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="2_26qos"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_cooldown.tres" id="2_dash_cd"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_distance.tres" id="3_dash_dist"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_invulnerable.tres" id="4_dash_invuln"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_phase.tres" id="5_dash_phase"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/charge_ki_regen.tres" id="6_ki_regen"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/charge_ki_knockback.tres" id="7_ki_kb"]
+[ext_resource type="Resource" path="res://resources/progression/upgrades/utility/charge_ki_aoe_damage.tres" id="8_ki_aoe"]
+
+[resource]
+script = ExtResource("1_script")
+ki_charge_regen_per_second = 20.0
+utility_upgrades = Array[ExtResource("2_26qos")]([ExtResource("2_dash_cd"), ExtResource("3_dash_dist"), ExtResource("4_dash_invuln"), ExtResource("5_dash_phase"), ExtResource("6_ki_regen"), ExtResource("7_ki_kb"), ExtResource("8_ki_aoe")])

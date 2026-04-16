@@ -1,15 +1,10 @@
 extends Node2D
 
-const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/ghoul.tscn")
 const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/ui/floating_damage_number.tscn")
 
-@export var total_ghoul_count: int = 100
-@export var wave_size_increase_every: int = 5
-@export var max_ghouls_per_wave: int = 6
-@export var spawn_radius_min: float = 260.0
-@export var spawn_radius_max: float = 340.0
+@export var wave: WaveDefinition
 
-var _spawned_ghouls: int = 0
+var _spawned_enemies: int = 0
 var _wave_index: int = 0
 var _kills: int = 0
 
@@ -68,35 +63,41 @@ func _ready() -> void:
 	_game_over_panel.hide()
 
 func _on_wave_spawn_timer_timeout() -> void:
-	if _spawned_ghouls >= total_ghoul_count:
+	if wave == null:
+		_wave_spawn_timer.stop()
+		return
+	if _spawned_enemies >= wave.total_enemy_count:
 		_wave_spawn_timer.stop()
 		return
 
-	var waves_per_step: int = maxi(wave_size_increase_every, 1)
-	var max_per_wave: int = maxi(max_ghouls_per_wave, 1)
-	var step_index: int = int(float(_wave_index) / float(waves_per_step))
-	var wave_size: int = mini(1 + step_index, max_per_wave)
-	var remaining: int = total_ghoul_count - _spawned_ghouls
+	var wave_size: int = wave.get_wave_size(_wave_index)
+	var remaining: int = wave.total_enemy_count - _spawned_enemies
 	var spawn_count: int = mini(wave_size, remaining)
 
 	for i: int in range(spawn_count):
 		_spawn_enemy()
 
-	_spawned_ghouls += spawn_count
+	_spawned_enemies += spawn_count
 	_wave_index += 1
 
 func _spawn_enemy() -> void:
-	var enemy: Ghoul = ENEMY_SCENE.instantiate() as Ghoul
+	if wave == null or _player == null:
+		return
+
+	var enemy_def: EnemyDefinition = wave.pick_enemy(_rng)
+	if enemy_def == null or enemy_def.scene == null:
+		push_error("WaveDefinition has no valid enemy to spawn.")
+		return
+
+	var enemy: Ghoul = enemy_def.scene.instantiate() as Ghoul
 	if enemy == null:
 		push_error("Failed to instantiate enemy as Ghoul.")
 		return
 
-	if _player == null:
-		push_error("Player node is not a Player instance.")
-		return
+	enemy.definition = enemy_def
 
-	var angle: float = randf_range(0.0, TAU)
-	var radius: float = randf_range(spawn_radius_min, spawn_radius_max)
+	var angle: float = _rng.randf_range(0.0, TAU)
+	var radius: float = _rng.randf_range(wave.spawn_radius_min, wave.spawn_radius_max)
 	var offset: Vector2 = Vector2.RIGHT.rotated(angle) * radius
 
 	enemy.global_position = _player.global_position + offset
