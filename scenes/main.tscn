@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://wujuxb6c2tyw" path="res://scripts/ui/xp_progress_bar.gd" id="5_xp_bar"]
 [ext_resource type="Script" path="res://scripts/pickups/xp_orb_manager.gd" id="6_xp_orb_manager"]
 [ext_resource type="PackedScene" path="res://scenes/ui/action_button_bar.tscn" id="7_action_button_bar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_up_popup.tscn" id="8_level_up_popup"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0wfyh"]
 texture = ExtResource("1_0wfyh")
@@ -122,6 +123,8 @@ text = "1"
 horizontal_alignment = 2
 
 [node name="ActionButtonBar" parent="UI" instance=ExtResource("7_action_button_bar")]
+
+[node name="LevelUpPopup" parent="UI" instance=ExtResource("8_level_up_popup")]
 
 [node name="GameOverPanel" type="Panel" parent="UI" unique_id=2069566265]
 anchors_preset = 8

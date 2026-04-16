@@ -67,3 +67,12 @@ func apply_damage(amount: int, hit_world_position: Vector2) -> void:
 	if _hp <= 0:
 		died.emit()
 		queue_free()
+
+func apply_knockback(source_world_position: Vector2, knockback_distance: float) -> void:
+	if knockback_distance <= 0.0:
+		return
+	var away_direction: Vector2 = (global_position - source_world_position).normalized()
+	if away_direction == Vector2.ZERO:
+		away_direction = Vector2.UP
+	global_position += away_direction * knockback_distance
+	_hit_reaction.apply_hit(global_position, source_world_position, knockback_distance * 2.0, 0.04)

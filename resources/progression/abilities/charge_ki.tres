@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://bdkqkl1byrwwr"]
+
+[ext_resource type="Texture2D" uid="uid://c65lqxfixb3kx" path="res://resources/progression/icons/charge_ki_atlas.tres" id="1_qmqq8"]
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="2_x81oo"]
+
+[resource]
+script = ExtResource("2_x81oo")
+id = &"charge_ki"
+display_name = "Charge-Ki"
+action_bar_icon = ExtResource("1_qmqq8")
+level_up_icon = ExtResource("1_qmqq8")
+upgrade_icon = ExtResource("1_qmqq8")
+metadata/_custom_type_script = "uid://c8b6af4npusis"

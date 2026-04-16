@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://b6qsgwdk57w82"]
+
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_0axbq"]
+[ext_resource type="Texture2D" uid="uid://by0187lv72log" path="res://resources/progression/icons/energy_ball_atlas.tres" id="2_j2gmr"]
+
+[resource]
+script = ExtResource("1_0axbq")
+id = &"energy_ball"
+display_name = "Energy-Ball"
+action_bar_icon = ExtResource("2_j2gmr")
+level_up_icon = ExtResource("2_j2gmr")
+upgrade_icon = ExtResource("2_j2gmr")
+metadata/_custom_type_script = "uid://c8b6af4npusis"

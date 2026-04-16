@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeDefinition" format=3 uid="uid://d18eqdf56hckv"]
+
+[ext_resource type="Texture2D" uid="uid://dm4wsao25dpwr" path="res://art/weapons/small_blast.png" id="1_wfixt"]
+[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="2_3vyte"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_env8s"]
+atlas = ExtResource("1_wfixt")
+region = Rect2(0, 0, 5, 19)
+
+[resource]
+script = ExtResource("2_3vyte")
+id = &"ki_blast_damage"
+ability_id = &"ki_blast"
+title = "Ki-Blast: Damage"
+description = "Schaden +1"
+icon = SubResource("AtlasTexture_env8s")
+metadata/_custom_type_script = "uid://430faltn2517"

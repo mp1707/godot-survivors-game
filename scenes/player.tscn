@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://8esgyqo6dgmc" path="res://art/character/player.png" id="1_3vyb7"]
 [ext_resource type="Script" uid="uid://c0te4bt2fcja7" path="res://scripts/player/player.gd" id="1_g2els"]
+[ext_resource type="Texture2D" uid="uid://b8u4b4wq470dc" path="res://art/character/barrier.png" id="2_barrier"]
 [ext_resource type="Texture2D" uid="uid://brp0px88fdp63" path="res://art/character/aura.png" id="2_fjrip"]
 [ext_resource type="Script" uid="uid://c71jwhh35wv3u" path="res://scripts/player/player_health_bar.gd" id="3_qhqgy"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="4_hitreaction"]
@@ -51,6 +52,28 @@ animations = [{
 "loop": true,
 "name": &"default",
 "speed": 10.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4ni07"]
+atlas = ExtResource("2_barrier")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l71n6"]
+atlas = ExtResource("2_barrier")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_barrier"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4ni07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l71n6")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
 }]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_f1ej7"]
@@ -241,6 +264,12 @@ script = ExtResource("1_g2els")
 position = Vector2(0, -3)
 sprite_frames = SubResource("SpriteFrames_a38lo")
 
+[node name="BarrierSprite" type="AnimatedSprite2D" parent="." unique_id=213906874]
+visible = false
+position = Vector2(0, -3)
+scale = Vector2(1.6, 1.6)
+sprite_frames = SubResource("SpriteFrames_barrier")
+
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1569534084]
 sprite_frames = SubResource("SpriteFrames_qhqgy")
 animation = &"idle_down"
@@ -252,7 +281,6 @@ shape = SubResource("CapsuleShape2D_dqkch")
 
 [node name="AttackTimer" type="Timer" parent="." unique_id=1149125840]
 wait_time = 2.0
-autostart = true
 
 [node name="MuzzleUpMiddle" type="Marker2D" parent="." unique_id=143600569]
 position = Vector2(0, -31)

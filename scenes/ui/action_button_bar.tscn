@@ -3,8 +3,6 @@
 [ext_resource type="Script" uid="uid://d2m7l2rv3g8xf" path="res://scripts/ui/action_button_bar.gd" id="1_action_bar_script"]
 [ext_resource type="Theme" path="res://scenes/ui/game_ui_theme.tres" id="2_ui_theme"]
 [ext_resource type="Texture2D" uid="uid://jk5yaxhd86d7" path="res://art/effects/P1 Bullet_Yellow.png" id="3_7wxsi"]
-[ext_resource type="Texture2D" uid="uid://dmvub21w825vo" path="res://art/weapons/blue_energy_ball.png" id="4_energy_ball_icon"]
-[ext_resource type="Texture2D" uid="uid://8esgyqo6dgmc" path="res://art/character/player.png" id="5_player_icon"]
 [ext_resource type="Texture2D" uid="uid://brp0px88fdp63" path="res://art/character/aura.png" id="6_aura_icon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot"]
@@ -22,14 +20,6 @@ corner_radius_bottom_left = 7
 [sub_resource type="AtlasTexture" id="AtlasTexture_kcsnd"]
 atlas = ExtResource("3_7wxsi")
 region = Rect2(0, 0, 6.664814, 17.214384)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_energy_ball_icon"]
-atlas = ExtResource("4_energy_ball_icon")
-region = Rect2(0, 32, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_player_side_icon"]
-atlas = ExtResource("5_player_icon")
-region = Rect2(32, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_aura_icon"]
 atlas = ExtResource("6_aura_icon")
@@ -101,7 +91,6 @@ anchor_bottom = 1.0
 
 [node name="Icon" type="TextureRect" parent="ButtonRow/2Button/IconPanel/CenterContainer" unique_id=790827239]
 layout_mode = 2
-texture = SubResource("AtlasTexture_energy_ball_icon")
 
 [node name="KeyLabel" type="Label" parent="ButtonRow/2Button" unique_id=1662976071]
 layout_mode = 2
@@ -117,6 +106,15 @@ custom_minimum_size = Vector2(42, 42)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/3Button/IconPanel" unique_id=1804529318]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Icon" type="TextureRect" parent="ButtonRow/3Button/IconPanel/CenterContainer" unique_id=1606758052]
+visible = false
+layout_mode = 2
+
 [node name="KeyLabel" type="Label" parent="ButtonRow/3Button" unique_id=35387389]
 layout_mode = 2
 text = "3"
@@ -131,36 +129,13 @@ custom_minimum_size = Vector2(58, 42)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
-[node name="AfterImageIcon" type="Control" parent="ButtonRow/SpaceButton/IconPanel" unique_id=813699494]
-anchors_preset = 0
+[node name="CenterContainer" type="CenterContainer" parent="ButtonRow/SpaceButton/IconPanel" unique_id=1127230148]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="TrailA" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/AfterImageIcon" unique_id=1084083579]
-layout_mode = 0
-offset_left = 9.0
-offset_top = 13.0
-offset_right = 25.0
-offset_bottom = 29.0
-texture = SubResource("AtlasTexture_player_side_icon")
-
-[node name="TrailB" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/AfterImageIcon" unique_id=1394409848]
-modulate = Color(1, 1, 1, 0.5)
-layout_mode = 0
-offset_left = 19.0
-offset_top = 13.0
-offset_right = 35.0
-offset_bottom = 29.0
-texture = SubResource("AtlasTexture_player_side_icon")
-
-[node name="Main" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/AfterImageIcon" unique_id=1156172727]
-modulate = Color(1, 1, 1, 0.26)
-layout_mode = 0
-offset_left = 29.0
-offset_top = 13.0
-offset_right = 45.0
-offset_bottom = 29.0
-texture = SubResource("AtlasTexture_player_side_icon")
+[node name="Icon" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/CenterContainer" unique_id=768859593]
+layout_mode = 2
 
 [node name="KeyLabel" type="Label" parent="ButtonRow/SpaceButton" unique_id=819887975]
 layout_mode = 2

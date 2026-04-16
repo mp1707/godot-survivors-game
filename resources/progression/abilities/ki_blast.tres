@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://bq3cygc0retxk"]
+
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_aqfev"]
+[ext_resource type="Texture2D" uid="uid://dnlk653dgo38b" path="res://resources/progression/icons/ki_blast_atlas.tres" id="2_h8t8x"]
+
+[resource]
+script = ExtResource("1_aqfev")
+id = &"ki_blast"
+display_name = "Ki-Blast"
+action_bar_icon = ExtResource("2_h8t8x")
+level_up_icon = ExtResource("2_h8t8x")
+upgrade_icon = ExtResource("2_h8t8x")
+metadata/_custom_type_script = "uid://c8b6af4npusis"

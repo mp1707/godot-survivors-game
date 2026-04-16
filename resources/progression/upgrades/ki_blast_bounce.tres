@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeDefinition" format=3 uid="uid://c8ux7315k4c74"]
+
+[ext_resource type="Texture2D" uid="uid://dm4wsao25dpwr" path="res://art/weapons/small_blast.png" id="1_78bid"]
+[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_c1mhu"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_env8s"]
+atlas = ExtResource("1_78bid")
+region = Rect2(0, 0, 5, 19)
+
+[resource]
+script = ExtResource("1_c1mhu")
+id = &"ki_blast_bounce"
+ability_id = &"ki_blast"
+title = "Ki-Blast: Bounce"
+description = "Abpraller +1"
+icon = SubResource("AtlasTexture_env8s")
+metadata/_custom_type_script = "uid://430faltn2517"
