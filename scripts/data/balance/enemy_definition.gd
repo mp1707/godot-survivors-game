@@ -21,3 +21,6 @@ class_name EnemyDefinition
 
 @export_group("Rewards")
 @export var xp_drop_value: int = 1
+
+@export_group("Visuals")
+@export var sprite_scale: float = 1.0

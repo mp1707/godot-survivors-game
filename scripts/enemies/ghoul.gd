@@ -47,6 +47,8 @@ func _apply_definition() -> void:
 	knockback_strength = definition.knockback_strength
 	knockback_decay = definition.knockback_decay
 	hit_flash_time = definition.hit_flash_time
+	if _animated_sprite != null:
+		_animated_sprite.scale = Vector2.ONE * definition.sprite_scale
 
 func _physics_process(delta: float) -> void:
 	_hit_reaction.physics_step(delta)

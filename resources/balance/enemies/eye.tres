@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/balance/enemy_definition.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/eye.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"eye"
+scene = ExtResource("2_scene")
+max_hp = 3
+attack_damage = 12
+attack_range = 20.0
+attack_interval = 0.75
+move_speed = 48.0
+stop_distance = 12.0
+knockback_strength = 70.0
+knockback_decay = 650.0
+hit_flash_time = 0.07
+xp_drop_value = 2
+sprite_scale = 1.0

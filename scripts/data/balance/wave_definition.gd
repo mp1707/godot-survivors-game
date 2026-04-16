@@ -1,7 +1,6 @@
 extends Resource
 class_name WaveDefinition
 
-@export var total_enemy_count: int = 100
 @export var wave_size_increase_every: int = 5
 @export var max_enemies_per_wave: int = 6
 
@@ -13,8 +12,8 @@ class_name WaveDefinition
 @export var wave_size_curve: Curve
 @export var max_waves_for_curve: int = 100
 
-@export_group("Enemies")
-@export var enemy_pool: Array[EnemyDefinition] = []
+@export_group("Stages")
+@export var stages: Array[WaveStage] = []
 
 func get_wave_size(wave_index: int) -> int:
 	var cap: int = maxi(max_enemies_per_wave, 1)
@@ -29,8 +28,19 @@ func get_wave_size(wave_index: int) -> int:
 	var step_index: int = int(float(wave_index) / float(waves_per_step))
 	return clampi(1 + step_index, 1, cap)
 
-func pick_enemy(rng: RandomNumberGenerator) -> EnemyDefinition:
-	if enemy_pool.is_empty():
-		return null
-	var index: int = rng.randi_range(0, enemy_pool.size() - 1)
-	return enemy_pool[index]
+func get_total_enemy_count() -> int:
+	var total: int = 0
+	for stage: WaveStage in stages:
+		if stage != null:
+			total += maxi(stage.enemy_count, 0)
+	return total
+
+func pick_enemy_for_spawn(rng: RandomNumberGenerator, spawned_count: int) -> EnemyDefinition:
+	var cumulative: int = 0
+	for stage: WaveStage in stages:
+		if stage == null:
+			continue
+		cumulative += maxi(stage.enemy_count, 0)
+		if spawned_count < cumulative:
+			return stage.pick_enemy(rng)
+	return null

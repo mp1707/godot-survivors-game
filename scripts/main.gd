@@ -66,25 +66,26 @@ func _on_wave_spawn_timer_timeout() -> void:
 	if wave == null:
 		_wave_spawn_timer.stop()
 		return
-	if _spawned_enemies >= wave.total_enemy_count:
+	var total: int = wave.get_total_enemy_count()
+	if _spawned_enemies >= total:
 		_wave_spawn_timer.stop()
 		return
 
 	var wave_size: int = wave.get_wave_size(_wave_index)
-	var remaining: int = wave.total_enemy_count - _spawned_enemies
+	var remaining: int = total - _spawned_enemies
 	var spawn_count: int = mini(wave_size, remaining)
 
 	for i: int in range(spawn_count):
 		_spawn_enemy()
+		_spawned_enemies += 1
 
-	_spawned_enemies += spawn_count
 	_wave_index += 1
 
 func _spawn_enemy() -> void:
 	if wave == null or _player == null:
 		return
 
-	var enemy_def: EnemyDefinition = wave.pick_enemy(_rng)
+	var enemy_def: EnemyDefinition = wave.pick_enemy_for_spawn(_rng, _spawned_enemies)
 	if enemy_def == null or enemy_def.scene == null:
 		push_error("WaveDefinition has no valid enemy to spawn.")
 		return

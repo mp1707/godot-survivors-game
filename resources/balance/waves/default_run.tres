@@ -1,16 +1,42 @@
-[gd_resource type="Resource" script_class="WaveDefinition" format=3 uid="uid://dlv2luwt6eyej"]
+[gd_resource type="Resource" script_class="WaveDefinition" load_steps=13 format=3 uid="uid://dlv2luwt6eyej"]
 
 [ext_resource type="Script" uid="uid://btts4hin5rw5k" path="res://scripts/data/balance/wave_definition.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://fikysnc6pykc" path="res://scripts/data/balance/enemy_definition.gd" id="1_vk4te"]
-[ext_resource type="Resource" path="res://resources/balance/enemies/ghoul.tres" id="2_ghoul"]
+[ext_resource type="Script" path="res://scripts/data/balance/wave_stage.gd" id="2_stage_script"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/ghoul.tres" id="3_ghoul"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/ghoul_elite.tres" id="4_ghoul_elite"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/crawler.tres" id="5_crawler"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/crawler_elite.tres" id="6_crawler_elite"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/eye.tres" id="7_eye"]
+[ext_resource type="Resource" path="res://resources/balance/enemies/eye_elite.tres" id="8_eye_elite"]
 
 [sub_resource type="Curve" id="Curve_wave_size"]
 _limits = [1.0, 6.0, 0.0, 1.0]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 6), 0.0, 0.0, 0, 0]
 point_count = 2
 
+[sub_resource type="Resource" id="WaveStage_ghoul"]
+script = ExtResource("2_stage_script")
+normal_enemy = ExtResource("3_ghoul")
+elite_enemy = ExtResource("4_ghoul_elite")
+enemy_count = 220
+elite_chance = 0.07
+
+[sub_resource type="Resource" id="WaveStage_crawler"]
+script = ExtResource("2_stage_script")
+normal_enemy = ExtResource("5_crawler")
+elite_enemy = ExtResource("6_crawler_elite")
+enemy_count = 280
+elite_chance = 0.08
+
+[sub_resource type="Resource" id="WaveStage_eye"]
+script = ExtResource("2_stage_script")
+normal_enemy = ExtResource("7_eye")
+elite_enemy = ExtResource("8_eye_elite")
+enemy_count = 300
+elite_chance = 0.1
+
 [resource]
 script = ExtResource("1_script")
 wave_size_curve = SubResource("Curve_wave_size")
-max_waves_for_curve = 50
-enemy_pool = Array[ExtResource("1_vk4te")]([ExtResource("2_ghoul")])
+max_waves_for_curve = 40
+stages = Array[ExtResource("2_stage_script")]([SubResource("WaveStage_ghoul"), SubResource("WaveStage_crawler"), SubResource("WaveStage_eye")])

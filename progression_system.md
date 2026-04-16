@@ -112,16 +112,40 @@ Im `WeaponProgressionModel`:
 
 ## 7) Utility-Upgrades (Dash/Charge-Ki)
 
-Diese liegen aktuell im `Player`:
+Utility-Upgrades sind **datengetrieben** wie Waffen-Upgrades.
+Die Liste lebt in `PlayerDefinition.utility_upgrades` (`.tres` unter `resources/progression/upgrades/utility/`).
 
-- Optionen erzeugen: `Player.get_utility_upgrade_options()`
-- Anwenden: `Player.apply_utility_upgrade(...)`
+- Optionen erzeugen: `Player.get_utility_upgrade_options()` iteriert ueber die Definitionen und wendet Filter-Regeln (`_is_utility_upgrade_available`) an.
+- Anwenden: `Player.apply_utility_upgrade(...)` liest `numeric_value`, `min_clamp`, `max_clamp` aus der `UpgradeDefinition` und mutiert das passende Feld.
 
-Beispiele:
-- Dash Cooldown reduzieren
-- Dash Distanz erhoehen
-- Dash Phase aktivieren
-- Charge-Ki Regen/Knockback/AOE erhoehen
+Vorhandene Upgrades:
+- Dash: Cooldown (`dash_cooldown.tres` — `numeric_value=-1`, `min_clamp=1`)
+- Dash: Distance (`dash_distance.tres` — `numeric_value=5`)
+- Dash: Invulnerability (`dash_invulnerable.tres` — Flag, `max_stacks=1`)
+- Dash: Phase (`dash_phase.tres` — Flag, `max_stacks=1`)
+- Charge-Ki: Regen (`charge_ki_regen.tres` — `numeric_value=2`)
+- Charge-Ki: Knockback (`charge_ki_knockback.tres` — `numeric_value=10`)
+- Charge-Ki: AOE-Damage (`charge_ki_aoe_damage.tres` — `numeric_value=1`)
+
+Neues Utility-Upgrade hinzufuegen:
+1. Neue `.tres` in `resources/progression/upgrades/utility/` anlegen.
+2. In `player_default.tres` die Liste `utility_upgrades` erweitern.
+3. Falls die Wirkung kein einfacher Feld-Increment ist (z.B. Flag): neuen Case in `Player.apply_utility_upgrade()` und ggf. in `Player._is_utility_upgrade_available()` ergaenzen.
+
+## 7b) Zentrale Balance-Ressourcen
+
+Alle Zahlen leben in `.tres`-Dateien, keine Magic Numbers in Runtime-Skripten.
+
+- `resources/balance/level_progression_default.tres` — XP-Kurve (`LevelProgression`, Godot `Curve`).
+  Wird in `scenes/player.tscn` am `Progression`-Node gesetzt.
+- `resources/balance/player_default.tres` — Player-Stats + Utility-Upgrades (`PlayerDefinition`).
+  Wird in `scenes/player.tscn` am `Player`-Node gesetzt. `Player._apply_definition()` kopiert die Werte in Member-Vars (damit Upgrades zur Laufzeit weiterhin mutieren koennen).
+- `resources/balance/enemies/ghoul.tres` — Ghoul-Stats (`EnemyDefinition`, inkl. PackedScene-Referenz).
+  Wird von `main.gd._spawn_enemy()` vor `add_child` am Enemy gesetzt.
+- `resources/balance/waves/default_run.tres` — Wellen/Spawning (`WaveDefinition`).
+  Referenziert die Enemy-Definitionen (`enemy_pool`) und liefert `get_wave_size(wave_index)` aus einer `Curve`. In `scenes/main.tscn` am `main`-Node gesetzt.
+
+Grundsatz: `main.gd` bleibt "dumm" — keine Balance-Zahl im Orchestrator.
 
 ## 8) So erweiterst du das System
 
@@ -163,9 +187,10 @@ Wichtig:
 
 ## C) Neue Utility-Upgrades (Player) hinzufuegen
 
-1. Neue Konstanten in `player.gd` anlegen.
-2. Option in `get_utility_upgrade_options()` hinzufuegen (mit `LevelUpOption.make_player_upgrade`).
-3. Verhalten in `apply_utility_upgrade(...)` implementieren.
+1. Neue `.tres` in `resources/progression/upgrades/utility/` anlegen (`id`, `upgrade_type`, `title`, `description`, `numeric_value`, `min_clamp`/`max_clamp`).
+2. `player_default.tres` → `utility_upgrades` um die Referenz erweitern.
+3. Wenn ein neuer numerischer Zielwert betroffen ist: Case in `Player.apply_utility_upgrade(...)` hinzufuegen, der `numeric_value`/Clamps anwendet.
+4. Bei Flag-Upgrades zusaetzlich `Player._is_utility_upgrade_available(...)` pflegen, damit das Upgrade nach Freischaltung nicht erneut angeboten wird.
 
 ## D) Popup-Optionstyp erweitern
 
