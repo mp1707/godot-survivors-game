@@ -11,6 +11,7 @@ region = Rect2(0, 0, 5, 19)
 script = ExtResource("2_3vyte")
 id = &"ki_blast_damage"
 ability_id = &"ki_blast"
+upgrade_type = &"damage"
 title = "Ki-Blast: Damage"
 description = "Schaden +1"
 icon = SubResource("AtlasTexture_env8s")

@@ -8,8 +8,6 @@ signal xp_changed(current: int, required: int, level: int)
 signal leveled_up(new_level: int)
 signal died()
 
-const OPTION_TYPE_PLAYER_UPGRADE: StringName = &"player_upgrade"
-
 const UPGRADE_DASH_COOLDOWN: StringName = &"dash_cooldown"
 const UPGRADE_DASH_DISTANCE: StringName = &"dash_distance"
 const UPGRADE_DASH_INVULNERABLE: StringName = &"dash_invulnerable"
@@ -22,6 +20,7 @@ const DASH_ABILITY_RESOURCE_PATH: String = "res://resources/progression/abilitie
 const CHARGE_KI_ABILITY_RESOURCE_PATH: String = "res://resources/progression/abilities/charge_ki.tres"
 const DASH_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/player.png")
 const CHARGE_KI_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/aura.png")
+const ENEMY_COLLISION_LAYER_MASK: int = 1 << 2
 
 @export var max_health: int = 100
 @export var damage_invuln_time: float = 0.25
@@ -86,6 +85,7 @@ var _ki_release_aoe_damage: int = 0
 var _barrier_absorption_left: int = 0
 var _barrier_lifetime_left: float = 0.0
 var _barrier_reflect_damage: bool = false
+var _base_collision_mask: int = 0
 
 func _ready() -> void:
 	_health = max_health
@@ -103,6 +103,7 @@ func _ready() -> void:
 		_attack_timer.stop()
 	_clear_barrier()
 	_set_mana_charge_loop_playing(false)
+	_base_collision_mask = collision_mask
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
@@ -248,6 +249,7 @@ func _try_start_dash() -> bool:
 	_dash_distance_left = dash_distance
 	_dash_afterimage_timer = _get_dash_afterimage_interval()
 	_dash_cooldown_left = dash_cooldown
+	_apply_dash_collision_mask()
 	_spawn_dash_afterimage()
 	return true
 
@@ -269,13 +271,10 @@ func _update_dash(delta: float) -> void:
 		_finish_dash()
 		return
 
-	if _dash_phase_through_enemies:
-		global_position += _dash_direction * step_distance
-	else:
-		velocity = _dash_direction * (step_distance / delta)
-		move_and_slide()
-		if get_slide_collision_count() > 0 and get_last_motion().length_squared() <= 0.0001:
-			_dash_distance_left = 0.0
+	velocity = _dash_direction * (step_distance / delta)
+	move_and_slide()
+	if get_slide_collision_count() > 0 and get_last_motion().length_squared() <= 0.0001:
+		_dash_distance_left = 0.0
 
 	_dash_distance_left = max(_dash_distance_left - step_distance, 0.0)
 
@@ -294,6 +293,12 @@ func _finish_dash() -> void:
 	_dash_distance_left = 0.0
 	_dash_afterimage_timer = 0.0
 	velocity = Vector2.ZERO
+	collision_mask = _base_collision_mask
+
+func _apply_dash_collision_mask() -> void:
+	collision_mask = _base_collision_mask
+	if _dash_phase_through_enemies:
+		collision_mask = _base_collision_mask & ~ENEMY_COLLISION_LAYER_MASK
 
 func _get_dash_afterimage_interval() -> float:
 	return max(dash_afterimage_interval, 0.01)
@@ -449,65 +454,72 @@ func _clear_barrier() -> void:
 		_barrier_sprite.stop()
 		_barrier_sprite.visible = false
 
-func get_utility_upgrade_options() -> Array[Dictionary]:
-	var options: Array[Dictionary] = []
+func get_utility_upgrade_options() -> Array[LevelUpOption]:
+	var options: Array[LevelUpOption] = []
 
 	if dash_cooldown > 1.0:
-		options.append({
-			"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-			"upgrade_id": UPGRADE_DASH_COOLDOWN,
-			"title": "Dash: Cooldown",
-			"description": "Cooldown -1s (mind. 1s)",
-			"icon": _dash_upgrade_icon
-		})
+		options.append(
+			LevelUpOption.make_player_upgrade(
+				UPGRADE_DASH_COOLDOWN,
+				"Dash: Cooldown",
+				"Cooldown -1s (mind. 1s)",
+				_dash_upgrade_icon
+			)
+		)
 
-	options.append({
-		"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-		"upgrade_id": UPGRADE_DASH_DISTANCE,
-		"title": "Dash: Distance",
-		"description": "Dash-Distanz +5",
-		"icon": _dash_upgrade_icon
-	})
+	options.append(
+		LevelUpOption.make_player_upgrade(
+			UPGRADE_DASH_DISTANCE,
+			"Dash: Distance",
+			"Dash-Distanz +5",
+			_dash_upgrade_icon
+		)
+	)
 
 	if not _dash_invulnerable:
-		options.append({
-			"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-			"upgrade_id": UPGRADE_DASH_INVULNERABLE,
-			"title": "Dash: Invulnerability",
-			"description": "Unverwundbar waehrend Dash",
-			"icon": _dash_upgrade_icon
-		})
+		options.append(
+			LevelUpOption.make_player_upgrade(
+				UPGRADE_DASH_INVULNERABLE,
+				"Dash: Invulnerability",
+				"Unverwundbar waehrend Dash",
+				_dash_upgrade_icon
+			)
+		)
 
 	if not _dash_phase_through_enemies:
-		options.append({
-			"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-			"upgrade_id": UPGRADE_DASH_PHASE,
-			"title": "Dash: Phase",
-			"description": "Dash durch Enemies",
-			"icon": _dash_upgrade_icon
-		})
+		options.append(
+			LevelUpOption.make_player_upgrade(
+				UPGRADE_DASH_PHASE,
+				"Dash: Phase",
+				"Dash durch Enemies",
+				_dash_upgrade_icon
+			)
+		)
 
-	options.append({
-		"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-		"upgrade_id": UPGRADE_CHARGE_KI_REGEN,
-		"title": "Charge-Ki: Regen",
-		"description": "Ki pro Sekunde +2",
-		"icon": _charge_ki_upgrade_icon
-	})
-	options.append({
-		"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-		"upgrade_id": UPGRADE_CHARGE_KI_KNOCKBACK,
-		"title": "Charge-Ki: Knockback",
-		"description": "Release-Knockback +10",
-		"icon": _charge_ki_upgrade_icon
-	})
-	options.append({
-		"option_type": OPTION_TYPE_PLAYER_UPGRADE,
-		"upgrade_id": UPGRADE_CHARGE_KI_AOE_DAMAGE,
-		"title": "Charge-Ki: AOE",
-		"description": "Release-AOE-Damage +1",
-		"icon": _charge_ki_upgrade_icon
-	})
+	options.append(
+		LevelUpOption.make_player_upgrade(
+			UPGRADE_CHARGE_KI_REGEN,
+			"Charge-Ki: Regen",
+			"Ki pro Sekunde +2",
+			_charge_ki_upgrade_icon
+		)
+	)
+	options.append(
+		LevelUpOption.make_player_upgrade(
+			UPGRADE_CHARGE_KI_KNOCKBACK,
+			"Charge-Ki: Knockback",
+			"Release-Knockback +10",
+			_charge_ki_upgrade_icon
+		)
+	)
+	options.append(
+		LevelUpOption.make_player_upgrade(
+			UPGRADE_CHARGE_KI_AOE_DAMAGE,
+			"Charge-Ki: AOE",
+			"Release-AOE-Damage +1",
+			_charge_ki_upgrade_icon
+		)
+	)
 
 	return options
 
@@ -521,6 +533,8 @@ func apply_utility_upgrade(upgrade_id: StringName) -> bool:
 			_dash_invulnerable = true
 		UPGRADE_DASH_PHASE:
 			_dash_phase_through_enemies = true
+			if _is_dashing:
+				_apply_dash_collision_mask()
 		UPGRADE_CHARGE_KI_REGEN:
 			ki_charge_regen_per_second += 2.0
 		UPGRADE_CHARGE_KI_KNOCKBACK:

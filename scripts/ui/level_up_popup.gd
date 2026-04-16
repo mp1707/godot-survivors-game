@@ -1,7 +1,7 @@
 extends Panel
 class_name LevelUpPopup
 
-signal option_selected(option: Dictionary)
+signal option_selected(option: LevelUpOption)
 
 @onready var _root_margin: MarginContainer = $MarginContainer as MarginContainer
 @onready var _root_vbox: VBoxContainer = $MarginContainer/VBoxContainer as VBoxContainer
@@ -79,7 +79,7 @@ func _configure_wrapping(labels: Array[Label]) -> void:
 		label.clip_text = false
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-func present_options(level: int, options: Array[Dictionary]) -> void:
+func present_options(level: int, options: Array[LevelUpOption]) -> void:
 	_title_label.text = "Level %d - Waehle ein Upgrade" % level
 	for index: int in range(_option_buttons.size()):
 		_setup_option(index, options)
@@ -91,7 +91,7 @@ func present_options(level: int, options: Array[Dictionary]) -> void:
 func hide_popup() -> void:
 	visible = false
 
-func _setup_option(index: int, options: Array[Dictionary]) -> void:
+func _setup_option(index: int, options: Array[LevelUpOption]) -> void:
 	var button: Button = _option_buttons[index]
 	var icon: TextureRect = _option_icons[index]
 	var title_label: Label = _option_titles[index]
@@ -101,23 +101,23 @@ func _setup_option(index: int, options: Array[Dictionary]) -> void:
 		button.visible = false
 		button.disabled = true
 		button.custom_minimum_size = Vector2.ZERO
-		button.set_meta("level_up_option", {})
+		button.set_meta("level_up_option", null)
 		icon.texture = null
 		icon.visible = false
 		title_label.text = ""
 		description_label.text = ""
 		return
 
-	var option: Dictionary = options[index]
+	var option: LevelUpOption = options[index]
 	button.visible = true
 	button.disabled = false
 	button.set_meta("level_up_option", option)
 
-	var option_icon: Texture2D = option.get("icon", null) as Texture2D
+	var option_icon: Texture2D = option.icon
 	icon.texture = option_icon
 	icon.visible = option_icon != null
-	title_label.text = str(option.get("title", ""))
-	description_label.text = str(option.get("description", ""))
+	title_label.text = option.title
+	description_label.text = option.description
 
 func _refresh_layout() -> void:
 	if not visible:
@@ -236,8 +236,8 @@ func _on_option_pressed(index: int) -> void:
 	if not button.has_meta("level_up_option"):
 		return
 
-	var option: Dictionary = button.get_meta("level_up_option") as Dictionary
-	if option.is_empty():
+	var option: LevelUpOption = button.get_meta("level_up_option") as LevelUpOption
+	if option == null:
 		return
 
 	hide_popup()

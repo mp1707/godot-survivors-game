@@ -2,12 +2,31 @@
 
 [ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_aqfev"]
 [ext_resource type="Texture2D" uid="uid://dnlk653dgo38b" path="res://resources/progression/icons/ki_blast_atlas.tres" id="2_h8t8x"]
+[ext_resource type="PackedScene" uid="uid://442djdt3jfdt" path="res://scenes/abilities/laser_projectile.tscn" id="3_proj"]
 
 [resource]
 script = ExtResource("1_aqfev")
 id = &"ki_blast"
+progression_domain = &"weapon"
 display_name = "Ki-Blast"
 action_bar_icon = ExtResource("2_h8t8x")
 level_up_icon = ExtResource("2_h8t8x")
 upgrade_icon = ExtResource("2_h8t8x")
+starts_unlocked = true
+start_slot_index = 0
+unlock_level = 1
+unlock_description = "Schneller Standard-Schuss mit solider Skalierung."
+behavior = &"projectile"
+projectile_scene = ExtResource("3_proj")
+release_audio_variant = &"small_laser"
+base_cost = 10
+cost_upgrade_step = 1
+min_cost = 1
+base_damage_min = 1
+base_damage_max = 1
+base_speed = 360.0
+speed_upgrade_factor = 1.2
+base_size = 0.7
+size_upgrade_factor = 1.2
+upgrade_ids = [&"cost", &"damage", &"pierce", &"speed", &"bounce", &"size"]
 metadata/_custom_type_script = "uid://c8b6af4npusis"

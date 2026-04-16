@@ -11,6 +11,7 @@ region = Rect2(0, 0, 5, 19)
 script = ExtResource("1_c1mhu")
 id = &"ki_blast_bounce"
 ability_id = &"ki_blast"
+upgrade_type = &"bounce"
 title = "Ki-Blast: Bounce"
 description = "Abpraller +1"
 icon = SubResource("AtlasTexture_env8s")

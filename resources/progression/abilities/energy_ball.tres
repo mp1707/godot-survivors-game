@@ -2,12 +2,39 @@
 
 [ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_0axbq"]
 [ext_resource type="Texture2D" uid="uid://by0187lv72log" path="res://resources/progression/icons/energy_ball_atlas.tres" id="2_j2gmr"]
+[ext_resource type="PackedScene" uid="uid://djcgplxob42tk" path="res://scenes/abilities/energy_ball_projectile.tscn" id="3_proj"]
+[ext_resource type="PackedScene" uid="uid://fni1vgew1wuh" path="res://scenes/abilities/charging_energy_ball.tscn" id="4_charge_vfx"]
 
 [resource]
 script = ExtResource("1_0axbq")
 id = &"energy_ball"
+progression_domain = &"weapon"
 display_name = "Energy-Ball"
 action_bar_icon = ExtResource("2_j2gmr")
 level_up_icon = ExtResource("2_j2gmr")
 upgrade_icon = ExtResource("2_j2gmr")
+unlock_level = 13
+unlock_description = "Langsam, stark, durchdringt unbegrenzt viele Enemies."
+behavior = &"projectile"
+is_chargeable = true
+projectile_scene = ExtResource("3_proj")
+charge_vfx_scene = ExtResource("4_charge_vfx")
+charge_complete_animation = &"fully_charged"
+keep_projectile_upright = true
+use_middle_muzzle_for_charged = true
+charge_audio_variant = &"energy_ball"
+release_audio_variant = &"energy_ball"
+base_cost = 50
+cost_upgrade_step = 2
+min_cost = 1
+base_damage_min = 5
+base_damage_max = 10
+base_charge_time = 5.0
+charge_time_reduction_step = 1.0
+min_charge_time = 1.0
+base_speed = 70.0
+base_size = 1.0
+size_upgrade_factor = 1.1
+base_pierce_amount = -1
+upgrade_ids = [&"cost", &"damage", &"size", &"charge_speed"]
 metadata/_custom_type_script = "uid://c8b6af4npusis"

@@ -6,6 +6,7 @@
 [resource]
 script = ExtResource("2_ppxhv")
 id = &"dash"
+progression_domain = &"player_utility"
 display_name = "Dash"
 action_bar_icon = ExtResource("1_c1mgu")
 level_up_icon = ExtResource("1_c1mgu")

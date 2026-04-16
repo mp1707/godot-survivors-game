@@ -145,7 +145,7 @@ func _try_show_next_level_up_popup() -> void:
 		return
 
 	var level: int = _pending_level_ups.pop_front()
-	var options: Array[Dictionary] = _build_level_up_options(level)
+	var options: Array[LevelUpOption] = _build_level_up_options(level)
 	if options.is_empty():
 		_try_show_next_level_up_popup()
 		return
@@ -154,45 +154,50 @@ func _try_show_next_level_up_popup() -> void:
 	get_tree().paused = true
 	_level_up_popup.present_options(level, options)
 
-func _build_level_up_options(level: int) -> Array[Dictionary]:
-	if level == 5:
-		var new_weapon_options: Array[Dictionary] = _weapon_system.get_unlockable_weapon_options()
-		if not new_weapon_options.is_empty():
-			return _pick_random_options(new_weapon_options, 3)
+func _build_level_up_options(level: int) -> Array[LevelUpOption]:
+	var unlock_options: Array[LevelUpOption] = _weapon_system.get_unlockable_weapon_options(level)
+	if _weapon_system.has_unlock_milestone(level) and not unlock_options.is_empty():
+		var picked_unlocks: Array[LevelUpOption] = _pick_random_options(unlock_options, 3)
+		if picked_unlocks.size() >= 3:
+			return picked_unlocks
 
-	var options: Array[Dictionary] = []
+		var filler_pool: Array[LevelUpOption] = []
+		filler_pool.append_array(_weapon_system.get_weapon_upgrade_options())
+		filler_pool.append_array(_player.get_utility_upgrade_options())
+
+		var filler_count: int = 3 - picked_unlocks.size()
+		picked_unlocks.append_array(_pick_random_options(filler_pool, filler_count))
+		return picked_unlocks
+
+	var options: Array[LevelUpOption] = []
+	options.append_array(unlock_options)
 	options.append_array(_weapon_system.get_weapon_upgrade_options())
 	options.append_array(_player.get_utility_upgrade_options())
 	return _pick_random_options(options, 3)
 
-func _pick_random_options(options: Array[Dictionary], count: int) -> Array[Dictionary]:
+func _pick_random_options(options: Array[LevelUpOption], count: int) -> Array[LevelUpOption]:
 	var pool: Array = options.duplicate()
-	var picked: Array[Dictionary] = []
+	var picked: Array[LevelUpOption] = []
 	while picked.size() < count and not pool.is_empty():
 		var index: int = _rng.randi_range(0, pool.size() - 1)
-		picked.append(pool[index] as Dictionary)
+		picked.append(pool[index] as LevelUpOption)
 		pool.remove_at(index)
 	return picked
 
-func _on_level_up_option_selected(option: Dictionary) -> void:
+func _on_level_up_option_selected(option: LevelUpOption) -> void:
 	_apply_level_up_option(option)
 	_is_level_up_active = false
 	get_tree().paused = false
 	_try_show_next_level_up_popup()
 
-func _apply_level_up_option(option: Dictionary) -> void:
-	var option_type: StringName = option.get("option_type", &"") as StringName
-	match option_type:
-		PlayerWeaponSystem.OPTION_TYPE_NEW_WEAPON:
-			var ability_id: StringName = option.get("ability_id", &"") as StringName
-			_weapon_system.unlock_weapon_in_slot(ability_id, 1)
-		PlayerWeaponSystem.OPTION_TYPE_WEAPON_UPGRADE:
-			var weapon_id: StringName = option.get("ability_id", &"") as StringName
-			var upgrade_id: StringName = option.get("upgrade_id", &"") as StringName
-			_weapon_system.apply_weapon_upgrade(weapon_id, upgrade_id)
-		Player.OPTION_TYPE_PLAYER_UPGRADE:
-			var utility_upgrade_id: StringName = option.get("upgrade_id", &"") as StringName
-			_player.apply_utility_upgrade(utility_upgrade_id)
+func _apply_level_up_option(option: LevelUpOption) -> void:
+	match option.option_type:
+		LevelUpOption.TYPE_NEW_WEAPON:
+			_weapon_system.unlock_weapon_in_next_free_slot(option.ability_id)
+		LevelUpOption.TYPE_WEAPON_UPGRADE:
+			_weapon_system.apply_weapon_upgrade(option.ability_id, option.upgrade_id)
+		LevelUpOption.TYPE_PLAYER_UPGRADE:
+			_player.apply_utility_upgrade(option.upgrade_id)
 
 func _on_player_died() -> void:
 	_wave_spawn_timer.stop()
