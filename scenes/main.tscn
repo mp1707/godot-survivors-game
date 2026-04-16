@@ -53,10 +53,10 @@ shape = SubResource("RectangleShape2D_jyhfs")
 
 [node name="Player" parent="." unique_id=42483423 instance=ExtResource("2_sugp2")]
 
-[node name="Enemies" type="Node2D" parent="." unique_id=991429024]
-
 [node name="Pickups" type="Node2D" parent="." unique_id=1991247854]
 script = ExtResource("6_xp_orb_manager")
+
+[node name="Enemies" type="Node2D" parent="." unique_id=991429024]
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1001396299]
 

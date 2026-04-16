@@ -15,7 +15,7 @@ var _attack_cooldown_left: float = 0.0
 signal damage_taken(amount: int, world_position: Vector2)
 signal died()
 
-@export var max_hp: int = 3
+@export var max_hp: int = 1
 @export var knockback_strength: float = 70.0
 @export var knockback_decay: float = 650.0
 @export var hit_flash_time: float = 0.07

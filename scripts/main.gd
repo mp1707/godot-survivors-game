@@ -3,11 +3,14 @@ extends Node2D
 const ENEMY_SCENE: PackedScene = preload("res://scenes/enemies/ghoul.tscn")
 const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/ui/floating_damage_number.tscn")
 
-@export var wave1_enemy_total: int = 20
+@export var total_ghoul_count: int = 100
+@export var wave_size_increase_every: int = 5
+@export var max_ghouls_per_wave: int = 6
 @export var spawn_radius_min: float = 260.0
 @export var spawn_radius_max: float = 340.0
 
-var _spawned_in_wave1: int = 0
+var _spawned_ghouls: int = 0
+var _wave_index: int = 0
 var _kills: int = 0
 
 var _pending_level_ups: Array[int] = []
@@ -65,12 +68,22 @@ func _ready() -> void:
 	_game_over_panel.hide()
 
 func _on_wave_spawn_timer_timeout() -> void:
-	if _spawned_in_wave1 >= wave1_enemy_total:
+	if _spawned_ghouls >= total_ghoul_count:
 		_wave_spawn_timer.stop()
 		return
 
-	_spawn_enemy()
-	_spawned_in_wave1 += 1
+	var waves_per_step: int = maxi(wave_size_increase_every, 1)
+	var max_per_wave: int = maxi(max_ghouls_per_wave, 1)
+	var step_index: int = int(float(_wave_index) / float(waves_per_step))
+	var wave_size: int = mini(1 + step_index, max_per_wave)
+	var remaining: int = total_ghoul_count - _spawned_ghouls
+	var spawn_count: int = mini(wave_size, remaining)
+
+	for i: int in range(spawn_count):
+		_spawn_enemy()
+
+	_spawned_ghouls += spawn_count
+	_wave_index += 1
 
 func _spawn_enemy() -> void:
 	var enemy: Ghoul = ENEMY_SCENE.instantiate() as Ghoul
