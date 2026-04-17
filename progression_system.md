@@ -1,230 +1,131 @@
-# Progression System (Einsteiger-Doku)
+# Progression System (nach Balancing Refactor)
 
-Diese Datei erklaert dein aktuelles Progression-System im Projekt `godot-survivors-game`.
-Ziel: Du sollst verstehen, **wie alles zusammenhaengt** und **wie du es sauber erweiterst**.
+## 1. Kernprinzip
 
-## 1) Kurzueberblick
+Progression ist explizit datengetrieben:
 
-Dein Progression-System hat 3 Ebenen:
+- Abilities/Upgrades kommen aus `ProgressionCatalog`
+- Level-Up Optionen kommen aus `AbilityProgressionModel` + `LevelUpOptionService`
+- Upgrade-Wirkung kommt aus `UpgradeEffect` + Applier
 
-1. **XP + Level**
-- Enemies sterben -> XP-Orbs spawnen -> Player sammelt XP -> Level steigt.
+Keine implizite Ordner-Discovery, keine doppelte Level-Up-Build-Logik.
 
-2. **Level-Up Auswahl**
-- Bei jedem Level-Up oeffnet sich ein Popup mit bis zu 3 Optionen.
-- Optionen sind getypt (`LevelUpOption`), nicht mehr lose Dictionaries.
+## 2. Zentrale Bausteine
 
-3. **Anwenden der Wahl**
-- Neue Waffe freischalten, Waffenupgrade anwenden oder Player-Utility upgraden.
+### 2.1 Data
 
-## 2) Voller Ablauf eines Level-Ups
+- `scripts/data/progression/progression_catalog.gd`
+- `resources/progression/catalogs/default_progression_catalog.tres`
 
-1. Enemy stirbt in `scripts/main.gd` (`_on_enemy_died`) und ruft `XPOrbManager.spawn_orb(...)`.
-2. Orb wird vom Player eingesammelt (`scripts/pickups/xp_orb.gd`), Signal `collected` geht an `XPOrbManager`.
-3. `XPOrbManager` ruft `player.collect_xp(amount)`.
-4. `Player.collect_xp` delegiert an `PlayerProgression.add_xp(...)`.
-5. `PlayerProgression` emittiert:
-- `xp_changed`
-- bei Schwelle: `leveled_up(new_level)`
-6. `Player` leitet `leveled_up` weiter an `Main`.
-7. `Main` queued das Level in `_pending_level_ups` und zeigt nacheinander Popups.
-8. `Main._build_level_up_options(level)` baut die Auswahl:
-- ggf. Unlock-Optionen (neue Waffen)
-- Waffen-Upgrades
-- Utility-Upgrades
-9. `LevelUpPopup` zeigt Optionen und emittiert `option_selected(LevelUpOption)`.
-10. `Main._apply_level_up_option(...)` fuehrt die gewaehlte Option aus.
+enthaelt:
 
-## 3) Welche Skripte arbeiten zusammen?
+- `abilities: Array[AbilityDefinition]`
+- `upgrades: Array[UpgradeDefinition]`
 
-## XP + Level
-- `scripts/pickups/xp_orb_manager.gd`
-- Spawn, Pooling, Einsammel-Handling von XP-Orbs.
-- `scripts/pickups/xp_orb.gd`
-- Bewegung/Magnet zum Player, Signal bei Einsammeln.
-- `scripts/player/player_progression.gd`
-- Berechnet XP-Schwelle und Level-Ups.
-- `scripts/player/player.gd`
-- Bruecke: `collect_xp` -> `PlayerProgression`, leitet Signale weiter.
+### 2.2 Model
 
-## Orchestrierung + UI
-- `scripts/main.gd`
-- Zentrale Orchestrierung fuer Level-Up Queue, Popup anzeigen, Option anwenden.
-- `scripts/ui/level_up_popup.gd`
-- Zeigt 1..3 `LevelUpOption` an und gibt Auswahl zurueck.
-- `scripts/ui/action_button_bar.gd`
-- Aktualisiert Action-Bar Icons aus den Weapon-Slots.
+- `scripts/player/ability_progression_model.gd`
 
-## Weapon-Progression (Kern)
-- `scripts/player/player_weapon_system.gd`
-- Runtime-Combat (Input, Chargen, Schiessen, VFX/Audio).
-- Nutzt `WeaponProgressionModel` fuer Progression-Daten und Upgrade-Regeln.
-- `scripts/player/weapon_progression_model.gd`
-- Datengetriebene Weapon-Progression:
-- laedt Ability/Upgrade-Definitionen aus `.tres`
-- verwaltet Slots/Unlocks
-- erzeugt Upgrade-Optionen
-- wendet Waffenupgrades an
-- `scripts/player/weapon_ability_state.gd`
-- Runtime-State einer Weapon-Ability (Stats + Upgrade-Zaehler).
+Aufgaben:
 
-## Datenmodelle
-- `scripts/data/progression/ability_definition.gd.gd`
-- Daten fuer Abilities (Unlock-Level, Verhalten, Stats, Icons, etc.).
-- `scripts/data/progression/upgrade_definition.gd.gd`
-- Daten fuer Upgrades (Typ, max Stacks, Texte, Icon).
-- `scripts/data/progression/level_up_option.gd`
-- Typisierte Option im Popup (`new_weapon`, `weapon_upgrade`, `player_upgrade`).
+- Weapon-Slots und Ability-States verwalten
+- Utility-Upgrade-States verwalten
+- Option-Pool fuer Level-Up bauen (`get_level_up_options(level)`)
+- gewaehlte Option anwenden (`apply_option`)
 
-## 4) Wichtige Resource-Ordner
+### 2.3 Option-Auswahl
 
-- `resources/progression/abilities/`
-- Jede Ability als `.tres` (z. B. `ki_blast.tres`, `barrier.tres`).
-- `resources/progression/upgrades/`
-- Upgrade-Definitionen (`damage.tres`, `reflect.tres`, ability-spezifische wie `ki_blast_damage.tres`).
-- `resources/progression/icons/`
-- Atlas-Icons fuer Action-Bar und Level-Up.
+- `scripts/systems/level_up_option_service.gd`
+- `scripts/systems/level_up_controller.gd`
 
-## 5) Warum `LevelUpOption` wichtig ist
+Ablauf:
 
-Frueher wurden freie Dictionaries benutzt (fragil bei Tippfehlern).
-Jetzt gibt es eine klare Klasse mit festen Feldern:
+1. Controller bekommt `leveled_up(level)`.
+2. Service liest Option-Pool aus Model.
+3. Service waehlt finale Optionen (Standard: 3), inkl. Unlock-Milestone-Priorisierung.
+4. Popup zeigt Optionen; Auswahl geht zurueck an `AbilityProgressionModel.apply_option`.
 
-- `option_type`
-- `ability_id`
-- `upgrade_id`
-- `title`
-- `description`
-- `icon`
+## 3. Upgrade-Effekte
 
-Das macht Refactors sicherer und den Code leichter lesbar.
+### 3.1 Datenstruktur
 
-## 6) Unlock-Logik (neue Waffen)
+- `scripts/data/progression/upgrade_effect.gd`
+- `UpgradeDefinition.effects: Array[UpgradeEffect]`
 
-Im `WeaponProgressionModel`:
+`UpgradeEffect`-Felder:
 
-- Jede Weapon hat `unlock_level`.
-- Bei Level-Up baut `Main` Optionen.
-- Wenn ein echtes Unlock-Milestone-Level erreicht ist:
-- Unlock-Optionen werden priorisiert.
-- Falls weniger als 3 Unlocks verfuegbar sind, werden mit normalen Upgrades aufgefuellt.
-- Beim Anwenden wird immer der **naechste freie Slot** genommen.
+- `target_domain` (`weapon_state` / `player`)
+- `stat_key`
+- `operation` (`add`, `clamp_add`, `set_true`, ...)
+- `value`
+- `min_value`, `max_value`
 
-## 7) Utility-Upgrades (Dash/Charge-Ki)
+### 3.2 Runtime-Anwendung
 
-Utility-Upgrades sind **datengetrieben** wie Waffen-Upgrades.
-Die Liste lebt in `PlayerDefinition.utility_upgrades` (`.tres` unter `resources/progression/upgrades/utility/`).
+- `scripts/progression/weapon_upgrade_applier.gd`
+- `scripts/progression/utility_upgrade_applier.gd`
 
-- Optionen erzeugen: `Player.get_utility_upgrade_options()` iteriert ueber die Definitionen und wendet Filter-Regeln (`_is_utility_upgrade_available`) an.
-- Anwenden: `Player.apply_utility_upgrade(...)` liest `numeric_value`, `min_clamp`, `max_clamp` aus der `UpgradeDefinition` und mutiert das passende Feld.
+Regel:
 
-Vorhandene Upgrades:
-- Dash: Cooldown (`dash_cooldown.tres` — `numeric_value=-1`, `min_clamp=1`)
-- Dash: Distance (`dash_distance.tres` — `numeric_value=5`)
-- Dash: Invulnerability (`dash_invulnerable.tres` — Flag, `max_stacks=1`)
-- Dash: Phase (`dash_phase.tres` — Flag, `max_stacks=1`)
-- Charge-Ki: Regen (`charge_ki_regen.tres` — `numeric_value=2`)
-- Charge-Ki: Knockback (`charge_ki_knockback.tres` — `numeric_value=10`)
-- Charge-Ki: AOE-Damage (`charge_ki_aoe_damage.tres` — `numeric_value=1`)
+- Wenn `effects` gesetzt sind: datengetriebene Anwendung.
+- Wenn `effects` leer sind: Legacy-Fallback (`upgrade_type`/`numeric_value`).
 
-Neues Utility-Upgrade hinzufuegen:
-1. Neue `.tres` in `resources/progression/upgrades/utility/` anlegen.
-2. In `player_default.tres` die Liste `utility_upgrades` erweitern.
-3. Falls die Wirkung kein einfacher Feld-Increment ist (z.B. Flag): neuen Case in `Player.apply_utility_upgrade()` und ggf. in `Player._is_utility_upgrade_available()` ergaenzen.
+Damit bleibt Migration robust, ohne Big-Bang.
 
-## 7b) Zentrale Balance-Ressourcen
+## 4. Utility-Upgrades (Player)
 
-Alle Zahlen leben in `.tres`-Dateien, keine Magic Numbers in Runtime-Skripten.
+Utility-Upgrades mutieren Player-Stats ueber klar benannte Methoden in `player.gd`:
 
-- `resources/balance/level_progression_default.tres` — XP-Kurve (`LevelProgression`, Godot `Curve`).
-  Wird in `scenes/player.tscn` am `Progression`-Node gesetzt.
-- `resources/balance/player_default.tres` — Player-Stats + Utility-Upgrades (`PlayerDefinition`).
-  Wird in `scenes/player.tscn` am `Player`-Node gesetzt. `Player._apply_definition()` kopiert die Werte in Member-Vars (damit Upgrades zur Laufzeit weiterhin mutieren koennen).
-- `resources/balance/enemies/ghoul.tres` — Ghoul-Stats (`EnemyDefinition`, inkl. PackedScene-Referenz).
-  Wird von `main.gd._spawn_enemy()` vor `add_child` am Enemy gesetzt.
-- `resources/balance/waves/default_run.tres` — Wellen/Spawning (`WaveDefinition`).
-  Referenziert die Enemy-Definitionen (`enemy_pool`) und liefert `get_wave_size(wave_index)` aus einer `Curve`. In `scenes/main.tscn` am `main`-Node gesetzt.
+- `adjust_dash_cooldown(...)`
+- `adjust_dash_distance(...)`
+- `unlock_dash_invulnerable()`
+- `unlock_dash_phase()`
+- `adjust_charge_ki_regen(...)`
+- `adjust_ki_release_knockback(...)`
+- `adjust_ki_release_aoe_damage(...)`
 
-Grundsatz: `main.gd` bleibt "dumm" — keine Balance-Zahl im Orchestrator.
+Kein ID-basierter Handler-Registrierungscode mehr im Model.
 
-## 8) So erweiterst du das System
+## 5. Weapon-Upgrades
 
-## A) Neue Weapon-Ability hinzufuegen
+Weapon-Upgrades mutieren `WeaponAbilityState` ueber `WeaponUpgradeApplier`.
 
-1. Neue `.tres` in `resources/progression/abilities/` anlegen.
-2. Felder setzen:
-- `id`, `progression_domain = weapon`, `display_name`
-- `unlock_level`, `unlock_description`
-- `behavior` (`projectile` oder `barrier`)
-- Stats (`base_cost`, `base_damage_min/max`, etc.)
-- `upgrade_ids`
-- Icon-Felder
-3. Falls Projektil:
-- `projectile_scene` setzen
-- optional `charge_vfx_scene`, `is_chargeable`, Audio-Varianten
-4. Falls Startwaffe:
-- `starts_unlocked = true`
-- `start_slot_index` setzen
+Typische Stat-Keys in Effekten:
 
-Wichtig:
-- `id` muss eindeutig sein.
-- `upgrade_ids` muessen zu existierenden Upgrade-Definitionen passen.
+- `cost_upgrade_count`
+- `damage_upgrade_count`
+- `pierce_upgrade_count`
+- `speed_upgrade_count`
+- `bounce_upgrade_count`
+- `size_upgrade_count`
+- `barrier_absorb_upgrade_count`
+- `barrier_lifetime_upgrade_count`
+- `barrier_reflect_unlocked`
+- `charge_speed_upgrade_count`
 
-## B) Neues Waffen-Upgrade hinzufuegen
+## 6. Integritaetsregeln
 
-1. Upgrade-Typ festlegen (z. B. `damage`, `bounce`, ...).
-2. Falls neuer Typ: im `WeaponProgressionModel` erweitern:
-- Konstante
-- Logik in `apply_weapon_upgrade`
-- Stack-Zaehlung in `_get_upgrade_stack_count`
-- Anzeige in `_upgrade_display_name` und `_upgrade_description`
-3. Neue `.tres` in `resources/progression/upgrades/` anlegen:
-- `id`
-- `upgrade_type`
-- optional `ability_id`
-- optional `max_stacks`, `title`, `description`, `icon`
-4. Ability `.tres` um `upgrade_ids` erweitern.
+- `ProgressionCatalog` ist Pflicht fuer `AbilityProgressionModel.initialize(...)`.
+- Fehlende oder doppelte IDs im Catalog werden als Fehler geloggt.
+- Utility-States werden aus dem Upgrade-Katalog (Domain `utility`) aufgebaut.
 
-## C) Neue Utility-Upgrades (Player) hinzufuegen
+## 7. Erweiterung
 
-1. Neue `.tres` in `resources/progression/upgrades/utility/` anlegen (`id`, `upgrade_type`, `title`, `description`, `numeric_value`, `min_clamp`/`max_clamp`).
-2. `player_default.tres` → `utility_upgrades` um die Referenz erweitern.
-3. Wenn ein neuer numerischer Zielwert betroffen ist: Case in `Player.apply_utility_upgrade(...)` hinzufuegen, der `numeric_value`/Clamps anwendet.
-4. Bei Flag-Upgrades zusaetzlich `Player._is_utility_upgrade_available(...)` pflegen, damit das Upgrade nach Freischaltung nicht erneut angeboten wird.
+### Neue Ability
 
-## D) Popup-Optionstyp erweitern
+1. `AbilityDefinition`-Resource anlegen.
+2. In `default_progression_catalog.tres` unter `abilities` eintragen.
+3. Optional: `projectile_definition` referenzieren.
 
-Wenn du einen ganz neuen Optionstyp willst:
+### Neues Upgrade
 
-1. Neuen Typ in `LevelUpOption` einfuehren.
-2. Optionen an passender Stelle erzeugen (`Main` / Model / Player).
-3. `Main._apply_level_up_option(...)` um neuen `match`-Fall erweitern.
+1. `UpgradeDefinition`-Resource anlegen.
+2. `effects` definieren (`target_domain`, `stat_key`, `operation`, `value`).
+3. In `default_progression_catalog.tres` unter `upgrades` eintragen.
+4. Ability `upgrade_ids` (falls weapon-bound) erweitern.
 
-## 9) Trennung der Verantwortlichkeiten (wichtig fuer Wartbarkeit)
+### Neues Utility-Stat-Ziel
 
-- `Main`: Ablauf und UI-Orchestrierung.
-- `PlayerWeaponSystem`: Combat-Runtime.
-- `WeaponProgressionModel`: Daten + Regeln + Upgrade/Unlock-Entscheidungen.
-- `Player`: Charakterzustand + Utility-Upgrades.
-- `LevelUpPopup`: reine Darstellung/Interaktion.
-
-Wenn du neue Features baust, halte diese Trennung ein. Dann bleibt das System sauber.
-
-## 10) Typische Fehlerquellen
-
-1. `upgrade_ids` verweisen auf nicht vorhandene Upgrade-`id`.
-2. Ability hat kein gueltiges Icon -> Option wirkt "leer".
-3. Neuer Upgrade-Typ wurde in `.tres` gesetzt, aber nicht in `WeaponProgressionModel`-Logik implementiert.
-4. `progression_domain` falsch (Weapon vs. Utility) -> Ability wird nicht im Weapon-Model geladen.
-5. Unlock-Level korrekt gesetzt, aber kein freier Slot mehr vorhanden.
-
-## 11) Kurze Checkliste vor jedem Test
-
-1. `id` eindeutig?
-2. Icons sichtbar?
-3. `unlock_level` sinnvoll?
-4. `upgrade_ids` korrekt?
-5. Option erscheint im Popup?
-6. Auswahl wird korrekt angewendet?
-
----
+1. neuen `stat_key` in Utility-Upgrade-Resource verwenden.
+2. genau einmal in `UtilityUpgradeApplier` auf Player-Methode mappen.
+3. Player-Methode kapselt Seiteneffekte (z. B. Dash-Phasing waehrend aktiver Dash-Phase).

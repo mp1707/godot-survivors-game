@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://t6p6b86qo0nd" path="res://resources/progression/icons/charged_ki_blast_atlas.tres" id="2_jc2iu"]
 [ext_resource type="PackedScene" uid="uid://d33d8jn5vfqnk" path="res://scenes/abilities/charged_laser_blast.tscn" id="3_proj"]
 [ext_resource type="PackedScene" uid="uid://s465xiay1qwc" path="res://scenes/abilities/charging_laser_ball.tscn" id="4_charge_vfx"]
+[ext_resource type="Resource" path="res://resources/progression/projectiles/charged_ki_blast_projectile.tres" id="5_projectile_def"]
 
 [resource]
 script = ExtResource("1_kslqc")
@@ -16,6 +17,7 @@ unlock_level = 5
 unlock_description = "Aufladbarer Blast mit hohem Burst-Damage."
 is_chargeable = true
 projectile_scene = ExtResource("3_proj")
+projectile_definition = ExtResource("5_projectile_def")
 charge_vfx_scene = ExtResource("4_charge_vfx")
 charge_complete_animation = &"max_charge"
 charge_audio_variant = &"big_laser"

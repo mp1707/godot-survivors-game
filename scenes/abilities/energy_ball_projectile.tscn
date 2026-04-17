@@ -39,7 +39,6 @@ radius = 13.038404
 collision_layer = 8
 collision_mask = 5
 script = ExtResource("1_energy")
-lifetime = 10.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1943044247]
 sprite_frames = SubResource("SpriteFrames_energy")

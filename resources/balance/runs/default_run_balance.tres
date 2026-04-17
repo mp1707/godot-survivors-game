@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RunBalanceDefinition" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/balance/run_balance_definition.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/balance/player_default.tres" id="2_player_def"]
+[ext_resource type="Resource" path="res://resources/balance/level_progression_default.tres" id="3_level_prog"]
+[ext_resource type="Resource" path="res://resources/balance/waves/default_run.tres" id="4_wave_def"]
+[ext_resource type="Resource" path="res://resources/balance/spawn/default_spawn_pacing.tres" id="5_spawn_pacing"]
+[ext_resource type="Resource" path="res://resources/progression/catalogs/default_progression_catalog.tres" id="6_catalog"]
+
+[resource]
+script = ExtResource("1_script")
+player_definition = ExtResource("2_player_def")
+level_progression = ExtResource("3_level_prog")
+wave_definition = ExtResource("4_wave_def")
+spawn_pacing_definition = ExtResource("5_spawn_pacing")
+progression_catalog = ExtResource("6_catalog")

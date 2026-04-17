@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ProjectileDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/progression/projectile_definition.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+base_lifetime = 1.2
+collision_shape_scale = 1.0
+rotation_mode = &"align_to_direction"
+bounce_targeting_mode = &"nearest_not_hit"
+bounce_step_distance = 6.0
+destroy_on_non_enemy_contact = true

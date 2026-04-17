@@ -29,6 +29,7 @@ const AUDIO_VARIANT_ENERGY_BALL: StringName = &"energy_ball"
 @export var behavior: StringName = BEHAVIOR_PROJECTILE
 @export var is_chargeable: bool = false
 @export var projectile_scene: PackedScene
+@export var projectile_definition: ProjectileDefinition
 @export var charge_vfx_scene: PackedScene
 @export var charge_complete_animation: StringName = &""
 @export var keep_projectile_upright: bool = false

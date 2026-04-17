@@ -9,13 +9,14 @@ var upgrade_icon: Texture2D = null # level-up/upgrades
 
 var starts_unlocked: bool = false
 var preferred_slot_index: int = -1
-var unlock_level: int = 1
+var unlock_level: int = 0
 var unlock_description: String = ""
 
-var behavior: StringName = AbilityDefinition.BEHAVIOR_PROJECTILE
+var behavior: StringName = &""
 var is_unlocked: bool = false
 var is_chargeable: bool = false
 var projectile_scene: PackedScene = null
+var projectile_definition: ProjectileDefinition = null
 var charge_vfx_scene: PackedScene = null
 var charge_complete_animation: StringName = &""
 var keep_projectile_upright: bool = false
@@ -27,19 +28,19 @@ var slot_index: int = -1
 
 var base_cost: int = 0
 var cost_upgrade_step: int = 0
-var min_cost: int = 1
+var min_cost: int = 0
 
 var base_damage_min: int = 0
 var base_damage_max: int = 0
 
 var base_charge_time: float = 0.0
 var charge_time_reduction_step: float = 0.0
-var min_charge_time: float = 1.0
+var min_charge_time: float = 0.0
 
 var base_speed: float = 0.0
 var speed_upgrade_factor: float = 1.0
 
-var base_size: float = 1.0
+var base_size: float = 0.0
 var size_upgrade_factor: float = 1.0
 
 var base_pierce_amount: int = 0
@@ -62,8 +63,14 @@ var barrier_absorb_upgrade_count: int = 0
 var barrier_lifetime_upgrade_count: int = 0
 var barrier_reflect_unlocked: bool = false
 var charge_speed_upgrade_count: int = 0
+var has_definition: bool = false
 
 func apply_definition(definition: AbilityDefinition) -> void:
+	if definition == null:
+		push_error("WeaponAbilityState: AbilityDefinition is missing.")
+		has_definition = false
+		return
+	has_definition = true
 	ability_id = definition.id
 	display_name = definition.display_name
 	starts_unlocked = definition.starts_unlocked
@@ -73,6 +80,7 @@ func apply_definition(definition: AbilityDefinition) -> void:
 	behavior = definition.behavior
 	is_chargeable = definition.is_chargeable
 	projectile_scene = definition.projectile_scene
+	projectile_definition = definition.projectile_definition
 	charge_vfx_scene = definition.charge_vfx_scene
 	charge_complete_animation = definition.charge_complete_animation
 	keep_projectile_upright = definition.keep_projectile_upright

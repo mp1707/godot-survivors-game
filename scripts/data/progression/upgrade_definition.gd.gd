@@ -12,6 +12,7 @@ const DOMAIN_UTILITY: StringName = &"utility"
 @export_multiline var description: String
 # Optional override. If empty, UI uses ability upgrade icon.
 @export var icon: Texture2D
+@export var effects: Array[UpgradeEffect] = []
 
 # Explicit domain marker. If left empty, the domain is inferred from upgrade_type.
 @export var domain: StringName = &""
@@ -26,6 +27,13 @@ const DOMAIN_UTILITY: StringName = &"utility"
 func get_domain() -> StringName:
 	if domain != &"":
 		return domain
+	for effect: UpgradeEffect in effects:
+		if effect == null:
+			continue
+		if effect.target_domain == UpgradeEffect.TARGET_PLAYER:
+			return DOMAIN_UTILITY
+		if effect.target_domain == UpgradeEffect.TARGET_WEAPON_STATE:
+			return DOMAIN_WEAPON
 	if upgrade_type == &"player_utility" or upgrade_type == &"player_utility_flag":
 		return DOMAIN_UTILITY
 	return DOMAIN_WEAPON

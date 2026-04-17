@@ -1,8 +1,15 @@
-[gd_resource type="Resource" script_class="UpgradeDefinition" format=3]
+[gd_resource type="Resource" script_class="UpgradeDefinition" format=3 uid="uid://d25thgdr0rmpi"]
 
 [ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="2_effect_script"]
+
+[sub_resource type="Resource" id="UpgradeEffect_charge_speed"]
+script = ExtResource("2_effect_script")
+stat_key = &"charge_speed_upgrade_count"
+value = 1.0
 
 [resource]
 script = ExtResource("1_script")
 id = &"charge_speed"
 upgrade_type = &"charge_speed"
+effects = Array[ExtResource("2_effect_script")]([SubResource("UpgradeEffect_charge_speed")])

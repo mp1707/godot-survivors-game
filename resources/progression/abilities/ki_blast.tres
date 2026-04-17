@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_aqfev"]
 [ext_resource type="Texture2D" uid="uid://dnlk653dgo38b" path="res://resources/progression/icons/ki_blast_atlas.tres" id="2_h8t8x"]
 [ext_resource type="PackedScene" uid="uid://442djdt3jfdt" path="res://scenes/abilities/laser_projectile.tscn" id="3_proj"]
+[ext_resource type="Resource" path="res://resources/progression/projectiles/ki_blast_projectile.tres" id="4_projectile_def"]
 
 [resource]
 script = ExtResource("1_aqfev")
@@ -15,6 +16,7 @@ starts_unlocked = true
 start_slot_index = 0
 unlock_description = "Schneller Standard-Schuss mit solider Skalierung."
 projectile_scene = ExtResource("3_proj")
+projectile_definition = ExtResource("4_projectile_def")
 release_audio_variant = &"small_laser"
 base_cost = 10
 cost_upgrade_step = 1

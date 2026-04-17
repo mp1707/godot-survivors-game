@@ -1,6 +1,13 @@
-[gd_resource type="Resource" script_class="UpgradeDefinition" format=3]
+[gd_resource type="Resource" script_class="UpgradeDefinition" format=3 uid="uid://cg40f2wvabebp"]
 
 [ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="2_effect_script"]
+
+[sub_resource type="Resource" id="UpgradeEffect_dash_distance"]
+script = ExtResource("2_effect_script")
+target_domain = &"player"
+stat_key = &"dash_distance"
+value = 5.0
 
 [resource]
 script = ExtResource("1_script")
@@ -8,4 +15,6 @@ id = &"dash_distance"
 upgrade_type = &"player_utility"
 title = "Dash: Distance"
 description = "Dash-Distanz +5"
+effects = Array[ExtResource("2_effect_script")]([SubResource("UpgradeEffect_dash_distance")])
+domain = &"utility"
 numeric_value = 5.0

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://1bc8385wiu0l"]
 
-[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_8yhgg"]
+[ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/enemy.gd" id="1_8yhgg"]
 [ext_resource type="Texture2D" uid="uid://c1q31y318pjod" path="res://art/enemies/Dismembered Crawler/DismemberedCrawler.png" id="2_l8e30"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="3_ntbkm"]
 
@@ -45,9 +45,9 @@ radius = 5.0
 height = 16.0
 
 [node name="Crawler" type="CharacterBody2D" unique_id=560951609]
-script = ExtResource("1_8yhgg")
 collision_layer = 4
 collision_mask = 7
+script = ExtResource("1_8yhgg")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1041669266]
 sprite_frames = SubResource("SpriteFrames_euqfn")

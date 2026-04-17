@@ -5,8 +5,6 @@ signal weapon_unlocked(slot_index: int, ability_id: StringName)
 signal weapon_upgraded(ability_id: StringName, upgrade_id: StringName)
 signal utility_applied(upgrade_id: StringName)
 
-const ABILITY_DEFINITIONS_DIR: String = "res://resources/progression/abilities"
-const UPGRADE_DEFINITIONS_DIR: String = "res://resources/progression/upgrades"
 const ICONS_DIR: String = "res://resources/progression/icons"
 
 const UPGRADE_COST: StringName = &"cost"
@@ -24,18 +22,24 @@ var _weapon_slots: Array[StringName] = []
 var _abilities: Dictionary = {}
 var _ability_definitions: Dictionary = {}
 var _upgrade_definitions: Dictionary = {}
+var _catalog: ProgressionCatalog
 
 var _utility_states: Dictionary = {}
-var _utility_handlers: Dictionary = {}
+var _weapon_upgrade_applier: WeaponUpgradeApplier = WeaponUpgradeApplier.new()
+var _utility_upgrade_applier: UtilityUpgradeApplier
 
-func initialize(slot_count: int, player_definition: PlayerDefinition = null) -> void:
+func initialize(slot_count: int, catalog: ProgressionCatalog, player_definition: PlayerDefinition = null) -> void:
+	_catalog = catalog
 	_initialize_empty_slots(slot_count)
 	_load_progression_definitions()
 	_setup_weapon_abilities()
 	_setup_utility_upgrades(player_definition)
 
-func register_utility_handler(upgrade_id: StringName, handler: Callable) -> void:
-	_utility_handlers[upgrade_id] = handler
+func set_weapon_upgrade_applier(applier: WeaponUpgradeApplier) -> void:
+	_weapon_upgrade_applier = applier if applier != null else WeaponUpgradeApplier.new()
+
+func set_utility_upgrade_applier(applier: UtilityUpgradeApplier) -> void:
+	_utility_upgrade_applier = applier
 
 func set_utility_fallback_icon(upgrade_id: StringName, icon: Texture2D) -> void:
 	var state: UtilityUpgradeState = _utility_states.get(upgrade_id) as UtilityUpgradeState
@@ -47,9 +51,6 @@ func set_utility_fallback_icon(upgrade_id: StringName, icon: Texture2D) -> void:
 
 func get_level_up_options(current_level: int) -> Array[LevelUpOption]:
 	var unlock_options: Array[LevelUpOption] = get_unlockable_weapon_options(current_level)
-	if has_unlock_milestone(current_level) and not unlock_options.is_empty():
-		return unlock_options
-
 	var options: Array[LevelUpOption] = []
 	options.append_array(unlock_options)
 	options.append_array(get_weapon_upgrade_options())
@@ -155,30 +156,10 @@ func apply_weapon_upgrade(ability_id: StringName, upgrade_id: StringName) -> boo
 		return false
 
 	var definition: UpgradeDefinition = _get_upgrade_definition(ability_id, upgrade_id)
-	var upgrade_type: StringName = _resolve_upgrade_type(definition, upgrade_id)
-	match upgrade_type:
-		UPGRADE_COST:
-			state.cost_upgrade_count += 1
-		UPGRADE_DAMAGE:
-			state.damage_upgrade_count += 1
-		UPGRADE_PIERCE:
-			state.pierce_upgrade_count += 1
-		UPGRADE_SPEED:
-			state.speed_upgrade_count += 1
-		UPGRADE_BOUNCE:
-			state.bounce_upgrade_count += 1
-		UPGRADE_SIZE:
-			state.size_upgrade_count += 1
-		UPGRADE_ABSORB:
-			state.barrier_absorb_upgrade_count += 1
-		UPGRADE_LIFETIME:
-			state.barrier_lifetime_upgrade_count += 1
-		UPGRADE_REFLECT:
-			state.barrier_reflect_unlocked = true
-		UPGRADE_CHARGE_SPEED:
-			state.charge_speed_upgrade_count += 1
-		_:
-			return false
+	if _weapon_upgrade_applier == null:
+		return false
+	if not _weapon_upgrade_applier.apply_upgrade(state, definition, upgrade_id):
+		return false
 
 	weapon_upgraded.emit(ability_id, upgrade_id)
 	return true
@@ -211,16 +192,11 @@ func apply_utility_upgrade(upgrade_id: StringName) -> bool:
 		return false
 	if state.is_max_stacked():
 		return false
-	if not _utility_handlers.has(upgrade_id):
-		push_warning("No utility handler registered for upgrade '%s'." % String(upgrade_id))
+	if _utility_upgrade_applier == null:
+		push_warning("No UtilityUpgradeApplier configured for utility upgrade '%s'." % String(upgrade_id))
 		return false
 
-	var handler: Callable = _utility_handlers[upgrade_id] as Callable
-	if not handler.is_valid():
-		return false
-
-	var applied: bool = bool(handler.call(state.definition))
-	if not applied:
+	if not _utility_upgrade_applier.apply_upgrade(state.definition):
 		return false
 
 	state.stack_count += 1
@@ -334,17 +310,30 @@ func _setup_weapon_abilities() -> void:
 
 func _setup_utility_upgrades(player_definition: PlayerDefinition) -> void:
 	_utility_states.clear()
-	if player_definition == null:
-		return
-	for upgrade: UpgradeDefinition in player_definition.utility_upgrades:
+	for upgrade_value: Variant in _upgrade_definitions.values():
+		var upgrade: UpgradeDefinition = upgrade_value as UpgradeDefinition
 		if upgrade == null or upgrade.id == &"":
 			continue
 		if upgrade.get_domain() != UpgradeDefinition.DOMAIN_UTILITY:
 			continue
-		var state: UtilityUpgradeState = UtilityUpgradeState.new()
-		state.upgrade_id = upgrade.id
-		state.definition = upgrade
-		_utility_states[upgrade.id] = state
+		_register_utility_state(upgrade)
+
+	# Legacy fallback: keep old player-definition list working while resources migrate.
+	if _utility_states.is_empty() and player_definition != null:
+		for upgrade: UpgradeDefinition in player_definition.utility_upgrades:
+			if upgrade == null or upgrade.id == &"":
+				continue
+			if upgrade.get_domain() != UpgradeDefinition.DOMAIN_UTILITY:
+				continue
+			_register_utility_state(upgrade)
+
+func _register_utility_state(upgrade: UpgradeDefinition) -> void:
+	if _utility_states.has(upgrade.id):
+		return
+	var state: UtilityUpgradeState = UtilityUpgradeState.new()
+	state.upgrade_id = upgrade.id
+	state.definition = upgrade
+	_utility_states[upgrade.id] = state
 
 func _unlock_weapon_in_slot(ability_id: StringName, slot_index: int) -> bool:
 	if slot_index < 0 or slot_index >= _weapon_slots.size():
@@ -397,35 +386,13 @@ func _can_offer_upgrade(state: WeaponAbilityState, upgrade_id: StringName) -> bo
 		return get_current_charge_time(state) > state.min_charge_time
 
 	var max_stacks: int = definition.max_stacks if definition != null else -1
-	if max_stacks >= 0 and _get_upgrade_stack_count(state, upgrade_type) >= max_stacks:
+	var stack_count: int = 0
+	if _weapon_upgrade_applier != null:
+		stack_count = _weapon_upgrade_applier.get_stack_count_for_upgrade(state, definition, upgrade_id)
+	if max_stacks >= 0 and stack_count >= max_stacks:
 		return false
 
 	return true
-
-func _get_upgrade_stack_count(state: WeaponAbilityState, upgrade_type: StringName) -> int:
-	match upgrade_type:
-		UPGRADE_COST:
-			return state.cost_upgrade_count
-		UPGRADE_DAMAGE:
-			return state.damage_upgrade_count
-		UPGRADE_PIERCE:
-			return state.pierce_upgrade_count
-		UPGRADE_SPEED:
-			return state.speed_upgrade_count
-		UPGRADE_BOUNCE:
-			return state.bounce_upgrade_count
-		UPGRADE_SIZE:
-			return state.size_upgrade_count
-		UPGRADE_ABSORB:
-			return state.barrier_absorb_upgrade_count
-		UPGRADE_LIFETIME:
-			return state.barrier_lifetime_upgrade_count
-		UPGRADE_REFLECT:
-			return 1 if state.barrier_reflect_unlocked else 0
-		UPGRADE_CHARGE_SPEED:
-			return state.charge_speed_upgrade_count
-		_:
-			return 0
 
 func _build_weapon_upgrade_option(state: WeaponAbilityState, upgrade_id: StringName) -> LevelUpOption:
 	var upgrade_definition: UpgradeDefinition = _get_upgrade_definition(state.ability_id, upgrade_id)
@@ -501,48 +468,57 @@ func _upgrade_description(state: WeaponAbilityState, upgrade_type: StringName) -
 func _load_progression_definitions() -> void:
 	_ability_definitions.clear()
 	_upgrade_definitions.clear()
-	_load_ability_definitions_from_dir(ABILITY_DEFINITIONS_DIR)
-	_load_upgrade_definitions_from_dir(UPGRADE_DEFINITIONS_DIR)
-
-func _load_ability_definitions_from_dir(dir_path: String) -> void:
-	var dir: DirAccess = DirAccess.open(dir_path)
-	if dir == null:
+	if _catalog == null:
+		push_error("AbilityProgressionModel: ProgressionCatalog is required.")
 		return
 
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var full_path: String = dir_path.path_join(file_name)
-			var resource: Resource = load(full_path)
-			var definition: AbilityDefinition = resource as AbilityDefinition
-			if definition != null:
-				var definition_id: StringName = definition.id
-				if definition_id == &"":
-					definition_id = StringName(file_name.get_basename())
-				_ability_definitions[definition_id] = definition
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for ability_definition: AbilityDefinition in _catalog.abilities:
+		_register_ability_definition(ability_definition)
 
-func _load_upgrade_definitions_from_dir(dir_path: String) -> void:
-	var dir: DirAccess = DirAccess.open(dir_path)
-	if dir == null:
+	for upgrade_definition: UpgradeDefinition in _catalog.upgrades:
+		_register_upgrade_definition(upgrade_definition)
+
+	if _ability_definitions.is_empty():
+		push_error("AbilityProgressionModel: catalog contains no valid abilities.")
+	if _upgrade_definitions.is_empty():
+		push_warning("AbilityProgressionModel: catalog contains no valid upgrades.")
+
+func _register_ability_definition(definition: AbilityDefinition) -> void:
+	if definition == null:
+		push_warning("AbilityProgressionModel: null ability definition in catalog.")
 		return
 
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var full_path: String = dir_path.path_join(file_name)
-			var resource: Resource = load(full_path)
-			var definition: UpgradeDefinition = resource as UpgradeDefinition
-			if definition != null:
-				var definition_id: StringName = definition.id
-				if definition_id == &"":
-					definition_id = StringName(file_name.get_basename())
-				_upgrade_definitions[definition_id] = definition
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	var definition_id: StringName = definition.id
+	if definition_id == &"":
+		definition_id = _fallback_id_from_resource(definition)
+	if definition_id == &"":
+		push_error("AbilityProgressionModel: ability without id and resource path in catalog.")
+		return
+	if _ability_definitions.has(definition_id):
+		push_error("AbilityProgressionModel: duplicate ability id '%s' in catalog." % String(definition_id))
+		return
+	_ability_definitions[definition_id] = definition
+
+func _register_upgrade_definition(definition: UpgradeDefinition) -> void:
+	if definition == null:
+		push_warning("AbilityProgressionModel: null upgrade definition in catalog.")
+		return
+
+	var definition_id: StringName = definition.id
+	if definition_id == &"":
+		definition_id = _fallback_id_from_resource(definition)
+	if definition_id == &"":
+		push_error("AbilityProgressionModel: upgrade without id and resource path in catalog.")
+		return
+	if _upgrade_definitions.has(definition_id):
+		push_error("AbilityProgressionModel: duplicate upgrade id '%s' in catalog." % String(definition_id))
+		return
+	_upgrade_definitions[definition_id] = definition
+
+func _fallback_id_from_resource(resource: Resource) -> StringName:
+	if resource == null or resource.resource_path.is_empty():
+		return &""
+	return StringName(resource.resource_path.get_file().get_basename())
 
 func _apply_ability_visuals(state: WeaponAbilityState, ability_definition: AbilityDefinition) -> void:
 	var display_name: String = ability_definition.display_name

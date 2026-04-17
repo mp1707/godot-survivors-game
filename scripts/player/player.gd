@@ -23,29 +23,30 @@ const CHARGE_KI_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/au
 const ENEMY_COLLISION_LAYER_MASK: int = 1 << 2
 
 @export var definition: PlayerDefinition
+@export var progression_catalog: ProgressionCatalog
 
-var max_health: int = 100
-var damage_invuln_time: float = 0.25
-var knockback_strength: float = 90.0
-var knockback_decay: float = 700.0
-var hit_flash_time: float = 0.08
-var ki_charge_regen_per_second: float = 10.0
-var ki_release_radius: float = 72.0
+var max_health: int = 0
+var damage_invuln_time: float = 0.0
+var knockback_strength: float = 0.0
+var knockback_decay: float = 0.0
+var hit_flash_time: float = 0.0
+var ki_charge_regen_per_second: float = 0.0
+var ki_release_radius: float = 0.0
 
-var max_mana: int = 100
-var mana_regen_per_second: float = 1.0
-var xp_magnet_radius: float = 80.0
+var max_mana: int = 0
+var mana_regen_per_second: float = 0.0
+var xp_magnet_radius: float = 0.0
 
-var speed: float = 150.0
-var shoot_anim_duration: float = 0.3
-var mouse_move_deadzone: float = 6.0
-var dash_distance: float = 40.0
-var dash_speed: float = 700.0
-var dash_cooldown: float = 5.0
-var dash_afterimage_interval: float = 0.02
-var dash_afterimage_lifetime: float = 0.12
-var dash_afterimage_alpha: float = 0.6
-var dash_afterimage_tint: Color = Color(0.8, 0.9, 1.0, 1.0)
+var speed: float = 0.0
+var shoot_anim_duration: float = 0.0
+var mouse_move_deadzone: float = 0.0
+var dash_distance: float = 0.0
+var dash_speed: float = 0.0
+var dash_cooldown: float = 0.0
+var dash_afterimage_interval: float = 0.0
+var dash_afterimage_lifetime: float = 0.0
+var dash_afterimage_alpha: float = 0.0
+var dash_afterimage_tint: Color = Color.WHITE
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
 @onready var _aura_sprite: AnimatedSprite2D = $AuraSprite as AnimatedSprite2D
@@ -92,7 +93,9 @@ var _base_collision_mask: int = 0
 var _progression_model: AbilityProgressionModel
 
 func _ready() -> void:
-	_apply_definition()
+	if not _apply_definition():
+		set_physics_process(false)
+		return
 	_health = max_health
 	_mana = float(max_mana)
 	_hit_reaction.knockback_decay = knockback_decay
@@ -100,7 +103,9 @@ func _ready() -> void:
 	mana_changed.emit(_mana, max_mana)
 	mana_preview_changed.emit(false, 0, max_mana)
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
-	_setup_progression_model()
+	if not _setup_progression_model():
+		set_physics_process(false)
+		return
 	if _progression != null:
 		_progression.xp_changed.connect(_on_progression_xp_changed)
 		_progression.leveled_up.connect(_on_progression_leveled_up)
@@ -114,21 +119,22 @@ func _ready() -> void:
 func get_progression_model() -> AbilityProgressionModel:
 	return _progression_model
 
-func _setup_progression_model() -> void:
+func _setup_progression_model() -> bool:
+	if progression_catalog == null:
+		push_error("Player: progression_catalog is missing.")
+		return false
 	_progression_model = AbilityProgressionModel.new()
-	_progression_model.initialize(PlayerWeaponSystem.SLOT_ACTIONS.size(), definition)
-	_register_utility_handlers()
+	_progression_model.initialize(PlayerWeaponSystem.SLOT_ACTIONS.size(), progression_catalog, definition)
+	var weapon_upgrade_applier: WeaponUpgradeApplier = WeaponUpgradeApplier.new()
+	var utility_upgrade_applier: UtilityUpgradeApplier = UtilityUpgradeApplier.new()
+	utility_upgrade_applier.setup(self)
+	_progression_model.set_weapon_upgrade_applier(weapon_upgrade_applier)
+	_progression_model.set_utility_upgrade_applier(utility_upgrade_applier)
+	_configure_utility_upgrade_icons()
 	_weapon_system.attach_progression_model(_progression_model)
+	return true
 
-func _register_utility_handlers() -> void:
-	_progression_model.register_utility_handler(UPGRADE_DASH_COOLDOWN, _apply_dash_cooldown_upgrade)
-	_progression_model.register_utility_handler(UPGRADE_DASH_DISTANCE, _apply_dash_distance_upgrade)
-	_progression_model.register_utility_handler(UPGRADE_DASH_INVULNERABLE, _apply_dash_invulnerable_upgrade)
-	_progression_model.register_utility_handler(UPGRADE_DASH_PHASE, _apply_dash_phase_upgrade)
-	_progression_model.register_utility_handler(UPGRADE_CHARGE_KI_REGEN, _apply_charge_ki_regen_upgrade)
-	_progression_model.register_utility_handler(UPGRADE_CHARGE_KI_KNOCKBACK, _apply_charge_ki_knockback_upgrade)
-	_progression_model.register_utility_handler(UPGRADE_CHARGE_KI_AOE_DAMAGE, _apply_charge_ki_aoe_damage_upgrade)
-
+func _configure_utility_upgrade_icons() -> void:
 	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_COOLDOWN, _dash_upgrade_icon)
 	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_DISTANCE, _dash_upgrade_icon)
 	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_INVULNERABLE, _dash_upgrade_icon)
@@ -486,35 +492,44 @@ func _clear_barrier() -> void:
 		_barrier_sprite.stop()
 		_barrier_sprite.visible = false
 
-func _apply_dash_cooldown_upgrade(upgrade: UpgradeDefinition) -> bool:
-	dash_cooldown = clampf(dash_cooldown + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
+func adjust_dash_cooldown(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
+	dash_cooldown = _apply_clamped_float_add(dash_cooldown, delta, min_value, max_value)
 	return true
 
-func _apply_dash_distance_upgrade(upgrade: UpgradeDefinition) -> bool:
-	dash_distance = clampf(dash_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
+func adjust_dash_distance(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
+	dash_distance = _apply_clamped_float_add(dash_distance, delta, min_value, max_value)
 	return true
 
-func _apply_dash_invulnerable_upgrade(_upgrade: UpgradeDefinition) -> bool:
+func unlock_dash_invulnerable() -> bool:
 	_dash_invulnerable = true
 	return true
 
-func _apply_dash_phase_upgrade(_upgrade: UpgradeDefinition) -> bool:
+func unlock_dash_phase() -> bool:
 	_dash_phase_through_enemies = true
 	if _is_dashing:
 		_apply_dash_collision_mask()
 	return true
 
-func _apply_charge_ki_regen_upgrade(upgrade: UpgradeDefinition) -> bool:
-	ki_charge_regen_per_second = clampf(ki_charge_regen_per_second + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
+func adjust_charge_ki_regen(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
+	ki_charge_regen_per_second = _apply_clamped_float_add(ki_charge_regen_per_second, delta, min_value, max_value)
 	return true
 
-func _apply_charge_ki_knockback_upgrade(upgrade: UpgradeDefinition) -> bool:
-	_ki_release_knockback_distance = clampf(_ki_release_knockback_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
+func adjust_ki_release_knockback(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
+	_ki_release_knockback_distance = _apply_clamped_float_add(_ki_release_knockback_distance, delta, min_value, max_value)
 	return true
 
-func _apply_charge_ki_aoe_damage_upgrade(upgrade: UpgradeDefinition) -> bool:
-	_ki_release_aoe_damage = int(clampf(float(_ki_release_aoe_damage) + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp))
+func adjust_ki_release_aoe_damage(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
+	var next_value: float = _apply_clamped_float_add(float(_ki_release_aoe_damage), delta, min_value, max_value)
+	_ki_release_aoe_damage = int(round(next_value))
 	return true
+
+func _apply_clamped_float_add(base_value: float, delta: float, min_value: float, max_value: float) -> float:
+	var result: float = base_value + delta
+	if not is_inf(min_value):
+		result = maxf(result, min_value)
+	if not is_inf(max_value):
+		result = minf(result, max_value)
+	return result
 
 func collect_xp(amount: int) -> void:
 	if _progression == null:
@@ -577,9 +592,10 @@ func _on_progression_xp_changed(current: int, required: int, level: int) -> void
 func _on_progression_leveled_up(new_level: int) -> void:
 	leveled_up.emit(new_level)
 
-func _apply_definition() -> void:
+func _apply_definition() -> bool:
 	if definition == null:
-		return
+		push_error("Player: PlayerDefinition is missing.")
+		return false
 	max_health = definition.max_health
 	damage_invuln_time = definition.damage_invuln_time
 	knockback_strength = definition.knockback_strength
@@ -600,3 +616,4 @@ func _apply_definition() -> void:
 	dash_afterimage_lifetime = definition.dash_afterimage_lifetime
 	dash_afterimage_alpha = definition.dash_afterimage_alpha
 	dash_afterimage_tint = definition.dash_afterimage_tint
+	return true

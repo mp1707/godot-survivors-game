@@ -1,338 +1,149 @@
-# Survivors Game – Architekturübersicht (Post-Refactor)
+# Survivors Game – Architektur (Balancing Refactor)
 
-## 1. Systemübersicht
+## 1. Zielbild
 
-```mermaid
-graph TB
-    subgraph CORE["Core Orchestration"]
-        MAIN["main.gd"]
-        ES["EnemySpawner"]
-        LUC["LevelUpController"]
-        HUD["GameHud"]
-    end
+Balancing ist datengetrieben und zentral orchestriert:
 
-    subgraph PLAYER["Player Subsystem"]
-        P["Player (player.gd)"]
-        PWS["PlayerWeaponSystem"]
-        PP["PlayerProgression"]
-        APM["AbilityProgressionModel"]
-        PUI["PlayerUIController"]
-        PHB["PlayerHealthBar"]
-        PMB["PlayerManaBar"]
-        DAI["DashAfterimageVfx"]
-    end
+- Zentraler Einstieg pro Run: `RunBalanceDefinition`
+- Expliziter Progression-Datenkatalog: `ProgressionCatalog`
+- Spawn-Druck in eigener Datenquelle: `SpawnPacingDefinition`
+- Projektil-Balance in eigener Datenquelle: `ProjectileDefinition`
+- Upgrade-Anwendung ueber dedizierte Applier statt ID-basierter Handler
 
-    subgraph COMBAT["Combat"]
-        DB["DamageableBody2D (abstract)"]
-        HR["HitReaction2D"]
-    end
+## 2. Zentrale Balance-Resources
 
-    subgraph ENEMIES["Enemies"]
-        E["Enemy (ghoul/crawler/eye scenes)"]
-    end
+### 2.1 Run-Einstieg
 
-    subgraph PROJECTILES["Projectiles"]
-        PROJ["laser_projectile.gd"]
-    end
+- `resources/balance/runs/default_run_balance.tres`
+- Script: `scripts/data/balance/run_balance_definition.gd`
 
-    subgraph PICKUPS["Pickups"]
-        XOM["XPOrbManager"]
-        XO["XPOrb"]
-    end
+Enthaelt Referenzen auf:
 
-    subgraph UI["UI Components"]
-        XPB["XPProgressBar"]
-        LUP["LevelUpPopup"]
-        ABB["ActionButtonBar"]
-        FDN["FloatingDamageNumber"]
-    end
+- `player_definition` (`PlayerDefinition`)
+- `level_progression` (`LevelProgression`)
+- `wave_definition` (`WaveDefinition`)
+- `spawn_pacing_definition` (`SpawnPacingDefinition`)
+- `progression_catalog` (`ProgressionCatalog`)
 
-    subgraph DATA["Data / Resources"]
-        AD["AbilityDefinition (.tres)"]
-        UD["UpgradeDefinition (.tres)"]
-        ED["EnemyDefinition (.tres)"]
-        WD["WaveDefinition (.tres)"]
-        PD["PlayerDefinition (.tres)"]
-        LPROG["LevelProgression (.tres)"]
-    end
+### 2.2 Progression-Daten
 
-    DB -->|extends| P
-    DB -->|extends| E
+- `scripts/data/progression/progression_catalog.gd`
+- `resources/progression/catalogs/default_progression_catalog.tres`
 
-    MAIN --> ES
-    MAIN --> LUC
-    MAIN --> HUD
-    MAIN --> XOM
-    MAIN --> P
+Explizite Listen:
 
-    P --> PWS
-    P --> PP
-    P --> PUI
-    P --> DAI
+- `abilities: Array[AbilityDefinition]`
+- `upgrades: Array[UpgradeDefinition]`
 
-    PWS --> APM
-    LUC --> APM
-    HUD --> APM
+Wichtig: Keine implizite Ordner-Discovery mehr.
 
-    PUI --> PHB
-    PUI --> PMB
+### 2.3 Spawn-Pacing
 
-    ES -->|instantiates| E
-    E -->|apply_damage| P
-    PWS -->|instantiates| PROJ
-    PROJ -->|apply_damage| E
+- `scripts/data/balance/spawn_pacing_definition.gd`
+- `resources/balance/spawn/default_spawn_pacing.tres`
 
-    MAIN -->|spawn_orb| XOM
-    XOM --> XO
-    XO -->|collect_xp| P
+Steuert:
 
-    HR --> E
-    HR --> P
+- Spawn-Intervall ueber Zeit/Wave
+- optionalen Spawn-Batch-Multiplikator
 
-    APM -.->|loads| AD
-    APM -.->|loads| UD
-    E -.->|reads| ED
-    ES -.->|reads| WD
-    P -.->|reads| PD
-    PP -.->|reads| LPROG
+### 2.4 Projektil-Balance
 
-    HUD --> XPB
-    HUD --> ABB
-    HUD --> FDN
-    LUC --> LUP
-```
+- `scripts/data/progression/projectile_definition.gd`
+- `resources/progression/projectiles/*.tres`
 
----
+Steuert u. a.:
 
-## 2. Signal-Verbindungen
+- Lifetime
+- CollisionShape-Scale
+- Rotation-Mode
+- Bounce-Targeting und Bounce-Step
+- Kontaktverhalten bei Nicht-Enemy-Kollision
 
-```mermaid
-flowchart LR
-    PP(["PlayerProgression"])
-    P(["Player"])
-    PWS(["PlayerWeaponSystem"])
-    PUI(["PlayerUIController"])
-    LUC(["LevelUpController"])
-    LUP(["LevelUpPopup"])
-    APM(["AbilityProgressionModel"])
-    ES(["EnemySpawner"])
-    HUD(["GameHud"])
-    MAIN(["main.gd"])
-    XO(["XPOrb"])
-    XOM(["XPOrbManager"])
+## 3. Runtime-Orchestrierung
 
-    PP -->|"xp_changed(cur, req, lvl)"| P
-    PP -->|"leveled_up(level)"| P
+### 3.1 Main
 
-    P -->|"health_changed(cur, max)"| PUI
-    P -->|"mana_changed(cur, max)"| PUI
-    P -->|"mana_preview_changed(active, preview_cost, max)"| PUI
-    P -->|"xp_changed(cur, req, lvl)"| HUD
-    P -->|"leveled_up(level)"| LUC
-    P -->|"died()"| MAIN
+- Script: `scripts/main.gd`
+- Scene: `scenes/main.tscn`
 
-    PWS -->|"charging_state_changed(bool)"| PUI
-    PWS -->|"shoot_animation_requested(dir)"| P
+Verantwortung:
 
-    ES -->|"enemy_damage_taken(amount, pos)"| HUD
-    ES -->|"enemy_died(enemy)"| HUD
-    ES -->|"enemy_died(enemy)"| MAIN
+- liest genau eine `run_balance`-Resource
+- versorgt Player/Progression vor `Player._ready()` mit Run-Daten (`_enter_tree`)
+- erstellt Runtime-Systeme (`EnemySpawner`, `LevelUpController`, `GameHud`)
+- steuert Wave-Timer technisch; Spawn-Tempo kommt aus `SpawnPacingDefinition`
 
-    LUP -->|"option_selected(option)"| LUC
-    LUC -->|"apply_option(option)"| APM
+### 3.2 Player / Progression
 
-    APM -->|"weapon_unlocked(slot, ability)"| HUD
-    APM -->|"weapon_upgraded(ability, upgrade)"| HUD
+- `scripts/player/player.gd`
+- `scripts/player/player_progression.gd`
+- `scripts/player/ability_progression_model.gd`
 
-    XO -->|"collected(orb, amount)"| XOM
-    XOM -->|"collect_xp(amount)"| P
-```
+Verantwortung:
 
----
+- Player liest nur `PlayerDefinition` als Balance-Quelle
+- `AbilityProgressionModel` baut Progression/Level-Up Daten aus `ProgressionCatalog`
+- Utility-Upgrade-Anwendung via `UtilityUpgradeApplier`
+- Weapon-Upgrade-Anwendung via `WeaponUpgradeApplier`
 
-## 3. Spawn-, Kampf- und XP-Datenfluss
+### 3.3 Level-Up Pipeline
 
-```mermaid
-sequenceDiagram
-    participant T as WaveSpawnTimer
-    participant MAIN as main.gd
-    participant ES as EnemySpawner
-    participant WD as WaveDefinition
-    participant E as Enemy
-    participant HUD as GameHud
-    participant XOM as XPOrbManager
-    participant XO as XPOrb
-    participant P as Player
-    participant PP as PlayerProgression
+- `scripts/systems/level_up_controller.gd`
+- `scripts/systems/level_up_option_service.gd`
 
-    T->>MAIN: timeout()
-    MAIN->>ES: on_wave_tick()
-    ES->>WD: get_total_enemy_count()
-    ES->>WD: get_wave_size(wave_index)
-    ES->>WD: pick_enemy_for_spawn(rng, spawned_count)
-    ES->>E: instantiate + add_child + set target
+Verantwortung:
 
-    E-->>ES: damage_taken(amount, world_position)
-    ES-->>HUD: enemy_damage_taken(amount, world_position)
-    HUD->>HUD: spawn FloatingDamageNumber
+- `LevelUpController`: Queue + Popup-Flow
+- `LevelUpOptionService`: finaler 3er-Option-Satz inkl. Milestone-Priorisierung
+- Option-Pool kommt zentral aus `AbilityProgressionModel.get_level_up_options(level)`
 
-    E-->>ES: died()
-    ES-->>MAIN: enemy_died(enemy)
-    ES-->>HUD: enemy_died(enemy)
-    MAIN->>XOM: spawn_orb(enemy.global_position, enemy.xp_drop_value)
+### 3.4 Combat / Projectiles
 
-    XO-->>XOM: collected(orb, amount)
-    XOM->>P: collect_xp(amount)
-    P->>PP: add_xp(amount)
-    PP-->>P: xp_changed / leveled_up
-    P-->>HUD: xp_changed
-```
+- `scripts/player/player_weapon_system.gd`
+- `scripts/abilities/laser_projectile.gd`
 
----
+Verantwortung:
 
-## 4. Level-Up Datenfluss
+- WeaponSystem instanziert Projektil und uebergibt Ability-Stats + `ProjectileDefinition`
+- Projektil-Script enthaelt nur technische Fallbacks; Balancewerte kommen aus Daten
 
-```mermaid
-sequenceDiagram
-    participant PP as PlayerProgression
-    participant P as Player
-    participant LUC as LevelUpController
-    participant APM as AbilityProgressionModel
-    participant LUP as LevelUpPopup
-    participant HUD as GameHud
+## 4. Upgrade-System
 
-    PP-->>P: leveled_up(level)
-    P-->>LUC: leveled_up(level)
-    LUC->>APM: get_unlockable_weapon_options(level)
-    LUC->>APM: get_weapon_upgrade_options()
-    LUC->>APM: get_utility_upgrade_options()
-    LUC->>LUP: present_options(level, options)
-    Note over LUC,LUP: Tree paused while popup is active
+### 4.1 Datenmodell
 
-    LUP-->>LUC: option_selected(option)
-    LUC->>APM: apply_option(option)
+- `scripts/data/progression/upgrade_definition.gd.gd`
+- `scripts/data/progression/upgrade_effect.gd`
 
-    alt new weapon
-        APM-->>HUD: weapon_unlocked(slot_index, ability_id)
-    else weapon upgrade
-        APM-->>HUD: weapon_upgraded(ability_id, upgrade_id)
-    else utility upgrade
-        APM->>P: utility handler (Player) anwenden
-    end
+`UpgradeDefinition` kann jetzt strukturierte `effects` enthalten:
 
-    HUD->>HUD: refresh action bar icons
-    Note over LUC,LUP: Tree resumed after selection
-```
+- `target_domain`
+- `stat_key`
+- `operation`
+- `value`
+- optionale Clamps (`min_value`, `max_value`)
 
----
+### 4.2 Anwendung
 
-## 5. Vererbungs- und Kompositionshierarchie
+- `scripts/progression/weapon_upgrade_applier.gd`
+- `scripts/progression/utility_upgrade_applier.gd`
 
-```mermaid
-classDiagram
-    class DamageableBody2D {
-        +apply_damage(amount, pos)
-        +apply_knockback(source_pos, distance)
-    }
+Prinzip:
 
-    class Player {
-        +collect_xp(amount)
-        +get_progression_model() AbilityProgressionModel
-    }
+- neue Upgrades werden primaer als Daten (`effects`) angelegt
+- Legacy-Felder (`upgrade_type`, `numeric_value`) bleiben als kompatibler Fallback
 
-    class Enemy {
-        +definition EnemyDefinition
-        +target DamageableBody2D
-    }
+## 5. Verantwortlichkeitsgrenzen
 
-    class PlayerWeaponSystem {
-        +attach_progression_model(model)
-        +physics_update(delta)
-        +is_charging() bool
-    }
+- `main.gd`: Orchestrierung, kein Balancing-Hardcode
+- `EnemySpawner`: Spawn-Komposition + Pacing-Auswertung
+- `AbilityProgressionModel`: Progression-Read/Write + Option-Pool
+- `LevelUpOptionService`: Option-Selection-Regeln
+- Applier: Upgrade-Effektanwendung pro Domain
+- Resource-Definitions: Single Source of Truth fuer Balance
 
-    class AbilityProgressionModel {
-        +get_slot_icon(slot) Texture2D
-        +get_unlockable_weapon_options(level) Array
-        +get_weapon_upgrade_options() Array
-        +get_utility_upgrade_options() Array
-        +apply_option(option) bool
-    }
+## 6. Fail-Fast / Integrity
 
-    class PlayerProgression {
-        +add_xp(amount)
-        +get_level() int
-    }
-
-    class EnemySpawner {
-        +setup(player, wave, rng, enemies_parent)
-        +on_wave_tick() bool
-    }
-
-    class LevelUpController {
-        +setup(player, progression, popup, rng)
-        +flush_and_resume()
-    }
-
-    class GameHud {
-        +setup(player, progression, spawner, ...)
-        +get_kill_count() int
-    }
-
-    class XPOrbManager {
-        +setup(player)
-        +spawn_orb(pos, xp)
-        +clear_orbs()
-    }
-
-    DamageableBody2D <|-- Player
-    DamageableBody2D <|-- Enemy
-    Player *-- PlayerWeaponSystem
-    Player *-- PlayerProgression
-    PlayerWeaponSystem --> AbilityProgressionModel
-    LevelUpController --> AbilityProgressionModel
-    EnemySpawner --> Enemy
-    GameHud --> EnemySpawner
-    XPOrbManager *-- XPOrb
-```
-
----
-
-## 6. Ressourcen-Hierarchie
-
-```text
-res://resources/
-├── balance/
-│   ├── player_default.tres          -> PlayerDefinition (HP/Mana/Movement/Utility Upgrades)
-│   ├── enemies/*.tres               -> EnemyDefinition (Combat/Movement/Rewards)
-│   ├── waves/default_run.tres       -> WaveDefinition + WaveStage-Verteilung
-│   └── level_progression_default.tres -> LevelProgression (XP-Kurve)
-└── progression/
-    ├── abilities/*.tres             -> AbilityDefinition (Weapon/Utility-Abilities)
-    ├── upgrades/**/*.tres            -> UpgradeDefinition (Weapon + Utility)
-    └── icons/*.tres                 -> Icon-Ressourcen
-```
-
----
-
-## 7. Schnellreferenz – Signaltabelle
-
-| Signal | Emittiert von | Empfangen von | Effekt |
-|---|---|---|---|
-| `xp_changed(current, required, level)` | `PlayerProgression` | `Player` | Player spiegelt XP-Status nach außen |
-| `leveled_up(new_level)` | `PlayerProgression` | `Player` | Player reicht Level-Up weiter |
-| `health_changed(current, max)` | `Player` | `PlayerUIController` | HealthBar aktualisieren |
-| `mana_changed(current, max)` | `Player` | `PlayerUIController` | ManaBar aktualisieren |
-| `mana_preview_changed(active, preview_cost, max)` | `Player` | `PlayerUIController` | Mana-Vorschau aktualisieren |
-| `xp_changed(current, required, level)` | `Player` | `GameHud` | XPProgressBar + Level-Label aktualisieren |
-| `leveled_up(new_level)` | `Player` | `LevelUpController` | Level-Up Queue/Pause-Flow starten |
-| `died()` | `Player` | `main.gd` | Spawn stoppen, Cleanup, Game Over anzeigen |
-| `shoot_animation_requested(dir)` | `PlayerWeaponSystem` | `Player` | Schussanimation abspielen |
-| `charging_state_changed(is_charging)` | `PlayerWeaponSystem` | `PlayerUIController` | ManaBar Charge-Preview anzeigen/verstecken |
-| `enemy_damage_taken(amount, world_position)` | `EnemySpawner` | `GameHud` | FloatingDamageNumber erzeugen |
-| `enemy_died(enemy)` | `EnemySpawner` | `GameHud`, `main.gd` | Kill-Counter + XP-Orb-Spawn |
-| `option_selected(option)` | `LevelUpPopup` | `LevelUpController` | Option anwenden und Spiel fortsetzen |
-| `weapon_unlocked(slot_index, ability_id)` | `AbilityProgressionModel` | `GameHud` | ActionBar-Icons aktualisieren |
-| `weapon_upgraded(ability_id, upgrade_id)` | `AbilityProgressionModel` | `GameHud` | ActionBar-Icons aktualisieren |
-| `utility_applied(upgrade_id)` | `AbilityProgressionModel` | *(aktuell kein Listener)* | Event für potenzielle zukünftige UI-Hooks |
-| `collected(orb, amount)` | `XPOrb` | `XPOrbManager` | XP einsammeln + Orb recyceln |
+- fehlendes `RunBalanceDefinition`-Setup -> `push_error`
+- fehlende Definitionen in `Player`/`Enemy` -> `push_error` + Abbruch
+- `ProgressionCatalog` validiert fehlende/duplizierte IDs beim Laden

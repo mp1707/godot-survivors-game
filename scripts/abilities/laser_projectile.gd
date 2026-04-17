@@ -9,13 +9,27 @@ extends Area2D
 
 var direction: Vector2 = Vector2.RIGHT
 var source_body: Node2D = null
+var projectile_definition: ProjectileDefinition = null
 
 var _life_left: float = 0.0
 var _remaining_hits: int = 1
 var _remaining_bounces: int = 0
 var _hit_enemy_ids: Dictionary = {}
 
+var _rotation_mode: StringName = ProjectileDefinition.ROTATION_ALIGN_TO_DIRECTION
+var _direction_rotation_offset_radians: float = deg_to_rad(90.0)
+var _bounce_targeting_mode: StringName = ProjectileDefinition.BOUNCE_TARGET_NEAREST_NOT_HIT
+var _bounce_step_distance: float = 6.0
+var _destroy_on_non_enemy_contact: bool = true
+
+@onready var _collision_shape: CollisionShape2D = $CollisionShape2D as CollisionShape2D
+var _collision_shape_base_scale: Vector2 = Vector2.ONE
+
 func _ready() -> void:
+	if _collision_shape != null:
+		_collision_shape_base_scale = _collision_shape.scale
+	_apply_projectile_definition()
+
 	_life_left = lifetime
 	_remaining_bounces = max(bounce_amount, 0)
 	if pierce_enemy_amount < 0:
@@ -67,9 +81,13 @@ func _on_body_entered(body: Node) -> void:
 					queue_free()
 		return
 
-	queue_free()
+	if _destroy_on_non_enemy_contact:
+		queue_free()
 
 func _bounce_to_next_enemy(hit_enemy: Node) -> bool:
+	if _bounce_targeting_mode != ProjectileDefinition.BOUNCE_TARGET_NEAREST_NOT_HIT:
+		return false
+
 	var closest_enemy: DamageableBody2D = null
 	var closest_distance_sq: float = INF
 
@@ -98,11 +116,29 @@ func _bounce_to_next_enemy(hit_enemy: Node) -> bool:
 
 	direction = to_enemy.normalized()
 	_update_visual_rotation()
-	global_position += direction * 6.0
+	global_position += direction * _bounce_step_distance
 	return true
 
 func _update_visual_rotation() -> void:
-	rotation = direction.angle() + deg_to_rad(90.0)
+	if _rotation_mode == ProjectileDefinition.ROTATION_UPRIGHT:
+		rotation = 0.0
+		return
+	rotation = direction.angle() + _direction_rotation_offset_radians
+
+func _apply_projectile_definition() -> void:
+	if projectile_definition == null:
+		return
+
+	lifetime = maxf(projectile_definition.base_lifetime, 0.01)
+	_rotation_mode = projectile_definition.rotation_mode
+	_direction_rotation_offset_radians = deg_to_rad(projectile_definition.direction_rotation_offset_degrees)
+	_bounce_targeting_mode = projectile_definition.bounce_targeting_mode
+	_bounce_step_distance = maxf(projectile_definition.bounce_step_distance, 0.0)
+	_destroy_on_non_enemy_contact = projectile_definition.destroy_on_non_enemy_contact
+
+	if _collision_shape != null:
+		var safe_scale: float = maxf(projectile_definition.collision_shape_scale, 0.01)
+		_collision_shape.scale = _collision_shape_base_scale * safe_scale
 
 func configure(
 	new_damage: int,
@@ -110,7 +146,8 @@ func configure(
 	new_visual_scale: float,
 	new_pierce_enemy_amount: int,
 	new_bounce_amount: int,
-	new_source_body: Node2D
+	new_source_body: Node2D,
+	new_projectile_definition: ProjectileDefinition = null
 ) -> void:
 	damage = new_damage
 	speed = new_speed
@@ -118,3 +155,4 @@ func configure(
 	pierce_enemy_amount = new_pierce_enemy_amount
 	bounce_amount = new_bounce_amount
 	source_body = new_source_body
+	projectile_definition = new_projectile_definition

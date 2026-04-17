@@ -150,7 +150,7 @@ func _fire_projectile_weapon(state: WeaponAbilityState, damage: int, from_charge
 
 	projectile.global_position = _get_spawn_position(state, dir, from_charge)
 	projectile.direction = dir
-	if state.keep_projectile_upright:
+	if _is_projectile_upright(state):
 		projectile.rotation = 0.0
 	else:
 		projectile.rotation = dir.angle() + deg_to_rad(90.0)
@@ -161,7 +161,8 @@ func _fire_projectile_weapon(state: WeaponAbilityState, damage: int, from_charge
 		_progression_model.get_current_size(state),
 		_progression_model.get_current_pierce_amount(state),
 		_progression_model.get_current_bounce_amount(state),
-		_player
+		_player,
+		state.projectile_definition
 	)
 
 	shoot_animation_requested.emit(dir)
@@ -274,6 +275,11 @@ func _action_for_slot(slot_index: int) -> StringName:
 	if slot_index < 0 or slot_index >= SLOT_ACTIONS.size():
 		return &""
 	return SLOT_ACTIONS[slot_index]
+
+func _is_projectile_upright(state: WeaponAbilityState) -> bool:
+	if state.projectile_definition != null:
+		return state.projectile_definition.rotation_mode == ProjectileDefinition.ROTATION_UPRIGHT
+	return state.keep_projectile_upright
 
 func _play_if_available(player: AudioStreamPlayer) -> void:
 	if player != null:

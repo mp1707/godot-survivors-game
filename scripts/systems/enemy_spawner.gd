@@ -5,6 +5,9 @@ signal enemy_damage_taken(amount: int, world_position: Vector2)
 signal enemy_died(enemy: Enemy)
 
 @export var wave: WaveDefinition
+@export var spawn_pacing: SpawnPacingDefinition
+
+const DEFAULT_SPAWN_INTERVAL: float = 1.2
 
 var _player: Player
 var _rng: RandomNumberGenerator
@@ -12,11 +15,23 @@ var _enemies_parent: Node
 var _spawned_enemies: int = 0
 var _wave_index: int = 0
 
-func setup(player: Player, wave_definition: WaveDefinition, rng: RandomNumberGenerator, enemies_parent: Node) -> void:
+func setup(
+	player: Player,
+	wave_definition: WaveDefinition,
+	pacing_definition: SpawnPacingDefinition,
+	rng: RandomNumberGenerator,
+	enemies_parent: Node
+) -> void:
 	_player = player
 	wave = wave_definition
+	spawn_pacing = pacing_definition
 	_rng = rng
 	_enemies_parent = enemies_parent
+
+func get_current_spawn_interval() -> float:
+	if spawn_pacing == null:
+		return DEFAULT_SPAWN_INTERVAL
+	return spawn_pacing.get_spawn_interval(_wave_index)
 
 func on_wave_tick() -> bool:
 	if wave == null or _player == null or _enemies_parent == null:
@@ -26,6 +41,10 @@ func on_wave_tick() -> bool:
 		return false
 
 	var wave_size: int = wave.get_wave_size(_wave_index)
+	if spawn_pacing != null:
+		var batch_multiplier: float = spawn_pacing.get_spawn_batch_multiplier(_wave_index)
+		wave_size = maxi(int(round(float(wave_size) * batch_multiplier)), 1)
+
 	var remaining: int = total - _spawned_enemies
 	var spawn_count: int = mini(wave_size, remaining)
 	var spawned_this_tick: int = 0

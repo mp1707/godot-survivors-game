@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://by0187lv72log" path="res://resources/progression/icons/energy_ball_atlas.tres" id="2_j2gmr"]
 [ext_resource type="PackedScene" uid="uid://djcgplxob42tk" path="res://scenes/abilities/energy_ball_projectile.tscn" id="3_proj"]
 [ext_resource type="PackedScene" uid="uid://fni1vgew1wuh" path="res://scenes/abilities/charging_energy_ball.tscn" id="4_charge_vfx"]
+[ext_resource type="Resource" path="res://resources/progression/projectiles/energy_ball_projectile.tres" id="5_projectile_def"]
 
 [resource]
 script = ExtResource("1_0axbq")
@@ -16,6 +17,7 @@ unlock_level = 13
 unlock_description = "Langsam, stark, durchdringt unbegrenzt viele Enemies."
 is_chargeable = true
 projectile_scene = ExtResource("3_proj")
+projectile_definition = ExtResource("5_projectile_def")
 charge_vfx_scene = ExtResource("4_charge_vfx")
 charge_complete_animation = &"fully_charged"
 keep_projectile_upright = true

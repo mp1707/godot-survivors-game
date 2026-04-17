@@ -1,6 +1,13 @@
-[gd_resource type="Resource" script_class="UpgradeDefinition" format=3]
+[gd_resource type="Resource" script_class="UpgradeDefinition" format=3 uid="uid://m4qqiwn338kv"]
 
 [ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="2_effect_script"]
+
+[sub_resource type="Resource" id="UpgradeEffect_charge_ki_regen"]
+script = ExtResource("2_effect_script")
+target_domain = &"player"
+stat_key = &"charge_ki_regen"
+value = 2.0
 
 [resource]
 script = ExtResource("1_script")
@@ -8,4 +15,6 @@ id = &"charge_ki_regen"
 upgrade_type = &"player_utility"
 title = "Charge-Ki: Regen"
 description = "Ki pro Sekunde +2"
+effects = Array[ExtResource("2_effect_script")]([SubResource("UpgradeEffect_charge_ki_regen")])
+domain = &"utility"
 numeric_value = 2.0

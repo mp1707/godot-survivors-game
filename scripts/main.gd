@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var wave: WaveDefinition
+@export var run_balance: RunBalanceDefinition
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
@@ -20,20 +20,36 @@ var _enemy_spawner: EnemySpawner
 var _level_up_controller: LevelUpController
 var _game_hud: GameHud
 
+func _enter_tree() -> void:
+	_apply_run_balance_to_scene_nodes()
+
 func _ready() -> void:
 	_rng.randomize()
 	_setup_camera_limits()
+
+	if run_balance == null or not run_balance.is_valid():
+		push_error("Main: RunBalanceDefinition is missing required references.")
+		return
 
 	if _player == null:
 		push_error("Player node is not a Player instance.")
 		return
 
 	var progression: AbilityProgressionModel = _player.get_progression_model()
+	if progression == null:
+		push_error("Main: Player progression model is not initialized.")
+		return
 
 	_enemy_spawner = EnemySpawner.new()
 	_enemy_spawner.name = "EnemySpawner"
 	add_child(_enemy_spawner)
-	_enemy_spawner.setup(_player, wave, _rng, _enemies_parent)
+	_enemy_spawner.setup(
+		_player,
+		run_balance.wave_definition,
+		run_balance.spawn_pacing_definition,
+		_rng,
+		_enemies_parent
+	)
 	_enemy_spawner.enemy_died.connect(_on_enemy_died)
 
 	_level_up_controller = LevelUpController.new()
@@ -61,6 +77,23 @@ func _ready() -> void:
 		_xp_orb_manager.setup(_player)
 
 	_game_over_panel.hide()
+	_wave_spawn_timer.wait_time = _enemy_spawner.get_current_spawn_interval()
+	_wave_spawn_timer.start()
+
+func _apply_run_balance_to_scene_nodes() -> void:
+	if run_balance == null:
+		return
+
+	var player_node: Player = get_node_or_null("Player") as Player
+	if player_node == null:
+		return
+
+	player_node.definition = run_balance.player_definition
+	player_node.progression_catalog = run_balance.progression_catalog
+
+	var player_progression: PlayerProgression = player_node.get_node_or_null("Progression") as PlayerProgression
+	if player_progression != null:
+		player_progression.progression = run_balance.level_progression
 
 func _setup_camera_limits() -> void:
 	var used_rect: Rect2i = $TileMapLayer.get_used_rect()
@@ -80,6 +113,8 @@ func _on_wave_spawn_timer_timeout() -> void:
 	var keep_spawning: bool = _enemy_spawner.on_wave_tick()
 	if not keep_spawning:
 		_wave_spawn_timer.stop()
+		return
+	_wave_spawn_timer.wait_time = _enemy_spawner.get_current_spawn_interval()
 
 func _on_enemy_died(enemy: Enemy) -> void:
 	if enemy != null and is_instance_valid(enemy) and _xp_orb_manager != null:

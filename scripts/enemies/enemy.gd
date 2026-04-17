@@ -3,24 +3,24 @@ class_name Enemy
 
 @export var definition: EnemyDefinition
 
-var move_speed: float = 40.0
-var stop_distance: float = 12.0
-var attack_range: float = 18.0
+var move_speed: float = 0.0
+var stop_distance: float = 0.0
+var attack_range: float = 0.0
 
 var target: DamageableBody2D
 
-var attack_damage: int = 10
-var attack_interval: float = 0.8
-var xp_drop_value: int = 1
+var attack_damage: int = 0
+var attack_interval: float = 0.0
+var xp_drop_value: int = 0
 var _attack_cooldown_left: float = 0.0
 
 signal damage_taken(amount: int, world_position: Vector2)
 signal died()
 
-var max_hp: int = 1
-var knockback_strength: float = 70.0
-var knockback_decay: float = 650.0
-var hit_flash_time: float = 0.07
+var max_hp: int = 0
+var knockback_strength: float = 0.0
+var knockback_decay: float = 0.0
+var hit_flash_time: float = 0.0
 
 @onready var _animated_sprite: AnimatedSprite2D = $AnimatedSprite2D as AnimatedSprite2D
 @onready var _hit_reaction: HitReaction2D = $HitReaction as HitReaction2D
@@ -28,15 +28,18 @@ var hit_flash_time: float = 0.07
 var _hp: int = 0
 
 func _ready() -> void:
-	_apply_definition()
+	if not _apply_definition():
+		queue_free()
+		return
 	_hp = max_hp
 	_hit_reaction.knockback_decay = knockback_decay
 	_animated_sprite.play("default")
 	add_to_group("enemies")
 
-func _apply_definition() -> void:
+func _apply_definition() -> bool:
 	if definition == null:
-		return
+		push_error("Enemy: EnemyDefinition is missing.")
+		return false
 	move_speed = definition.move_speed
 	stop_distance = definition.stop_distance
 	attack_range = definition.attack_range
@@ -49,6 +52,7 @@ func _apply_definition() -> void:
 	hit_flash_time = definition.hit_flash_time
 	if _animated_sprite != null:
 		_animated_sprite.scale = Vector2.ONE * definition.sprite_scale
+	return true
 
 func _physics_process(delta: float) -> void:
 	_hit_reaction.physics_step(delta)

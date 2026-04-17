@@ -2,6 +2,12 @@
 
 [ext_resource type="Texture2D" uid="uid://dm4wsao25dpwr" path="res://art/weapons/small_blast.png" id="1_78bid"]
 [ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_c1mhu"]
+[ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="3_effect_script"]
+
+[sub_resource type="Resource" id="UpgradeEffect_ki_blast_bounce"]
+script = ExtResource("3_effect_script")
+stat_key = &"bounce_upgrade_count"
+value = 1.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_env8s"]
 atlas = ExtResource("1_78bid")
@@ -15,4 +21,5 @@ upgrade_type = &"bounce"
 title = "Ki-Blast: Bounce"
 description = "Abpraller +1"
 icon = SubResource("AtlasTexture_env8s")
+effects = Array[ExtResource("3_effect_script")]([SubResource("UpgradeEffect_ki_blast_bounce")])
 metadata/_custom_type_script = "uid://430faltn2517"

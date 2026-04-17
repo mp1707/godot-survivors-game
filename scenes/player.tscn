@@ -19,6 +19,7 @@
 [ext_resource type="AudioStream" uid="uid://dkthi61xavequ" path="res://art/audio/weapons/energy_ball_release.wav" id="14_eq8we"]
 [ext_resource type="Resource" path="res://resources/balance/player_default.tres" id="15_player_def"]
 [ext_resource type="Resource" path="res://resources/balance/level_progression_default.tres" id="16_level_prog"]
+[ext_resource type="Resource" path="res://resources/progression/catalogs/default_progression_catalog.tres" id="17_progression_catalog"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fulsm"]
 atlas = ExtResource("2_fjrip")
@@ -264,6 +265,7 @@ script = ExtResource("1_g2els")
 collision_layer = 2
 collision_mask = 5
 definition = ExtResource("15_player_def")
+progression_catalog = ExtResource("17_progression_catalog")
 
 [node name="AuraSprite" type="AnimatedSprite2D" parent="." unique_id=1180086724]
 position = Vector2(0, -3)

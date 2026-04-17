@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="SpawnPacingDefinition" format=3 uid="uid://4pvu5h4dmtim"]
+
+[ext_resource type="Script" uid="uid://bhv7flygqs0os" path="res://scripts/data/balance/spawn_pacing_definition.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+min_spawn_interval = 3.0
+max_spawn_interval = 3.0
+max_waves_for_curve = 40
