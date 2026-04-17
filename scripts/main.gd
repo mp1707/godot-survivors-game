@@ -15,6 +15,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 @onready var _game_over_panel: Panel = $UI/GameOverPanel as Panel
 @onready var _game_over_kills_label: Label = $UI/GameOverPanel/MarginContainer/VBoxContainer/KillsLabel as Label
 @onready var _enemies_parent: Node = $Enemies
+@onready var _projectiles_parent: Node = $Projectiles
 
 var _enemy_spawner: EnemySpawner
 var _level_up_controller: LevelUpController
@@ -45,6 +46,8 @@ func _ready() -> void:
 	if progression == null:
 		push_error("Main: Player progression model is not initialized.")
 		return
+
+	_player.attach_projectile_parent(_projectiles_parent)
 
 	_enemy_spawner = EnemySpawner.new()
 	_enemy_spawner.name = "EnemySpawner"

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="PlayerDefinition" format=3 uid="uid://shh3oypos1fg"]
 
 [ext_resource type="Script" uid="uid://ctlx8uhsa6y3y" path="res://scripts/data/balance/player_definition.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="2_26qos"]
+[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd" id="2_26qos"]
 
 [resource]
 script = ExtResource("1_script")

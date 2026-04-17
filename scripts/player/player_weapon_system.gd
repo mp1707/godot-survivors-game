@@ -7,6 +7,7 @@ signal charging_state_changed(is_charging: bool)
 const SLOT_ACTIONS: Array[StringName] = [&"action1", &"action2", &"action3"]
 
 var _progression_model: AbilityProgressionModel
+var _projectiles_parent: Node = null
 
 var _charging_ability_id: StringName = &""
 var _charge_time: float = 0.0
@@ -27,6 +28,9 @@ var _charge_vfx_sprite: AnimatedSprite2D = null
 
 func attach_progression_model(model: AbilityProgressionModel) -> void:
 	_progression_model = model
+
+func attach_projectile_parent(parent: Node) -> void:
+	_projectiles_parent = parent
 
 func physics_update(delta: float) -> void:
 	if _progression_model == null:
@@ -166,7 +170,11 @@ func _fire_projectile_weapon(state: WeaponAbilityState, damage: int, from_charge
 	)
 
 	shoot_animation_requested.emit(dir)
-	get_tree().current_scene.add_child(projectile)
+	if _projectiles_parent == null:
+		push_error("PlayerWeaponSystem: projectile parent is not attached.")
+		projectile.queue_free()
+		return
+	_projectiles_parent.add_child(projectile)
 
 func _begin_charge(state: WeaponAbilityState) -> void:
 	_charging_ability_id = state.ability_id

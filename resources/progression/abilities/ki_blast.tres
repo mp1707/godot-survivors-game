@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://bq3cygc0retxk"]
 
-[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_aqfev"]
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd" id="1_aqfev"]
 [ext_resource type="Texture2D" uid="uid://dnlk653dgo38b" path="res://resources/progression/icons/ki_blast_atlas.tres" id="2_h8t8x"]
 [ext_resource type="PackedScene" uid="uid://442djdt3jfdt" path="res://scenes/abilities/laser_projectile.tscn" id="3_proj"]
 [ext_resource type="Resource" path="res://resources/progression/projectiles/ki_blast_projectile.tres" id="4_projectile_def"]

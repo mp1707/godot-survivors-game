@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="ProgressionCatalog" load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/progression/progression_catalog.gd" id="1_catalog"]
-[ext_resource type="Script" path="res://scripts/data/progression/ability_definition.gd.gd" id="2_ability_script"]
-[ext_resource type="Script" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="3_upgrade_script"]
+[ext_resource type="Script" path="res://scripts/data/progression/ability_definition.gd" id="2_ability_script"]
+[ext_resource type="Script" path="res://scripts/data/progression/upgrade_definition.gd" id="3_upgrade_script"]
 
 [ext_resource type="Resource" path="res://resources/progression/abilities/ki_blast.tres" id="10_ability_ki_blast"]
 [ext_resource type="Resource" path="res://resources/progression/abilities/charged_ki_blast.tres" id="11_ability_charged_blast"]

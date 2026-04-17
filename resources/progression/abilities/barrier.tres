@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://6ba7fvk5x7nf"]
 
-[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_1t1qh"]
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd" id="1_1t1qh"]
 [ext_resource type="Texture2D" uid="uid://bqw8bjchpxaqi" path="res://resources/progression/icons/barrier_atlas.tres" id="2_7faba"]
 
 [resource]

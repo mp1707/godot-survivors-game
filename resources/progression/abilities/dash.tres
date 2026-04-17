@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://cobh6sscgwx3e"]
 
 [ext_resource type="Texture2D" uid="uid://5oox7cpie737" path="res://resources/progression/icons/dash_atlas.tres" id="1_c1mgu"]
-[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="2_ppxhv"]
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd" id="2_ppxhv"]
 
 [resource]
 script = ExtResource("2_ppxhv")

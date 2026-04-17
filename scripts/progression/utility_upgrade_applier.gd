@@ -32,34 +32,36 @@ func apply_upgrade(definition: UpgradeDefinition) -> bool:
 	return _execute_planned_calls(planned_calls)
 
 func _build_handler_registry() -> Dictionary:
+	var dash: DashController = _player.get_dash()
+	var ki_charge: KiChargeController = _player.get_ki_charge()
 	return {
 		STAT_DASH_COOLDOWN: {
 			"kind": HANDLER_KIND_NUMERIC,
-			"callable": Callable(_player, "adjust_dash_cooldown")
+			"callable": Callable(dash, "adjust_cooldown")
 		},
 		STAT_DASH_DISTANCE: {
 			"kind": HANDLER_KIND_NUMERIC,
-			"callable": Callable(_player, "adjust_dash_distance")
+			"callable": Callable(dash, "adjust_distance")
 		},
 		STAT_DASH_INVULNERABLE: {
 			"kind": HANDLER_KIND_SET_TRUE,
-			"callable": Callable(_player, "unlock_dash_invulnerable")
+			"callable": Callable(dash, "unlock_invulnerable")
 		},
 		STAT_DASH_PHASE: {
 			"kind": HANDLER_KIND_SET_TRUE,
-			"callable": Callable(_player, "unlock_dash_phase")
+			"callable": Callable(dash, "unlock_phase")
 		},
 		STAT_CHARGE_KI_REGEN: {
 			"kind": HANDLER_KIND_NUMERIC,
-			"callable": Callable(_player, "adjust_charge_ki_regen")
+			"callable": Callable(ki_charge, "adjust_regen")
 		},
 		STAT_CHARGE_KI_KNOCKBACK: {
 			"kind": HANDLER_KIND_NUMERIC,
-			"callable": Callable(_player, "adjust_ki_release_knockback")
+			"callable": Callable(ki_charge, "adjust_release_knockback")
 		},
 		STAT_CHARGE_KI_AOE_DAMAGE: {
 			"kind": HANDLER_KIND_NUMERIC,
-			"callable": Callable(_player, "adjust_ki_release_aoe_damage")
+			"callable": Callable(ki_charge, "adjust_release_aoe")
 		}
 	}
 

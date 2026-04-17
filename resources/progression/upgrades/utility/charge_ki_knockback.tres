@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="UpgradeDefinition" format=3 uid="uid://doa387yoxvbx8"]
 
-[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="2_effect_script"]
 [ext_resource type="Texture2D" uid="uid://c65lqxfixb3kx" path="res://resources/progression/icons/charge_ki_atlas.tres" id="3_icon"]
 

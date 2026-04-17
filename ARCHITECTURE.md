@@ -101,6 +101,20 @@ Verantwortung:
 - Utility-Upgrade-Anwendung via `UtilityUpgradeApplier`
 - Weapon-Upgrade-Anwendung via `WeaponUpgradeApplier`
 
+#### 3.2.1 Player-Komposition (Component-Pattern)
+
+`Player` ist ein schlanker Orchestrator. Mechaniken leben in fokussierten Child-Node-Komponenten unter `scripts/player/components/`:
+
+- `PlayerVitals` — Health, Mana, Invuln-Frames, XP-Magnet-Radius. Owner aller Vitals-Signals (`health_changed`, `mana_changed`, `mana_preview_changed`, `died`); Player re-emittiert sie als oeffentliche API.
+- `BarrierController` — Lifetime/Absorption/Reflect + Barrier-Sprite. Wird von `Player.apply_damage` vor `Vitals.take_damage` konsultiert (`try_absorb`).
+- `DashController` — Dash-State, Cooldown, Phase-Through-Collision-Mask, Afterimage-Spawn. Besitzt `move_and_slide` waehrend des Dashs.
+- `KiChargeController` — Charge-State, Mana-Regen-Boost waehrend Charge, AOE-Release, Aura-Sprite + Audio-Loop. Emittiert `charge_state_changed`/`released`.
+- `PlayerAnimationController` — Walk/Idle/Shoot/Charging-Animationen auf `AnimatedSprite2D`.
+
+Player verteilt `PlayerDefinition` ueber `component.configure(definition)`, injiziert Cross-Refs ueber `component.setup(...)` und orchestriert `_physics_process` als sequenzielle Pipeline.
+
+Neue Mechaniken werden als zusaetzliche Komponente angelegt; `_physics_process` bekommt einen Slot in der Pipeline. Neue Utility-Upgrades hooken via `UtilityUpgradeApplier._build_handler_registry()` direkt auf die Komponenten-Methoden (z. B. `Callable(player.get_dash(), "adjust_cooldown")`).
+
 ### 3.3 Level-Up Pipeline
 
 - `scripts/systems/level_up_controller.gd`
@@ -121,6 +135,7 @@ Verantwortung:
 
 - WeaponSystem instanziert Projektil und uebergibt Ability-Stats + `ProjectileDefinition`
 - Projektil-Script liest Balancewerte ausschliesslich aus `ProjectileDefinition`
+- Projektil-Parent wird via `Player.attach_projectile_parent($Projectiles)` aus `main.gd` injiziert (analog `EnemySpawner._enemies_parent`); kein `get_tree().current_scene.add_child()` mehr
 
 ### 3.5 Enemy Registry
 
@@ -139,7 +154,7 @@ Verantwortung:
 
 ### 4.1 Datenmodell
 
-- `scripts/data/progression/upgrade_definition.gd.gd`
+- `scripts/data/progression/upgrade_definition.gd`
 - `scripts/data/progression/upgrade_effect.gd`
 
 `UpgradeDefinition` kann jetzt strukturierte `effects` enthalten:
@@ -161,6 +176,7 @@ Prinzip:
 - `effects` sind verpflichtend; Legacy-Felder wurden entfernt
 - Anwendung ist atomar (Prevalidate + Apply), kein Teil-Apply bei Fehlern
 - Utility-Applier nutzt stat-key-basierte Dispatcher-Registry statt harter Match-Kaskade
+- Utility-Handler-Callables zeigen direkt auf die zustaendige Player-Komponente (z. B. `Callable(player.get_dash(), "adjust_cooldown")`); keine Proxy-Methoden auf `Player`
 
 ## 5. Verantwortlichkeitsgrenzen
 
@@ -172,6 +188,12 @@ Prinzip:
 - `LevelUpOptionService`: Option-Selection-Regeln
 - Applier: Upgrade-Effektanwendung pro Domain
 - Resource-Definitions: Single Source of Truth fuer Balance
+- `Player`: Orchestrator + oeffentliche Signal-/Methoden-API; keine Mechanik-Logik
+- `PlayerVitals`: Health, Mana, Invuln, XP-Magnet; alleiniger Owner der Vitals-Signals
+- `BarrierController`: Damage-Absorption + Reflect; vor `Vitals.take_damage` konsultiert
+- `DashController`: Dash-State, Cooldown, Phase-Through-Mask, Afterimage-Spawn
+- `KiChargeController`: Charge-State, AOE-Release, Aura + Charge-Audio-Loop
+- `PlayerAnimationController`: alle `AnimatedSprite2D`-State-Transitions des Players
 
 ## 6. Fail-Fast / Integrity
 

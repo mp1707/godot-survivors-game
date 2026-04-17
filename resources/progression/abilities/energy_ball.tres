@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://b6qsgwdk57w82"]
 
-[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd.gd" id="1_0axbq"]
+[ext_resource type="Script" uid="uid://c8b6af4npusis" path="res://scripts/data/progression/ability_definition.gd" id="1_0axbq"]
 [ext_resource type="Texture2D" uid="uid://by0187lv72log" path="res://resources/progression/icons/energy_ball_atlas.tres" id="2_j2gmr"]
 [ext_resource type="PackedScene" uid="uid://djcgplxob42tk" path="res://scenes/abilities/energy_ball_projectile.tscn" id="3_proj"]
 [ext_resource type="PackedScene" uid="uid://fni1vgew1wuh" path="res://scenes/abilities/charging_energy_ball.tscn" id="4_charge_vfx"]
