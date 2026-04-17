@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://1bc8385wiu0l"]
 
-[ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/ghoul.gd" id="1_8yhgg"]
+[ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/enemy.gd" id="1_8yhgg"]
 [ext_resource type="Texture2D" uid="uid://c1q31y318pjod" path="res://art/enemies/Dismembered Crawler/DismemberedCrawler.png" id="2_l8e30"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="3_ntbkm"]
 

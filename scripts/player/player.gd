@@ -89,6 +89,8 @@ var _barrier_lifetime_left: float = 0.0
 var _barrier_reflect_damage: bool = false
 var _base_collision_mask: int = 0
 
+var _progression_model: AbilityProgressionModel
+
 func _ready() -> void:
 	_apply_definition()
 	_health = max_health
@@ -98,6 +100,7 @@ func _ready() -> void:
 	mana_changed.emit(_mana, max_mana)
 	mana_preview_changed.emit(false, 0, max_mana)
 	_weapon_system.shoot_animation_requested.connect(_play_shoot_animation)
+	_setup_progression_model()
 	if _progression != null:
 		_progression.xp_changed.connect(_on_progression_xp_changed)
 		_progression.leveled_up.connect(_on_progression_leveled_up)
@@ -107,6 +110,32 @@ func _ready() -> void:
 	_clear_barrier()
 	_set_mana_charge_loop_playing(false)
 	_base_collision_mask = collision_mask
+
+func get_progression_model() -> AbilityProgressionModel:
+	return _progression_model
+
+func _setup_progression_model() -> void:
+	_progression_model = AbilityProgressionModel.new()
+	_progression_model.initialize(PlayerWeaponSystem.SLOT_ACTIONS.size(), definition)
+	_register_utility_handlers()
+	_weapon_system.attach_progression_model(_progression_model)
+
+func _register_utility_handlers() -> void:
+	_progression_model.register_utility_handler(UPGRADE_DASH_COOLDOWN, _apply_dash_cooldown_upgrade)
+	_progression_model.register_utility_handler(UPGRADE_DASH_DISTANCE, _apply_dash_distance_upgrade)
+	_progression_model.register_utility_handler(UPGRADE_DASH_INVULNERABLE, _apply_dash_invulnerable_upgrade)
+	_progression_model.register_utility_handler(UPGRADE_DASH_PHASE, _apply_dash_phase_upgrade)
+	_progression_model.register_utility_handler(UPGRADE_CHARGE_KI_REGEN, _apply_charge_ki_regen_upgrade)
+	_progression_model.register_utility_handler(UPGRADE_CHARGE_KI_KNOCKBACK, _apply_charge_ki_knockback_upgrade)
+	_progression_model.register_utility_handler(UPGRADE_CHARGE_KI_AOE_DAMAGE, _apply_charge_ki_aoe_damage_upgrade)
+
+	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_COOLDOWN, _dash_upgrade_icon)
+	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_DISTANCE, _dash_upgrade_icon)
+	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_INVULNERABLE, _dash_upgrade_icon)
+	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_PHASE, _dash_upgrade_icon)
+	_progression_model.set_utility_fallback_icon(UPGRADE_CHARGE_KI_REGEN, _charge_ki_upgrade_icon)
+	_progression_model.set_utility_fallback_icon(UPGRADE_CHARGE_KI_KNOCKBACK, _charge_ki_upgrade_icon)
+	_progression_model.set_utility_fallback_icon(UPGRADE_CHARGE_KI_AOE_DAMAGE, _charge_ki_upgrade_icon)
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
@@ -457,77 +486,35 @@ func _clear_barrier() -> void:
 		_barrier_sprite.stop()
 		_barrier_sprite.visible = false
 
-func get_utility_upgrade_options() -> Array[LevelUpOption]:
-	var options: Array[LevelUpOption] = []
-	if definition == null:
-		return options
-
-	for upgrade: UpgradeDefinition in definition.utility_upgrades:
-		if upgrade == null:
-			continue
-		if not _is_utility_upgrade_available(upgrade.id):
-			continue
-		var icon: Texture2D = upgrade.icon if upgrade.icon != null else _icon_for_utility_upgrade(upgrade.id)
-		options.append(
-			LevelUpOption.make_player_upgrade(
-				upgrade.id,
-				upgrade.title,
-				upgrade.description,
-				icon
-			)
-		)
-
-	return options
-
-func apply_utility_upgrade(upgrade_id: StringName) -> bool:
-	var upgrade: UpgradeDefinition = _find_utility_upgrade(upgrade_id)
-	if upgrade == null:
-		return false
-
-	match upgrade_id:
-		UPGRADE_DASH_COOLDOWN:
-			dash_cooldown = clampf(dash_cooldown + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
-		UPGRADE_DASH_DISTANCE:
-			dash_distance = clampf(dash_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
-		UPGRADE_DASH_INVULNERABLE:
-			_dash_invulnerable = true
-		UPGRADE_DASH_PHASE:
-			_dash_phase_through_enemies = true
-			if _is_dashing:
-				_apply_dash_collision_mask()
-		UPGRADE_CHARGE_KI_REGEN:
-			ki_charge_regen_per_second = clampf(ki_charge_regen_per_second + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
-		UPGRADE_CHARGE_KI_KNOCKBACK:
-			_ki_release_knockback_distance = clampf(_ki_release_knockback_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
-		UPGRADE_CHARGE_KI_AOE_DAMAGE:
-			_ki_release_aoe_damage = int(clampf(float(_ki_release_aoe_damage) + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp))
-		_:
-			return false
+func _apply_dash_cooldown_upgrade(upgrade: UpgradeDefinition) -> bool:
+	dash_cooldown = clampf(dash_cooldown + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
 	return true
 
-func _is_utility_upgrade_available(upgrade_id: StringName) -> bool:
-	match upgrade_id:
-		UPGRADE_DASH_COOLDOWN:
-			return dash_cooldown > 1.0
-		UPGRADE_DASH_INVULNERABLE:
-			return not _dash_invulnerable
-		UPGRADE_DASH_PHASE:
-			return not _dash_phase_through_enemies
+func _apply_dash_distance_upgrade(upgrade: UpgradeDefinition) -> bool:
+	dash_distance = clampf(dash_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
 	return true
 
-func _find_utility_upgrade(upgrade_id: StringName) -> UpgradeDefinition:
-	if definition == null:
-		return null
-	for upgrade: UpgradeDefinition in definition.utility_upgrades:
-		if upgrade != null and upgrade.id == upgrade_id:
-			return upgrade
-	return null
+func _apply_dash_invulnerable_upgrade(_upgrade: UpgradeDefinition) -> bool:
+	_dash_invulnerable = true
+	return true
 
-func _icon_for_utility_upgrade(upgrade_id: StringName) -> Texture2D:
-	var name: String = String(upgrade_id)
-	if name.begins_with("charge_ki"):
-		return _charge_ki_upgrade_icon
-	return _dash_upgrade_icon
+func _apply_dash_phase_upgrade(_upgrade: UpgradeDefinition) -> bool:
+	_dash_phase_through_enemies = true
+	if _is_dashing:
+		_apply_dash_collision_mask()
+	return true
+
+func _apply_charge_ki_regen_upgrade(upgrade: UpgradeDefinition) -> bool:
+	ki_charge_regen_per_second = clampf(ki_charge_regen_per_second + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
+	return true
+
+func _apply_charge_ki_knockback_upgrade(upgrade: UpgradeDefinition) -> bool:
+	_ki_release_knockback_distance = clampf(_ki_release_knockback_distance + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp)
+	return true
+
+func _apply_charge_ki_aoe_damage_upgrade(upgrade: UpgradeDefinition) -> bool:
+	_ki_release_aoe_damage = int(clampf(float(_ki_release_aoe_damage) + upgrade.numeric_value, upgrade.min_clamp, upgrade.max_clamp))
+	return true
 
 func collect_xp(amount: int) -> void:
 	if _progression == null:

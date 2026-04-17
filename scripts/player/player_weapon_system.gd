@@ -3,11 +3,10 @@ class_name PlayerWeaponSystem
 
 signal shoot_animation_requested(dir: Vector2)
 signal charging_state_changed(is_charging: bool)
-signal weapon_slots_changed()
 
 const SLOT_ACTIONS: Array[StringName] = [&"action1", &"action2", &"action3"]
 
-var _progression_model: WeaponProgressionModel = WeaponProgressionModel.new()
+var _progression_model: AbilityProgressionModel
 
 var _charging_ability_id: StringName = &""
 var _charge_time: float = 0.0
@@ -26,11 +25,12 @@ var _charge_vfx_sprite: AnimatedSprite2D = null
 @onready var _big_laser_shot_player: AudioStreamPlayer = $"../BigLaserShotPlayer" as AudioStreamPlayer
 @onready var _energy_ball_release_player: AudioStreamPlayer = $"../EnergyBallReleasePlayer" as AudioStreamPlayer
 
-func _ready() -> void:
-	_progression_model.initialize(SLOT_ACTIONS.size())
-	weapon_slots_changed.emit()
+func attach_progression_model(model: AbilityProgressionModel) -> void:
+	_progression_model = model
 
 func physics_update(delta: float) -> void:
+	if _progression_model == null:
+		return
 	_handle_weapon_input(delta)
 
 func cancel_charge() -> void:
@@ -42,7 +42,7 @@ func is_charging() -> bool:
 	return _charging_ability_id != &""
 
 func is_charging_energy_ball() -> bool:
-	if not is_charging():
+	if not is_charging() or _progression_model == null:
 		return false
 	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	return state != null and state.use_middle_muzzle_for_charged
@@ -51,36 +51,12 @@ func get_aim_direction() -> Vector2:
 	return _aim_direction
 
 func get_current_charge_mana_cost() -> int:
-	if not is_charging():
+	if not is_charging() or _progression_model == null:
 		return 0
 	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	if state == null:
 		return 0
 	return _progression_model.get_current_cost(state)
-
-func has_weapon_in_slot(slot_index: int) -> bool:
-	return _progression_model.has_weapon_in_slot(slot_index)
-
-func get_slot_icon(slot_index: int) -> Texture2D:
-	return _progression_model.get_slot_icon(slot_index)
-
-func get_weapon_upgrade_options() -> Array[LevelUpOption]:
-	return _progression_model.get_weapon_upgrade_options()
-
-func get_unlockable_weapon_options(current_level: int) -> Array[LevelUpOption]:
-	return _progression_model.get_unlockable_weapon_options(current_level)
-
-func has_unlock_milestone(current_level: int) -> bool:
-	return _progression_model.has_unlock_milestone(current_level)
-
-func unlock_weapon_in_next_free_slot(ability_id: StringName) -> bool:
-	var unlocked: bool = _progression_model.unlock_weapon_in_next_free_slot(ability_id)
-	if unlocked:
-		weapon_slots_changed.emit()
-	return unlocked
-
-func apply_weapon_upgrade(ability_id: StringName, upgrade_id: StringName) -> bool:
-	return _progression_model.apply_weapon_upgrade(ability_id, upgrade_id)
 
 func _handle_weapon_input(delta: float) -> void:
 	if is_charging():

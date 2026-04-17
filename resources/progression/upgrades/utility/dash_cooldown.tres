@@ -6,6 +6,7 @@
 script = ExtResource("1_script")
 id = &"dash_cooldown"
 upgrade_type = &"player_utility"
+max_stacks = 4
 title = "Dash: Cooldown"
 description = "Cooldown -1s (mind. 1s)"
 numeric_value = -1.0

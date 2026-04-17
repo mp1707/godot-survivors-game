@@ -1,5 +1,5 @@
 extends DamageableBody2D
-class_name Ghoul
+class_name Enemy
 
 @export var definition: EnemyDefinition
 

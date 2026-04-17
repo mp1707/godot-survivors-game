@@ -1,5 +1,9 @@
 extends RefCounted
-class_name WeaponProgressionModel
+class_name AbilityProgressionModel
+
+signal weapon_unlocked(slot_index: int, ability_id: StringName)
+signal weapon_upgraded(ability_id: StringName, upgrade_id: StringName)
+signal utility_applied(upgrade_id: StringName)
 
 const ABILITY_DEFINITIONS_DIR: String = "res://resources/progression/abilities"
 const UPGRADE_DEFINITIONS_DIR: String = "res://resources/progression/upgrades"
@@ -21,10 +25,50 @@ var _abilities: Dictionary = {}
 var _ability_definitions: Dictionary = {}
 var _upgrade_definitions: Dictionary = {}
 
-func initialize(slot_count: int) -> void:
+var _utility_states: Dictionary = {}
+var _utility_handlers: Dictionary = {}
+
+func initialize(slot_count: int, player_definition: PlayerDefinition = null) -> void:
 	_initialize_empty_slots(slot_count)
 	_load_progression_definitions()
 	_setup_weapon_abilities()
+	_setup_utility_upgrades(player_definition)
+
+func register_utility_handler(upgrade_id: StringName, handler: Callable) -> void:
+	_utility_handlers[upgrade_id] = handler
+
+func set_utility_fallback_icon(upgrade_id: StringName, icon: Texture2D) -> void:
+	var state: UtilityUpgradeState = _utility_states.get(upgrade_id) as UtilityUpgradeState
+	if state == null:
+		return
+	state.fallback_icon = icon
+
+# --- Unified level-up API ---
+
+func get_level_up_options(current_level: int) -> Array[LevelUpOption]:
+	var unlock_options: Array[LevelUpOption] = get_unlockable_weapon_options(current_level)
+	if has_unlock_milestone(current_level) and not unlock_options.is_empty():
+		return unlock_options
+
+	var options: Array[LevelUpOption] = []
+	options.append_array(unlock_options)
+	options.append_array(get_weapon_upgrade_options())
+	options.append_array(get_utility_upgrade_options())
+	return options
+
+func apply_option(option: LevelUpOption) -> bool:
+	if option == null:
+		return false
+	match option.option_type:
+		LevelUpOption.TYPE_NEW_WEAPON:
+			return unlock_weapon_in_next_free_slot(option.ability_id)
+		LevelUpOption.TYPE_WEAPON_UPGRADE:
+			return apply_weapon_upgrade(option.ability_id, option.upgrade_id)
+		LevelUpOption.TYPE_PLAYER_UPGRADE:
+			return apply_utility_upgrade(option.upgrade_id)
+	return false
+
+# --- Weapon slot queries ---
 
 func has_weapon_in_slot(slot_index: int) -> bool:
 	if slot_index < 0 or slot_index >= _weapon_slots.size():
@@ -44,6 +88,8 @@ func get_slot_icon(slot_index: int) -> Texture2D:
 	if state == null:
 		return null
 	return state.icon
+
+# --- Weapon level-up building blocks ---
 
 func get_unlockable_weapon_options(current_level: int) -> Array[LevelUpOption]:
 	if get_next_free_slot_index() < 0:
@@ -76,7 +122,10 @@ func unlock_weapon_in_next_free_slot(ability_id: StringName) -> bool:
 	var next_free_slot_index: int = get_next_free_slot_index()
 	if next_free_slot_index < 0:
 		return false
-	return _unlock_weapon_in_slot(ability_id, next_free_slot_index)
+	var unlocked: bool = _unlock_weapon_in_slot(ability_id, next_free_slot_index)
+	if unlocked:
+		weapon_unlocked.emit(next_free_slot_index, ability_id)
+	return unlocked
 
 func get_weapon_upgrade_options() -> Array[LevelUpOption]:
 	var options: Array[LevelUpOption] = []
@@ -131,7 +180,60 @@ func apply_weapon_upgrade(ability_id: StringName, upgrade_id: StringName) -> boo
 		_:
 			return false
 
+	weapon_upgraded.emit(ability_id, upgrade_id)
 	return true
+
+# --- Utility upgrade API ---
+
+func get_utility_upgrade_options() -> Array[LevelUpOption]:
+	var options: Array[LevelUpOption] = []
+	for state_value: Variant in _utility_states.values():
+		var state: UtilityUpgradeState = state_value as UtilityUpgradeState
+		if state == null or state.definition == null:
+			continue
+		if state.is_max_stacked():
+			continue
+		var definition: UpgradeDefinition = state.definition
+		var icon: Texture2D = definition.icon if _is_valid_icon(definition.icon) else state.fallback_icon
+		options.append(
+			LevelUpOption.make_player_upgrade(
+				definition.id,
+				definition.title,
+				definition.description,
+				icon
+			)
+		)
+	return options
+
+func apply_utility_upgrade(upgrade_id: StringName) -> bool:
+	var state: UtilityUpgradeState = _utility_states.get(upgrade_id) as UtilityUpgradeState
+	if state == null or state.definition == null:
+		return false
+	if state.is_max_stacked():
+		return false
+	if not _utility_handlers.has(upgrade_id):
+		push_warning("No utility handler registered for upgrade '%s'." % String(upgrade_id))
+		return false
+
+	var handler: Callable = _utility_handlers[upgrade_id] as Callable
+	if not handler.is_valid():
+		return false
+
+	var applied: bool = bool(handler.call(state.definition))
+	if not applied:
+		return false
+
+	state.stack_count += 1
+	utility_applied.emit(upgrade_id)
+	return true
+
+func get_utility_stack_count(upgrade_id: StringName) -> int:
+	var state: UtilityUpgradeState = _utility_states.get(upgrade_id) as UtilityUpgradeState
+	if state == null:
+		return 0
+	return state.stack_count
+
+# --- Stat calculators ---
 
 func get_ability_state(ability_id: StringName) -> WeaponAbilityState:
 	if not _abilities.has(ability_id):
@@ -187,6 +289,8 @@ func get_next_free_slot_index() -> int:
 			return slot_index
 	return -1
 
+# --- Internal setup ---
+
 func _initialize_empty_slots(slot_count: int) -> void:
 	_weapon_slots.clear()
 	for _index: int in range(max(slot_count, 0)):
@@ -227,6 +331,20 @@ func _setup_weapon_abilities() -> void:
 			preferred_slot = get_next_free_slot_index()
 		if preferred_slot >= 0:
 			_unlock_weapon_in_slot(definition.id, preferred_slot)
+
+func _setup_utility_upgrades(player_definition: PlayerDefinition) -> void:
+	_utility_states.clear()
+	if player_definition == null:
+		return
+	for upgrade: UpgradeDefinition in player_definition.utility_upgrades:
+		if upgrade == null or upgrade.id == &"":
+			continue
+		if upgrade.get_domain() != UpgradeDefinition.DOMAIN_UTILITY:
+			continue
+		var state: UtilityUpgradeState = UtilityUpgradeState.new()
+		state.upgrade_id = upgrade.id
+		state.definition = upgrade
+		_utility_states[upgrade.id] = state
 
 func _unlock_weapon_in_slot(ability_id: StringName, slot_index: int) -> bool:
 	if slot_index < 0 or slot_index >= _weapon_slots.size():
