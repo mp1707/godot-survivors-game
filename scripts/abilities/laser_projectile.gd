@@ -88,25 +88,10 @@ func _bounce_to_next_enemy(hit_enemy: Node) -> bool:
 	if _bounce_targeting_mode != ProjectileDefinition.BOUNCE_TARGET_NEAREST_NOT_HIT:
 		return false
 
-	var closest_enemy: DamageableBody2D = null
-	var closest_distance_sq: float = INF
-
-	for node: Node in get_tree().get_nodes_in_group("enemies"):
-		var enemy: DamageableBody2D = node as DamageableBody2D
-		if enemy == null:
-			continue
-		if enemy == hit_enemy:
-			continue
-
-		var enemy_id: int = enemy.get_instance_id()
-		if _hit_enemy_ids.has(enemy_id):
-			continue
-
-		var distance_sq: float = global_position.distance_squared_to(enemy.global_position)
-		if distance_sq < closest_distance_sq:
-			closest_distance_sq = distance_sq
-			closest_enemy = enemy
-
+	var excluded_enemy_ids: Dictionary = _hit_enemy_ids.duplicate()
+	if hit_enemy != null:
+		excluded_enemy_ids[hit_enemy.get_instance_id()] = true
+	var closest_enemy: Enemy = EnemyRegistry.find_nearest_enemy(global_position, excluded_enemy_ids)
 	if closest_enemy == null:
 		return false
 

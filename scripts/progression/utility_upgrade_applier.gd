@@ -9,10 +9,15 @@ const STAT_CHARGE_KI_REGEN: StringName = &"charge_ki_regen"
 const STAT_CHARGE_KI_KNOCKBACK: StringName = &"charge_ki_knockback"
 const STAT_CHARGE_KI_AOE_DAMAGE: StringName = &"charge_ki_aoe_damage"
 
+const HANDLER_KIND_NUMERIC: StringName = &"numeric"
+const HANDLER_KIND_SET_TRUE: StringName = &"set_true"
+
 var _player: Player
+var _handlers: Dictionary = {}
 
 func setup(player: Player) -> void:
 	_player = player
+	_handlers = _build_handler_registry()
 
 func apply_upgrade(definition: UpgradeDefinition) -> bool:
 	if _player == null or definition == null:
@@ -21,45 +26,91 @@ func apply_upgrade(definition: UpgradeDefinition) -> bool:
 		push_error("UtilityUpgradeApplier: upgrade '%s' has no effects." % String(definition.id))
 		return false
 
-	for effect: UpgradeEffect in definition.effects:
-		if not _apply_effect(effect):
+	var planned_calls: Array[Dictionary] = []
+	if not _build_planned_calls(definition.effects, planned_calls):
+		return false
+	return _execute_planned_calls(planned_calls)
+
+func _build_handler_registry() -> Dictionary:
+	return {
+		STAT_DASH_COOLDOWN: {
+			"kind": HANDLER_KIND_NUMERIC,
+			"callable": Callable(_player, "adjust_dash_cooldown")
+		},
+		STAT_DASH_DISTANCE: {
+			"kind": HANDLER_KIND_NUMERIC,
+			"callable": Callable(_player, "adjust_dash_distance")
+		},
+		STAT_DASH_INVULNERABLE: {
+			"kind": HANDLER_KIND_SET_TRUE,
+			"callable": Callable(_player, "unlock_dash_invulnerable")
+		},
+		STAT_DASH_PHASE: {
+			"kind": HANDLER_KIND_SET_TRUE,
+			"callable": Callable(_player, "unlock_dash_phase")
+		},
+		STAT_CHARGE_KI_REGEN: {
+			"kind": HANDLER_KIND_NUMERIC,
+			"callable": Callable(_player, "adjust_charge_ki_regen")
+		},
+		STAT_CHARGE_KI_KNOCKBACK: {
+			"kind": HANDLER_KIND_NUMERIC,
+			"callable": Callable(_player, "adjust_ki_release_knockback")
+		},
+		STAT_CHARGE_KI_AOE_DAMAGE: {
+			"kind": HANDLER_KIND_NUMERIC,
+			"callable": Callable(_player, "adjust_ki_release_aoe_damage")
+		}
+	}
+
+func _build_planned_calls(effects: Array[UpgradeEffect], out_calls: Array[Dictionary]) -> bool:
+	for effect: UpgradeEffect in effects:
+		var planned_call: Dictionary = _build_planned_call(effect)
+		if planned_call.is_empty():
 			return false
+		out_calls.append(planned_call)
 	return true
 
-func _apply_effect(effect: UpgradeEffect) -> bool:
+func _build_planned_call(effect: UpgradeEffect) -> Dictionary:
+	var empty_result: Dictionary = {}
 	if effect == null:
-		return false
+		return empty_result
 	if effect.target_domain != UpgradeEffect.TARGET_PLAYER:
-		return false
+		return empty_result
 
-	match effect.stat_key:
-		STAT_DASH_COOLDOWN:
-			if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
-				return false
-			return _player.adjust_dash_cooldown(effect.value, effect.min_value, effect.max_value)
-		STAT_DASH_DISTANCE:
-			if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
-				return false
-			return _player.adjust_dash_distance(effect.value, effect.min_value, effect.max_value)
-		STAT_DASH_INVULNERABLE:
-			if effect.operation != UpgradeEffect.OP_SET_TRUE:
-				return false
-			return _player.unlock_dash_invulnerable()
-		STAT_DASH_PHASE:
-			if effect.operation != UpgradeEffect.OP_SET_TRUE:
-				return false
-			return _player.unlock_dash_phase()
-		STAT_CHARGE_KI_REGEN:
-			if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
-				return false
-			return _player.adjust_charge_ki_regen(effect.value, effect.min_value, effect.max_value)
-		STAT_CHARGE_KI_KNOCKBACK:
-			if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
-				return false
-			return _player.adjust_ki_release_knockback(effect.value, effect.min_value, effect.max_value)
-		STAT_CHARGE_KI_AOE_DAMAGE:
-			if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
-				return false
-			return _player.adjust_ki_release_aoe_damage(effect.value, effect.min_value, effect.max_value)
-		_:
+	var handler: Dictionary = _handlers.get(effect.stat_key, {}) as Dictionary
+	if handler.is_empty():
+		return empty_result
+
+	var handler_kind: StringName = handler.get("kind", &"") as StringName
+	var handler_callable: Callable = handler.get("callable", Callable())
+	if handler_callable.is_null():
+		return empty_result
+
+	if handler_kind == HANDLER_KIND_NUMERIC:
+		if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
+			return empty_result
+		return {
+			"callable": handler_callable,
+			"args": [effect.value, effect.min_value, effect.max_value]
+		}
+
+	if handler_kind == HANDLER_KIND_SET_TRUE:
+		if effect.operation != UpgradeEffect.OP_SET_TRUE:
+			return empty_result
+		return {
+			"callable": handler_callable,
+			"args": []
+		}
+
+	return empty_result
+
+func _execute_planned_calls(planned_calls: Array[Dictionary]) -> bool:
+	for planned_call: Dictionary in planned_calls:
+		var handler_callable: Callable = planned_call.get("callable", Callable())
+		if handler_callable.is_null():
 			return false
+		var args: Array = planned_call.get("args", []) as Array
+		if not bool(handler_callable.callv(args)):
+			return false
+	return true

@@ -5,8 +5,6 @@ const LIGHT_UP_SPEED: float = 16.0
 const DIM_SPEED: float = 10.0
 const MAX_LIGHT_BOOST: float = 0.1
 const DISABLED_PANEL_BRIGHTNESS: float = 0.55
-const DASH_ABILITY_RESOURCE_PATH: String = "res://resources/progression/abilities/dash.tres"
-const CHARGE_KI_ABILITY_RESOURCE_PATH: String = "res://resources/progression/abilities/charge_ki.tres"
 
 @onready var _action_1_panel: Panel = $"ButtonRow/1Button/IconPanel" as Panel
 @onready var _action_2_panel: Panel = $"ButtonRow/2Button/IconPanel" as Panel
@@ -37,8 +35,8 @@ func _ready() -> void:
 	_apply_slot_icon_state(_action_1_icon, _slot_enabled[0])
 	_apply_slot_icon_state(_action_2_icon, _slot_enabled[1])
 	_apply_slot_icon_state(_action_3_icon, _slot_enabled[2])
-	set_dash_icon(_load_ability_action_bar_icon(DASH_ABILITY_RESOURCE_PATH))
-	set_charge_icon(_load_ability_action_bar_icon(CHARGE_KI_ABILITY_RESOURCE_PATH))
+	set_dash_icon(null)
+	set_charge_icon(null)
 	_apply_lighting()
 
 func _process(delta: float) -> void:
@@ -79,26 +77,14 @@ func set_charge_icon(icon: Texture2D) -> void:
 	_charge_icon.texture = icon
 	_charge_icon.visible = _is_valid_icon(icon)
 
+func set_utility_icons(dash_icon: Texture2D, charge_icon: Texture2D) -> void:
+	set_dash_icon(dash_icon)
+	set_charge_icon(charge_icon)
+
 func _apply_slot_icon_state(icon: TextureRect, enabled: bool) -> void:
 	if icon == null:
 		return
 	icon.visible = enabled
-
-func _load_ability_action_bar_icon(resource_path: String) -> Texture2D:
-	if not ResourceLoader.exists(resource_path):
-		push_error("ActionButtonBar: missing ability resource '%s'." % resource_path)
-		return null
-	var ability_definition: AbilityDefinition = load(resource_path) as AbilityDefinition
-	if ability_definition == null:
-		push_error("ActionButtonBar: invalid ability resource '%s'." % resource_path)
-		return null
-
-	var action_bar_icon: Texture2D = ability_definition.action_bar_icon
-	if _is_valid_icon(action_bar_icon):
-		return action_bar_icon
-
-	push_error("ActionButtonBar: ability '%s' has invalid action_bar_icon." % String(ability_definition.id))
-	return null
 
 func _is_valid_icon(icon: Texture2D) -> bool:
 	if icon == null:

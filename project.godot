@@ -15,6 +15,10 @@ run/main_scene="uid://b07npo2v24div"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+EnemyRegistry="*res://scripts/systems/enemy_registry.gd"
+
 [display]
 
 window/size/viewport_width=640

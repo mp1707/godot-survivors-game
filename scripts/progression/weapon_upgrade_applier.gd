@@ -7,7 +7,11 @@ func apply_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> 
 	if definition.effects.is_empty():
 		push_error("WeaponUpgradeApplier: upgrade '%s' has no effects." % String(definition.id))
 		return false
-	return _apply_effects(state, definition.effects)
+	var planned_assignments: Array[Dictionary] = []
+	if not _build_planned_assignments(state, definition.effects, planned_assignments):
+		return false
+	_commit_assignments(state, planned_assignments)
+	return true
 
 func get_stack_count_for_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> int:
 	if state == null or definition == null:
@@ -16,51 +20,68 @@ func get_stack_count_for_upgrade(state: WeaponAbilityState, definition: UpgradeD
 		return 0
 	return _stack_count_from_effects(state, definition.effects)
 
-func _apply_effects(state: WeaponAbilityState, effects: Array[UpgradeEffect]) -> bool:
+func _build_planned_assignments(
+	state: WeaponAbilityState,
+	effects: Array[UpgradeEffect],
+	out_assignments: Array[Dictionary]
+) -> bool:
 	for effect: UpgradeEffect in effects:
-		if not _apply_effect(state, effect):
+		var assignment: Dictionary = _build_assignment(state, effect)
+		if assignment.is_empty():
 			return false
+		out_assignments.append(assignment)
 	return true
 
-func _apply_effect(state: WeaponAbilityState, effect: UpgradeEffect) -> bool:
+func _commit_assignments(state: WeaponAbilityState, assignments: Array[Dictionary]) -> void:
+	for assignment: Dictionary in assignments:
+		var key: String = assignment.get("key", "")
+		if key.is_empty():
+			continue
+		state.set(key, assignment.get("value"))
+
+func _build_assignment(state: WeaponAbilityState, effect: UpgradeEffect) -> Dictionary:
+	var empty_result: Dictionary = {}
 	if effect == null:
-		return false
+		return empty_result
 	if effect.target_domain != UpgradeEffect.TARGET_WEAPON_STATE:
-		return false
+		return empty_result
 	if effect.stat_key == &"":
-		return false
+		return empty_result
 
 	var key: String = String(effect.stat_key)
 	var current: Variant = state.get(key)
 	if current == null:
-		return false
+		return empty_result
 
 	match effect.operation:
 		UpgradeEffect.OP_ADD, UpgradeEffect.OP_CLAMP_ADD:
-			return _apply_numeric(state, key, current, current + effect.value, effect)
+			return _build_numeric_assignment(key, current, current + effect.value, effect)
 		UpgradeEffect.OP_MULTIPLY:
-			return _apply_numeric(state, key, current, float(current) * effect.value, effect)
+			return _build_numeric_assignment(key, current, float(current) * effect.value, effect)
 		UpgradeEffect.OP_SET_TRUE:
 			if typeof(current) != TYPE_BOOL:
-				return false
-			state.set(key, true)
-			return true
+				return empty_result
+			return {"key": key, "value": true}
 		UpgradeEffect.OP_SET_VALUE:
-			return _apply_numeric(state, key, current, effect.value, effect)
+			return _build_numeric_assignment(key, current, effect.value, effect)
 		_:
-			return false
+			return empty_result
 
-func _apply_numeric(state: WeaponAbilityState, key: String, current: Variant, proposed_value: float, effect: UpgradeEffect) -> bool:
+func _build_numeric_assignment(
+	key: String,
+	current: Variant,
+	proposed_value: float,
+	effect: UpgradeEffect
+) -> Dictionary:
+	var empty_result: Dictionary = {}
 	var clamped: float = _apply_optional_clamp(proposed_value, effect)
 	match typeof(current):
 		TYPE_INT:
-			state.set(key, int(round(clamped)))
-			return true
+			return {"key": key, "value": int(round(clamped))}
 		TYPE_FLOAT:
-			state.set(key, clamped)
-			return true
+			return {"key": key, "value": clamped}
 		_:
-			return false
+			return empty_result
 
 func _apply_optional_clamp(value: float, effect: UpgradeEffect) -> float:
 	var result: float = value

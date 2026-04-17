@@ -2,6 +2,8 @@ extends Node
 class_name GameHud
 
 const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/ui/floating_damage_number.tscn")
+const DASH_ABILITY_ID: StringName = &"dash"
+const CHARGE_KI_ABILITY_ID: StringName = &"charge_ki"
 
 var _player: Player
 var _progression: AbilityProgressionModel
@@ -45,6 +47,7 @@ func setup(
 	_update_score_label()
 	_refresh_xp_ui()
 	_refresh_action_bar_weapon_icons()
+	_refresh_action_bar_utility_icons()
 
 func get_kill_count() -> int:
 	return _kills
@@ -71,6 +74,14 @@ func _refresh_action_bar_weapon_icons() -> void:
 		return
 	for slot_index: int in range(3):
 		_action_button_bar.set_weapon_slot_icon(slot_index, _progression.get_slot_icon(slot_index))
+
+func _refresh_action_bar_utility_icons() -> void:
+	if _action_button_bar == null or _progression == null:
+		return
+	_action_button_bar.set_utility_icons(
+		_progression.get_ability_action_bar_icon(DASH_ABILITY_ID),
+		_progression.get_ability_action_bar_icon(CHARGE_KI_ABILITY_ID)
+	)
 
 func _on_weapon_unlocked(_slot_index: int, _ability_id: StringName) -> void:
 	_refresh_action_bar_weapon_icons()

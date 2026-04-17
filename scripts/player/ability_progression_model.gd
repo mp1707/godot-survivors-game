@@ -82,6 +82,21 @@ func get_slot_icon(slot_index: int) -> Texture2D:
 		return null
 	return state.icon
 
+func get_catalog() -> ProgressionCatalog:
+	return _catalog
+
+func get_ability_action_bar_icon(ability_id: StringName) -> Texture2D:
+	if ability_id == &"":
+		return null
+	var definition: AbilityDefinition = _ability_definitions.get(ability_id) as AbilityDefinition
+	if definition == null:
+		push_error("AbilityProgressionModel: missing ability definition '%s'." % String(ability_id))
+		return null
+	if not _is_valid_icon(definition.action_bar_icon):
+		push_error("AbilityProgressionModel: ability '%s' has invalid action_bar_icon." % String(ability_id))
+		return null
+	return definition.action_bar_icon
+
 # --- Weapon level-up building blocks ---
 
 func get_unlockable_weapon_options(current_level: int) -> Array[LevelUpOption]:

@@ -19,6 +19,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _enemy_spawner: EnemySpawner
 var _level_up_controller: LevelUpController
 var _game_hud: GameHud
+var _has_configuration_error: bool = false
 
 func _enter_tree() -> void:
 	_apply_run_balance_to_scene_nodes()
@@ -27,8 +28,13 @@ func _ready() -> void:
 	_rng.randomize()
 	_setup_camera_limits()
 
+	if _has_configuration_error:
+		return
+
 	if run_balance == null or not run_balance.is_valid():
 		push_error("Main: RunBalanceDefinition is missing required references.")
+		return
+	if not _validate_progression_catalog():
 		return
 
 	if _player == null:
@@ -81,11 +87,21 @@ func _ready() -> void:
 	_wave_spawn_timer.start()
 
 func _apply_run_balance_to_scene_nodes() -> void:
+	_has_configuration_error = false
 	if run_balance == null:
+		return
+	if not run_balance.is_valid():
+		push_error("Main: RunBalanceDefinition is missing required references.")
+		_has_configuration_error = true
+		return
+	if run_balance.progression_catalog != null and not run_balance.progression_catalog.validate():
+		_has_configuration_error = true
 		return
 
 	var player_node: Player = get_node_or_null("Player") as Player
 	if player_node == null:
+		push_error("Main: Player node is not a Player instance.")
+		_has_configuration_error = true
 		return
 
 	player_node.definition = run_balance.player_definition
@@ -94,6 +110,21 @@ func _apply_run_balance_to_scene_nodes() -> void:
 	var player_progression: PlayerProgression = player_node.get_node_or_null("Progression") as PlayerProgression
 	if player_progression != null:
 		player_progression.progression = run_balance.level_progression
+
+func _validate_progression_catalog() -> bool:
+	if run_balance == null or run_balance.progression_catalog == null:
+		push_error("Main: ProgressionCatalog is missing.")
+		return false
+	if run_balance.progression_catalog.validate():
+		return true
+
+	var validation_errors: PackedStringArray = run_balance.progression_catalog.get_validation_errors()
+	if validation_errors.is_empty():
+		push_error("Main: ProgressionCatalog validation failed.")
+		return false
+	for error_text: String in validation_errors:
+		push_error("Main: %s" % error_text)
+	return false
 
 func _setup_camera_limits() -> void:
 	var used_rect: Rect2i = $TileMapLayer.get_used_rect()

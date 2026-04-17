@@ -35,6 +35,10 @@ func _ready() -> void:
 	_hit_reaction.knockback_decay = knockback_decay
 	_animated_sprite.play("default")
 	add_to_group("enemies")
+	EnemyRegistry.register_enemy(self)
+
+func _exit_tree() -> void:
+	EnemyRegistry.unregister_enemy(self)
 
 func _apply_definition() -> bool:
 	if definition == null:

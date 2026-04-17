@@ -9,6 +9,7 @@ Balancing ist datengetrieben und zentral orchestriert:
 - Spawn-Druck in eigener Datenquelle: `SpawnPacingDefinition`
 - Projektil-Balance in eigener Datenquelle: `ProjectileDefinition`
 - Upgrade-Anwendung ueber dedizierte Applier statt ID-basierter Handler
+- Enemy-Targeting ueber zentrale Runtime-Registry statt globaler Group-Scans
 
 ## 2. Zentrale Balance-Resources
 
@@ -36,6 +37,17 @@ Explizite Listen:
 - `upgrades: Array[UpgradeDefinition]`
 
 Wichtig: Keine implizite Ordner-Discovery mehr.
+
+Integrity-API:
+
+- `validate() -> bool`
+- `get_validation_errors() -> PackedStringArray`
+
+Validiert u. a.:
+
+- Null-/Duplicate-/Empty-ID-Faelle bei Abilities und Upgrades
+- `ability.upgrade_ids` Cross-References
+- Ability-Icons (`action_bar_icon`, `upgrade_icon`)
 
 ### 2.3 Spawn-Pacing
 
@@ -71,6 +83,7 @@ Verantwortung:
 
 - liest genau eine `run_balance`-Resource
 - versorgt Player/Progression vor `Player._ready()` mit Run-Daten (`_enter_tree`)
+- fuehrt fruehes Fail-Fast fuer `ProgressionCatalog.validate()` aus (vor Runtime-Systemaufbau)
 - erstellt Runtime-Systeme (`EnemySpawner`, `LevelUpController`, `GameHud`)
 - steuert Wave-Timer technisch; Spawn-Tempo kommt aus `SpawnPacingDefinition`
 
@@ -84,6 +97,7 @@ Verantwortung:
 
 - Player liest nur `PlayerDefinition` als Balance-Quelle
 - `AbilityProgressionModel` baut Progression/Level-Up Daten aus `ProgressionCatalog`
+- `AbilityProgressionModel` liefert zentrale Ability-Icons (inkl. Utility-Icons fuer UI)
 - Utility-Upgrade-Anwendung via `UtilityUpgradeApplier`
 - Weapon-Upgrade-Anwendung via `WeaponUpgradeApplier`
 
@@ -107,6 +121,19 @@ Verantwortung:
 
 - WeaponSystem instanziert Projektil und uebergibt Ability-Stats + `ProjectileDefinition`
 - Projektil-Script liest Balancewerte ausschliesslich aus `ProjectileDefinition`
+
+### 3.5 Enemy Registry
+
+- Script: `scripts/systems/enemy_registry.gd`
+- Autoload: `EnemyRegistry` (in `project.godot`)
+
+Verantwortung:
+
+- zentrale Registry aktiver Enemies
+- Query-APIs fuer Combat-Targeting:
+  - `find_nearest_enemy(...)`
+  - `get_enemies_in_radius(...)`
+- `Enemy` registriert/deregistriert sich lifecycle-sicher (`_ready`/`_exit_tree`)
 
 ## 4. Upgrade-System
 
@@ -132,12 +159,16 @@ Prinzip:
 
 - neue Upgrades werden primaer als Daten (`effects`) angelegt
 - `effects` sind verpflichtend; Legacy-Felder wurden entfernt
+- Anwendung ist atomar (Prevalidate + Apply), kein Teil-Apply bei Fehlern
+- Utility-Applier nutzt stat-key-basierte Dispatcher-Registry statt harter Match-Kaskade
 
 ## 5. Verantwortlichkeitsgrenzen
 
 - `main.gd`: Orchestrierung, kein Balancing-Hardcode
 - `EnemySpawner`: Spawn-Komposition + Pacing-Auswertung
+- `EnemyRegistry`: zentrale Enemy-Queries fuer Combat-Hotpaths
 - `AbilityProgressionModel`: Progression-Read/Write + Option-Pool
+- `GameHud` + `ActionButtonBar`: UI-Icons aus aktivem Progression-Modell statt harter Resource-Pfade
 - `LevelUpOptionService`: Option-Selection-Regeln
 - Applier: Upgrade-Effektanwendung pro Domain
 - Resource-Definitions: Single Source of Truth fuer Balance
@@ -146,4 +177,5 @@ Prinzip:
 
 - fehlendes `RunBalanceDefinition`-Setup -> `push_error`
 - fehlende Definitionen in `Player`/`Enemy` -> `push_error` + Abbruch
-- `ProgressionCatalog` validiert fehlende/duplizierte IDs beim Laden
+- `ProgressionCatalog` wird vor Runtime-Systemaufbau validiert (`validate()` + Fehlerreport)
+- ungeltige Catalog-/Cross-Reference-/Icon-Daten brechen den Run-Setup frueh ab

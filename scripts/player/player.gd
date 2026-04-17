@@ -356,18 +356,7 @@ func apply_damage(amount: int, source_world_position: Vector2) -> void:
 	_hit_reaction.apply_hit(global_position, source_world_position, knockback_strength, hit_flash_time)
 
 func _reflect_absorbed_damage(amount: int, source_world_position: Vector2) -> void:
-	var closest_enemy: DamageableBody2D = null
-	var best_distance_sq: float = INF
-
-	for node: Node in get_tree().get_nodes_in_group("enemies"):
-		var enemy: DamageableBody2D = node as DamageableBody2D
-		if enemy == null:
-			continue
-		var distance_sq: float = enemy.global_position.distance_squared_to(source_world_position)
-		if distance_sq < best_distance_sq:
-			best_distance_sq = distance_sq
-			closest_enemy = enemy
-
+	var closest_enemy: Enemy = EnemyRegistry.find_nearest_enemy(source_world_position)
 	if closest_enemy != null:
 		closest_enemy.apply_damage(amount, global_position)
 
@@ -375,13 +364,7 @@ func _on_ki_charge_released() -> void:
 	if _ki_release_knockback_distance <= 0.0 and _ki_release_aoe_damage <= 0:
 		return
 
-	var radius_sq: float = ki_release_radius * ki_release_radius
-	for node: Node in get_tree().get_nodes_in_group("enemies"):
-		var enemy: DamageableBody2D = node as DamageableBody2D
-		if enemy == null:
-			continue
-		if global_position.distance_squared_to(enemy.global_position) > radius_sq:
-			continue
+	for enemy: Enemy in EnemyRegistry.get_enemies_in_radius(global_position, ki_release_radius):
 		if _ki_release_aoe_damage > 0:
 			enemy.apply_damage(_ki_release_aoe_damage, global_position)
 		if _ki_release_knockback_distance > 0.0:
