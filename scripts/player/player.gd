@@ -44,7 +44,7 @@ var dash_afterimage_tint: Color = Color.WHITE
 @onready var _mana_charge_loop_player: AudioStreamPlayer = $ChargeLoopPlayer as AudioStreamPlayer
 @onready var _progression: PlayerProgression = $Progression as PlayerProgression
 @onready var _dash_afterimage_vfx: DashAfterimageVfx = $DashAfterimageVfx as DashAfterimageVfx
-@onready var _attack_timer: Timer = $AttackTimer as Timer
+
 
 var _shoot_anim_time_left: float = 0.0
 var _health: int = 0
@@ -89,8 +89,6 @@ func _ready() -> void:
 		_progression.xp_changed.connect(_on_progression_xp_changed)
 		_progression.leveled_up.connect(_on_progression_leveled_up)
 		_progression.emit_state()
-	if _attack_timer != null:
-		_attack_timer.stop()
 	_clear_barrier()
 	_set_mana_charge_loop_playing(false)
 	_base_collision_mask = collision_mask
@@ -349,8 +347,7 @@ func apply_damage(amount: int, source_world_position: Vector2) -> void:
 		_finish_dash()
 		_set_mana_charge_loop_playing(false)
 		_weapon_system.cancel_charge()
-		if _attack_timer != null:
-			_attack_timer.stop()
+
 		died.emit()
 
 	_hit_reaction.apply_hit(global_position, source_world_position, knockback_strength, hit_flash_time)
@@ -384,8 +381,7 @@ func _set_shoot_animation(dir: Vector2) -> void:
 	else:
 		_animated_sprite.animation = "shoot_down"
 
-func _on_attack_timer_timeout() -> void:
-	return
+
 
 func _set_mana_charge_loop_playing(should_play: bool) -> void:
 	if _mana_charge_loop_player == null:

@@ -75,12 +75,12 @@ func _record_error(message: String) -> void:
 func _validate_ability_icons(ability: AbilityDefinition) -> void:
 	if ability.display_name.strip_edges().is_empty():
 		_record_error("ProgressionCatalog: ability '%s' has empty display_name." % String(ability.id))
-	if not _is_valid_icon(ability.action_bar_icon):
+	if not ProgressionCatalog.is_valid_icon(ability.action_bar_icon):
 		_record_error("ProgressionCatalog: ability '%s' has invalid action_bar_icon." % String(ability.id))
-	if not _is_valid_icon(ability.upgrade_icon):
+	if not ProgressionCatalog.is_valid_icon(ability.upgrade_icon):
 		_record_error("ProgressionCatalog: ability '%s' has invalid upgrade_icon." % String(ability.id))
 
-func _is_valid_icon(icon: Texture2D) -> bool:
+static func is_valid_icon(icon: Texture2D) -> bool:
 	if icon == null:
 		return false
 	var atlas_icon: AtlasTexture = icon as AtlasTexture

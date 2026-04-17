@@ -92,7 +92,7 @@ func get_ability_action_bar_icon(ability_id: StringName) -> Texture2D:
 	if definition == null:
 		push_error("AbilityProgressionModel: missing ability definition '%s'." % String(ability_id))
 		return null
-	if not _is_valid_icon(definition.action_bar_icon):
+	if not ProgressionCatalog.is_valid_icon(definition.action_bar_icon):
 		push_error("AbilityProgressionModel: ability '%s' has invalid action_bar_icon." % String(ability_id))
 		return null
 	return definition.action_bar_icon
@@ -280,7 +280,7 @@ func get_next_free_slot_index() -> int:
 
 func _initialize_empty_slots(slot_count: int) -> void:
 	_weapon_slots.clear()
-	for _index: int in range(max(slot_count, 0)):
+	for i: int in range(max(slot_count, 0)):
 		_weapon_slots.append(&"")
 
 func _setup_weapon_abilities() -> void:
@@ -517,9 +517,9 @@ func _register_upgrade_definition(definition: UpgradeDefinition) -> void:
 func _apply_ability_visuals(state: WeaponAbilityState, ability_definition: AbilityDefinition) -> void:
 	if ability_definition.display_name.strip_edges().is_empty():
 		push_error("AbilityProgressionModel: ability '%s' has empty display_name." % String(ability_definition.id))
-	if not _is_valid_icon(ability_definition.action_bar_icon):
+	if not ProgressionCatalog.is_valid_icon(ability_definition.action_bar_icon):
 		push_error("AbilityProgressionModel: ability '%s' has invalid action_bar_icon." % String(ability_definition.id))
-	if not _is_valid_icon(ability_definition.upgrade_icon):
+	if not ProgressionCatalog.is_valid_icon(ability_definition.upgrade_icon):
 		push_error("AbilityProgressionModel: ability '%s' has invalid upgrade_icon." % String(ability_definition.id))
 
 	state.display_name = ability_definition.display_name
@@ -540,16 +540,8 @@ func _get_option_icon_for_ability(state: WeaponAbilityState) -> Texture2D:
 func _get_option_icon_for_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> Texture2D:
 	if definition == null:
 		return null
-	if _is_valid_icon(definition.icon):
+	if ProgressionCatalog.is_valid_icon(definition.icon):
 		return definition.icon
-	if state != null and _is_valid_icon(state.upgrade_icon):
+	if state != null and ProgressionCatalog.is_valid_icon(state.upgrade_icon):
 		return state.upgrade_icon
 	return null
-
-func _is_valid_icon(icon: Texture2D) -> bool:
-	if icon == null:
-		return false
-	var atlas_icon: AtlasTexture = icon as AtlasTexture
-	if atlas_icon != null and atlas_icon.atlas == null:
-		return false
-	return true

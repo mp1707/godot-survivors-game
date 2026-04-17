@@ -34,6 +34,7 @@ func _ready() -> void:
 	_hp = max_hp
 	_hit_reaction.knockback_decay = knockback_decay
 	_animated_sprite.play("default")
+	# Required for projectile hit detection (laser_projectile.gd uses is_in_group("enemies")).
 	add_to_group("enemies")
 	EnemyRegistry.register_enemy(self)
 

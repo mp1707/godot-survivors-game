@@ -350,4 +350,4 @@ stream = ExtResource("14_eq8we")
 volume_db = -8.0
 max_polyphony = 2
 
-[connection signal="timeout" from="AttackTimer" to="." method="_on_attack_timer_timeout"]
+
