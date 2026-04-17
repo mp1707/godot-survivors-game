@@ -48,7 +48,7 @@ func is_charging() -> bool:
 func is_charging_energy_ball() -> bool:
 	if not is_charging() or _progression_model == null:
 		return false
-	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
+	var state: AbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	return state != null and state.use_middle_muzzle_for_charged
 
 func get_aim_direction() -> Vector2:
@@ -57,7 +57,7 @@ func get_aim_direction() -> Vector2:
 func get_current_charge_mana_cost() -> int:
 	if not is_charging() or _progression_model == null:
 		return 0
-	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
+	var state: AbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	if state == null:
 		return 0
 	return _progression_model.get_current_cost(state)
@@ -76,7 +76,7 @@ func _handle_weapon_input(delta: float) -> void:
 		if ability_id == &"":
 			continue
 
-		var state: WeaponAbilityState = _progression_model.get_ability_state(ability_id)
+		var state: AbilityState = _progression_model.get_ability_state(ability_id)
 		if state == null:
 			continue
 
@@ -91,7 +91,7 @@ func _handle_weapon_input(delta: float) -> void:
 		return
 
 func _update_charge_flow(delta: float) -> void:
-	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
+	var state: AbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	if state == null:
 		_finish_charge()
 		return
@@ -113,7 +113,7 @@ func _update_charge_flow(delta: float) -> void:
 		_fire_charge_weapon(state)
 		_finish_charge()
 
-func _activate_instant_weapon(state: WeaponAbilityState) -> void:
+func _activate_instant_weapon(state: AbilityState) -> void:
 	var mana_cost: int = _progression_model.get_current_cost(state)
 	if not _player.consume_mana(mana_cost):
 		return
@@ -129,7 +129,7 @@ func _activate_instant_weapon(state: WeaponAbilityState) -> void:
 				state.barrier_reflect_unlocked
 			)
 
-func _fire_charge_weapon(state: WeaponAbilityState) -> void:
+func _fire_charge_weapon(state: AbilityState) -> void:
 	if state.behavior != AbilityDefinition.BEHAVIOR_PROJECTILE:
 		return
 
@@ -137,7 +137,7 @@ func _fire_charge_weapon(state: WeaponAbilityState) -> void:
 	_fire_projectile_weapon(state, damage, true)
 	_play_release_audio_for_state(state)
 
-func _fire_projectile_weapon(state: WeaponAbilityState, damage: int, from_charge: bool) -> void:
+func _fire_projectile_weapon(state: AbilityState, damage: int, from_charge: bool) -> void:
 	if state.projectile_scene == null:
 		return
 
@@ -176,7 +176,7 @@ func _fire_projectile_weapon(state: WeaponAbilityState, damage: int, from_charge
 		return
 	_projectiles_parent.add_child(projectile)
 
-func _begin_charge(state: WeaponAbilityState) -> void:
+func _begin_charge(state: AbilityState) -> void:
 	_charging_ability_id = state.ability_id
 	charging_state_changed.emit(true)
 	_charge_time = 0.0
@@ -189,7 +189,7 @@ func _finish_charge() -> void:
 	_stop_charge_vfx()
 	charging_state_changed.emit(false)
 
-func _start_charge_vfx(state: WeaponAbilityState) -> void:
+func _start_charge_vfx(state: AbilityState) -> void:
 	if _charge_vfx != null:
 		return
 	if state.charge_vfx_scene == null:
@@ -211,7 +211,7 @@ func _on_charge_vfx_anim_finished() -> void:
 	if _charge_vfx_sprite.animation != "charging":
 		return
 
-	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
+	var state: AbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	if state == null:
 		return
 
@@ -225,7 +225,7 @@ func _on_charge_vfx_anim_finished() -> void:
 func _update_charge_vfx() -> void:
 	if _charge_vfx == null:
 		return
-	var state: WeaponAbilityState = _progression_model.get_ability_state(_charging_ability_id)
+	var state: AbilityState = _progression_model.get_ability_state(_charging_ability_id)
 	if state == null:
 		return
 	var dir: Vector2 = _get_mouse_aim_direction()
@@ -242,14 +242,14 @@ func _stop_charge_vfx() -> void:
 	_charge_vfx = null
 	_charge_vfx_sprite = null
 
-func _play_charge_audio_for_state(state: WeaponAbilityState) -> void:
+func _play_charge_audio_for_state(state: AbilityState) -> void:
 	match state.charge_audio_variant:
 		AbilityDefinition.AUDIO_VARIANT_ENERGY_BALL:
 			_play_loop_if_stopped(_energy_ball_charge_loop_player)
 		AbilityDefinition.AUDIO_VARIANT_SMALL_LASER, AbilityDefinition.AUDIO_VARIANT_BIG_LASER:
 			_play_loop_if_stopped(_weapon_charge_loop_player)
 
-func _play_release_audio_for_state(state: WeaponAbilityState) -> void:
+func _play_release_audio_for_state(state: AbilityState) -> void:
 	match state.release_audio_variant:
 		AbilityDefinition.AUDIO_VARIANT_SMALL_LASER:
 			_play_if_available(_small_laser_shot_player)
@@ -258,7 +258,7 @@ func _play_release_audio_for_state(state: WeaponAbilityState) -> void:
 		AbilityDefinition.AUDIO_VARIANT_ENERGY_BALL:
 			_play_if_available(_energy_ball_release_player)
 
-func _get_spawn_position(state: WeaponAbilityState, dir: Vector2, from_charge: bool) -> Vector2:
+func _get_spawn_position(state: AbilityState, dir: Vector2, from_charge: bool) -> Vector2:
 	if from_charge and state.use_middle_muzzle_for_charged and _muzzle_up_middle != null:
 		return _muzzle_up_middle.global_position
 	return _get_muzzle_world_position(dir)
@@ -284,7 +284,7 @@ func _action_for_slot(slot_index: int) -> StringName:
 		return &""
 	return SLOT_ACTIONS[slot_index]
 
-func _is_projectile_upright(state: WeaponAbilityState) -> bool:
+func _is_projectile_upright(state: AbilityState) -> bool:
 	if state.projectile_definition != null:
 		return state.projectile_definition.rotation_mode == ProjectileDefinition.ROTATION_UPRIGHT
 	return state.keep_projectile_upright

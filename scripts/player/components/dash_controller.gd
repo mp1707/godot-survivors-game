@@ -18,6 +18,7 @@ var _afterimage_timer: float = 0.0
 var _cooldown_left: float = 0.0
 var _invulnerable: bool = false
 var _phase_through_enemies: bool = false
+var _input_action: StringName = &"dash"
 
 var _player: CharacterBody2D = null
 var _vfx: DashAfterimageVfx = null
@@ -44,7 +45,9 @@ func tick_cooldown(delta: float) -> void:
 		_cooldown_left = maxf(_cooldown_left - delta, 0.0)
 
 func try_start(input_direction: Vector2) -> bool:
-	if not Input.is_action_just_pressed("dash"):
+	if _input_action == &"" or not InputMap.has_action(_input_action):
+		return false
+	if not Input.is_action_just_pressed(_input_action):
 		return false
 	if _cooldown_left > 0.0:
 		return false
@@ -124,6 +127,14 @@ func unlock_phase() -> bool:
 	if _is_dashing:
 		_apply_collision_mask()
 	return true
+
+func set_input_action(action_name: StringName) -> void:
+	if action_name == &"":
+		return
+	_input_action = action_name
+
+func get_input_action() -> StringName:
+	return _input_action
 
 func _apply_collision_mask() -> void:
 	if _player == null:

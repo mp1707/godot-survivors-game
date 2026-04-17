@@ -11,6 +11,7 @@ func validate() -> bool:
 
 	var ability_ids: Dictionary = {}
 	var upgrade_ids: Dictionary = {}
+	var utility_slot_indices: Dictionary = {}
 
 	for ability: AbilityDefinition in abilities:
 		if ability == null:
@@ -24,6 +25,7 @@ func validate() -> bool:
 			continue
 		ability_ids[ability.id] = ability
 		_validate_ability_icons(ability)
+		_validate_ability_activation(ability, utility_slot_indices)
 
 	for upgrade: UpgradeDefinition in upgrades:
 		if upgrade == null:
@@ -57,11 +59,7 @@ func validate() -> bool:
 					% [String(ability.id), String(upgrade_id)]
 				)
 				continue
-			if definition.get_domain() != UpgradeDefinition.DOMAIN_WEAPON:
-				_record_error(
-					"ProgressionCatalog: ability '%s' references non-weapon upgrade '%s'."
-					% [String(ability.id), String(upgrade_id)]
-				)
+			_validate_ability_upgrade_link(ability, definition)
 
 	return _last_validation_errors.is_empty()
 
@@ -79,6 +77,58 @@ func _validate_ability_icons(ability: AbilityDefinition) -> void:
 		_record_error("ProgressionCatalog: ability '%s' has invalid action_bar_icon." % String(ability.id))
 	if not ProgressionCatalog.is_valid_icon(ability.upgrade_icon):
 		_record_error("ProgressionCatalog: ability '%s' has invalid upgrade_icon." % String(ability.id))
+
+func _validate_ability_activation(ability: AbilityDefinition, utility_slot_indices: Dictionary) -> void:
+	if ability.activation_channel == AbilityDefinition.ACTIVATION_CHANNEL_WEAPON_SLOT:
+		return
+	if ability.activation_channel != AbilityDefinition.ACTIVATION_CHANNEL_UTILITY:
+		_record_error(
+			"ProgressionCatalog: ability '%s' has invalid activation_channel '%s'."
+			% [String(ability.id), String(ability.activation_channel)]
+		)
+		return
+	if ability.utility_slot_index < 0:
+		_record_error("ProgressionCatalog: utility ability '%s' has invalid utility_slot_index." % String(ability.id))
+	else:
+		if utility_slot_indices.has(ability.utility_slot_index):
+			_record_error(
+				"ProgressionCatalog: utility slot %d used by '%s' and '%s'."
+				% [ability.utility_slot_index, String(utility_slot_indices[ability.utility_slot_index]), String(ability.id)]
+			)
+		else:
+			utility_slot_indices[ability.utility_slot_index] = ability.id
+	if ability.input_action == &"":
+		_record_error("ProgressionCatalog: utility ability '%s' has empty input_action." % String(ability.id))
+	elif not InputMap.has_action(ability.input_action):
+		_record_error(
+			"ProgressionCatalog: utility ability '%s' references unknown input action '%s'."
+			% [String(ability.id), String(ability.input_action)]
+		)
+
+func _validate_ability_upgrade_link(ability: AbilityDefinition, definition: UpgradeDefinition) -> void:
+	if ability.activation_channel == AbilityDefinition.ACTIVATION_CHANNEL_UTILITY:
+		if definition.get_domain() != UpgradeDefinition.DOMAIN_UTILITY:
+			_record_error(
+				"ProgressionCatalog: utility ability '%s' references non-utility upgrade '%s'."
+				% [String(ability.id), String(definition.id)]
+			)
+		if definition.ability_id != ability.id:
+			_record_error(
+				"ProgressionCatalog: utility ability '%s' requires ability-bound upgrade '%s'."
+				% [String(ability.id), String(definition.id)]
+			)
+		return
+
+	if definition.get_domain() != UpgradeDefinition.DOMAIN_WEAPON:
+		_record_error(
+			"ProgressionCatalog: weapon ability '%s' references non-weapon upgrade '%s'."
+			% [String(ability.id), String(definition.id)]
+		)
+	if definition.ability_id != &"" and definition.ability_id != ability.id:
+		_record_error(
+			"ProgressionCatalog: weapon ability '%s' references upgrade '%s' bound to '%s'."
+			% [String(ability.id), String(definition.id), String(definition.ability_id)]
+		)
 
 static func is_valid_icon(icon: Texture2D) -> bool:
 	if icon == null:

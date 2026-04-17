@@ -13,6 +13,7 @@ operation = &"set_true"
 [resource]
 script = ExtResource("1_script")
 id = &"dash_invulnerable"
+ability_id = &"dash"
 max_stacks = 1
 title = "Dash: Invulnerability"
 description = "Unverwundbar waehrend Dash"

@@ -7,7 +7,12 @@
 script = ExtResource("2_ppxhv")
 id = &"dash"
 progression_domain = &"player_utility"
+activation_channel = &"utility"
 display_name = "Dash"
 action_bar_icon = ExtResource("1_c1mgu")
 upgrade_icon = ExtResource("1_c1mgu")
+starts_unlocked = true
+utility_slot_index = 0
+input_action = &"dash"
+upgrade_ids = Array[StringName]([&"dash_cooldown", &"dash_distance", &"dash_invulnerable", &"dash_phase"])
 metadata/_custom_type_script = "uid://c8b6af4npusis"

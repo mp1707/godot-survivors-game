@@ -1,6 +1,9 @@
 extends DamageableBody2D
 class_name Player
 
+const DASH_ABILITY_ID: StringName = &"dash"
+const CHARGE_KI_ABILITY_ID: StringName = &"charge_ki"
+
 signal health_changed(current: int, max: int)
 signal mana_changed(current: float, max: int)
 signal mana_preview_changed(active: bool, preview_cost: int, max: int)
@@ -81,7 +84,20 @@ func _setup_progression_model() -> bool:
 	_progression_model.set_weapon_upgrade_applier(weapon_upgrade_applier)
 	_progression_model.set_utility_upgrade_applier(utility_upgrade_applier)
 	_weapon_system.attach_progression_model(_progression_model)
+	_configure_utility_input_actions()
 	return true
+
+func _configure_utility_input_actions() -> void:
+	if _progression_model == null:
+		return
+	var dash_state: AbilityState = _progression_model.get_ability_state(DASH_ABILITY_ID)
+	if dash_state != null and dash_state.activation_channel == AbilityDefinition.ACTIVATION_CHANNEL_UTILITY:
+		if dash_state.input_action != &"":
+			_dash.set_input_action(dash_state.input_action)
+	var charge_state: AbilityState = _progression_model.get_ability_state(CHARGE_KI_ABILITY_ID)
+	if charge_state != null and charge_state.activation_channel == AbilityDefinition.ACTIVATION_CHANNEL_UTILITY:
+		if charge_state.input_action != &"":
+			_ki_charge.set_input_action(charge_state.input_action)
 
 func _physics_process(delta: float) -> void:
 	if _vitals.is_dead():

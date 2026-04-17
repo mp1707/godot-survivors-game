@@ -2,8 +2,7 @@ extends Node
 class_name GameHud
 
 const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/ui/floating_damage_number.tscn")
-const DASH_ABILITY_ID: StringName = &"dash"
-const CHARGE_KI_ABILITY_ID: StringName = &"charge_ki"
+const UTILITY_SLOT_COUNT: int = 2
 
 var _player: Player
 var _progression: AbilityProgressionModel
@@ -40,6 +39,7 @@ func setup(
 	if _progression != null:
 		_progression.weapon_unlocked.connect(_on_weapon_unlocked)
 		_progression.weapon_upgraded.connect(_on_weapon_upgraded)
+		_progression.utility_applied.connect(_on_utility_applied)
 	if _spawner != null:
 		_spawner.enemy_damage_taken.connect(_on_enemy_damage_taken)
 		_spawner.enemy_died.connect(_on_enemy_died)
@@ -78,16 +78,21 @@ func _refresh_action_bar_weapon_icons() -> void:
 func _refresh_action_bar_utility_icons() -> void:
 	if _action_button_bar == null or _progression == null:
 		return
-	_action_button_bar.set_utility_icons(
-		_progression.get_ability_action_bar_icon(DASH_ABILITY_ID),
-		_progression.get_ability_action_bar_icon(CHARGE_KI_ABILITY_ID)
-	)
+	for slot_index: int in range(UTILITY_SLOT_COUNT):
+		_action_button_bar.set_utility_slot(
+			slot_index,
+			_progression.get_utility_slot_icon(slot_index),
+			_progression.get_utility_slot_action(slot_index)
+		)
 
 func _on_weapon_unlocked(_slot_index: int, _ability_id: StringName) -> void:
 	_refresh_action_bar_weapon_icons()
 
 func _on_weapon_upgraded(_ability_id: StringName, _upgrade_id: StringName) -> void:
 	_refresh_action_bar_weapon_icons()
+
+func _on_utility_applied(_ability_id: StringName, _upgrade_id: StringName) -> void:
+	_refresh_action_bar_utility_icons()
 
 func _on_enemy_damage_taken(amount: int, world_position: Vector2) -> void:
 	if _damage_number_parent == null:

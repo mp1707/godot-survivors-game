@@ -4,6 +4,9 @@ class_name AbilityDefinition
 const DOMAIN_WEAPON: StringName = &"weapon"
 const DOMAIN_PLAYER_UTILITY: StringName = &"player_utility"
 
+const ACTIVATION_CHANNEL_WEAPON_SLOT: StringName = &"weapon_slot"
+const ACTIVATION_CHANNEL_UTILITY: StringName = &"utility"
+
 const BEHAVIOR_PROJECTILE: StringName = &"projectile"
 const BEHAVIOR_BARRIER: StringName = &"barrier"
 
@@ -14,6 +17,7 @@ const AUDIO_VARIANT_ENERGY_BALL: StringName = &"energy_ball"
 
 @export var id: StringName
 @export var progression_domain: StringName = DOMAIN_WEAPON
+@export var activation_channel: StringName = ACTIVATION_CHANNEL_WEAPON_SLOT
 @export var display_name: String
 
 @export var action_bar_icon: Texture2D
@@ -22,6 +26,8 @@ const AUDIO_VARIANT_ENERGY_BALL: StringName = &"energy_ball"
 
 @export var starts_unlocked: bool = false
 @export var start_slot_index: int = -1
+@export var utility_slot_index: int = -1
+@export var input_action: StringName = &""
 @export var unlock_level: int = 1
 @export_multiline var unlock_description: String = ""
 

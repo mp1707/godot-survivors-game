@@ -14,6 +14,7 @@ min_value = 1.0
 [resource]
 script = ExtResource("1_script")
 id = &"dash_cooldown"
+ability_id = &"dash"
 max_stacks = 4
 title = "Dash: Cooldown"
 description = "Cooldown -1s (mind. 1s)"

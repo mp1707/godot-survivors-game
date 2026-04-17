@@ -13,6 +13,7 @@ value = 5.0
 [resource]
 script = ExtResource("1_script")
 id = &"dash_distance"
+ability_id = &"dash"
 title = "Dash: Distance"
 description = "Dash-Distanz +5"
 icon = ExtResource("3_icon")

@@ -1,5 +1,5 @@
 extends RefCounted
-class_name WeaponAbilityState
+class_name AbilityState
 
 var ability_id: StringName = &""
 var display_name: String = ""
@@ -9,8 +9,11 @@ var upgrade_icon: Texture2D = null # level-up/upgrades
 
 var starts_unlocked: bool = false
 var preferred_slot_index: int = -1
+var utility_slot_index: int = -1
+var input_action: StringName = &""
 var unlock_level: int = 0
 var unlock_description: String = ""
+var activation_channel: StringName = AbilityDefinition.ACTIVATION_CHANNEL_WEAPON_SLOT
 
 var behavior: StringName = &""
 var is_unlocked: bool = false
@@ -67,7 +70,7 @@ var has_definition: bool = false
 
 func apply_definition(definition: AbilityDefinition) -> void:
 	if definition == null:
-		push_error("WeaponAbilityState: AbilityDefinition is missing.")
+		push_error("AbilityState: AbilityDefinition is missing.")
 		has_definition = false
 		return
 	has_definition = true
@@ -75,8 +78,11 @@ func apply_definition(definition: AbilityDefinition) -> void:
 	display_name = definition.display_name
 	starts_unlocked = definition.starts_unlocked
 	preferred_slot_index = definition.start_slot_index
+	utility_slot_index = definition.utility_slot_index
+	input_action = definition.input_action
 	unlock_level = definition.unlock_level
 	unlock_description = definition.unlock_description
+	activation_channel = definition.activation_channel
 	behavior = definition.behavior
 	is_chargeable = definition.is_chargeable
 	projectile_scene = definition.projectile_scene

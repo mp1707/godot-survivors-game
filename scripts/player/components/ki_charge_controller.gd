@@ -16,6 +16,7 @@ var _release_aoe_damage: int = 0
 var _is_charging: bool = false
 var _player: Node2D = null
 var _vitals: PlayerVitals = null
+var _input_action: StringName = &"charging"
 
 @onready var _aura_sprite: AnimatedSprite2D = get_node_or_null(aura_sprite_path) as AnimatedSprite2D
 @onready var _charge_loop_player: AudioStreamPlayer = get_node_or_null(charge_loop_player_path) as AudioStreamPlayer
@@ -31,9 +32,12 @@ func setup(player: Node2D, vitals: PlayerVitals) -> void:
 
 func update(delta: float, can_charge: bool) -> bool:
 	var was_charging: bool = _is_charging
-	_is_charging = can_charge and Input.is_action_pressed("charging")
+	if _input_action == &"" or not InputMap.has_action(_input_action):
+		_is_charging = false
+	else:
+		_is_charging = can_charge and Input.is_action_pressed(_input_action)
 
-	if was_charging and not _is_charging and Input.is_action_just_released("charging"):
+	if was_charging and not _is_charging and _input_action != &"" and InputMap.has_action(_input_action) and Input.is_action_just_released(_input_action):
 		_on_release()
 
 	if was_charging != _is_charging:
@@ -77,6 +81,14 @@ func adjust_release_aoe(delta: float, min_value: float = -INF, max_value: float 
 	var next_value: float = _clamped_add(float(_release_aoe_damage), delta, min_value, max_value)
 	_release_aoe_damage = int(round(next_value))
 	return true
+
+func set_input_action(action_name: StringName) -> void:
+	if action_name == &"":
+		return
+	_input_action = action_name
+
+func get_input_action() -> StringName:
+	return _input_action
 
 func _on_release() -> void:
 	released.emit()

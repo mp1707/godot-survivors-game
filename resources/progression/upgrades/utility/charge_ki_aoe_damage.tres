@@ -13,6 +13,7 @@ value = 1.0
 [resource]
 script = ExtResource("1_script")
 id = &"charge_ki_aoe_damage"
+ability_id = &"charge_ki"
 title = "Charge-Ki: AOE"
 description = "Release-AOE-Damage +1"
 icon = ExtResource("3_icon")

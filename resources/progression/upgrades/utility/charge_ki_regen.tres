@@ -13,6 +13,7 @@ value = 2.0
 [resource]
 script = ExtResource("1_script")
 id = &"charge_ki_regen"
+ability_id = &"charge_ki"
 title = "Charge-Ki: Regen"
 description = "Ki pro Sekunde +2"
 icon = ExtResource("3_icon")

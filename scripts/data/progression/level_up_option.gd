@@ -52,9 +52,10 @@ static func make_weapon_upgrade(
 	)
 
 static func make_player_upgrade(
+	option_ability_id: StringName,
 	option_upgrade_id: StringName,
 	option_title: String,
 	option_description: String,
 	option_icon: Texture2D
 ) -> LevelUpOption:
-	return LevelUpOption.new(TYPE_PLAYER_UPGRADE, option_title, option_description, option_icon, &"", option_upgrade_id)
+	return LevelUpOption.new(TYPE_PLAYER_UPGRADE, option_title, option_description, option_icon, option_ability_id, option_upgrade_id)

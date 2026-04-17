@@ -1,7 +1,7 @@
 extends RefCounted
 class_name WeaponUpgradeApplier
 
-func apply_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> bool:
+func apply_upgrade(state: AbilityState, definition: UpgradeDefinition) -> bool:
 	if state == null or definition == null:
 		return false
 	if definition.effects.is_empty():
@@ -13,7 +13,7 @@ func apply_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> 
 	_commit_assignments(state, planned_assignments)
 	return true
 
-func get_stack_count_for_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> int:
+func get_stack_count_for_upgrade(state: AbilityState, definition: UpgradeDefinition) -> int:
 	if state == null or definition == null:
 		return 0
 	if definition.effects.is_empty():
@@ -21,7 +21,7 @@ func get_stack_count_for_upgrade(state: WeaponAbilityState, definition: UpgradeD
 	return _stack_count_from_effects(state, definition.effects)
 
 func _build_planned_assignments(
-	state: WeaponAbilityState,
+	state: AbilityState,
 	effects: Array[UpgradeEffect],
 	out_assignments: Array[Dictionary]
 ) -> bool:
@@ -32,14 +32,14 @@ func _build_planned_assignments(
 		out_assignments.append(assignment)
 	return true
 
-func _commit_assignments(state: WeaponAbilityState, assignments: Array[Dictionary]) -> void:
+func _commit_assignments(state: AbilityState, assignments: Array[Dictionary]) -> void:
 	for assignment: Dictionary in assignments:
 		var key: String = assignment.get("key", "")
 		if key.is_empty():
 			continue
 		state.set(key, assignment.get("value"))
 
-func _build_assignment(state: WeaponAbilityState, effect: UpgradeEffect) -> Dictionary:
+func _build_assignment(state: AbilityState, effect: UpgradeEffect) -> Dictionary:
 	var empty_result: Dictionary = {}
 	if effect == null:
 		return empty_result
@@ -91,7 +91,7 @@ func _apply_optional_clamp(value: float, effect: UpgradeEffect) -> float:
 		result = minf(result, effect.max_value)
 	return result
 
-func _stack_count_from_effects(state: WeaponAbilityState, effects: Array[UpgradeEffect]) -> int:
+func _stack_count_from_effects(state: AbilityState, effects: Array[UpgradeEffect]) -> int:
 	for effect: UpgradeEffect in effects:
 		if effect == null:
 			continue
