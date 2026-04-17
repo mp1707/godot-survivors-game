@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://fstw5ubi16go"]
 
-[ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/enemy.gd" id="1_817ua"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_817ua"]
 [ext_resource type="Texture2D" uid="uid://bc143k0o0isr8" path="res://art/enemies/Ghastly Eye/GhastlyEye.png" id="2_sypwk"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="3_50m3f"]
 

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bp13vpuc4w6yd"]
 
-[ext_resource type="Script" uid="uid://cnlf4nfsxr33h" path="res://scripts/enemies/enemy.gd" id="1_8ni7i"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_8ni7i"]
 [ext_resource type="Texture2D" uid="uid://t6swvep0nwc0" path="res://art/enemies/Sand Ghoul/SandGhoul.png" id="2_so73h"]
 [ext_resource type="Script" uid="uid://yc0k8852pd4l" path="res://scripts/combat/hit_reaction_2d.gd" id="3_hitreaction"]
 

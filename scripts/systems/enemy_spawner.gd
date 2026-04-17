@@ -28,10 +28,16 @@ func on_wave_tick() -> bool:
 	var wave_size: int = wave.get_wave_size(_wave_index)
 	var remaining: int = total - _spawned_enemies
 	var spawn_count: int = mini(wave_size, remaining)
+	var spawned_this_tick: int = 0
 
 	for _i: int in range(spawn_count):
-		_spawn_enemy()
-		_spawned_enemies += 1
+		if _spawn_enemy():
+			_spawned_enemies += 1
+			spawned_this_tick += 1
+
+	if spawned_this_tick == 0:
+		push_error("EnemySpawner: failed to spawn any enemies on wave tick. Stopping spawn timer to avoid empty-loop retries.")
+		return false
 
 	_wave_index += 1
 	return _spawned_enemies < total
@@ -44,16 +50,16 @@ func clear_all_targets() -> void:
 		if enemy != null:
 			enemy.target = null
 
-func _spawn_enemy() -> void:
+func _spawn_enemy() -> bool:
 	var enemy_def: EnemyDefinition = wave.pick_enemy_for_spawn(_rng, _spawned_enemies)
 	if enemy_def == null or enemy_def.scene == null:
 		push_error("WaveDefinition has no valid enemy to spawn.")
-		return
+		return false
 
 	var enemy: Enemy = enemy_def.scene.instantiate() as Enemy
 	if enemy == null:
 		push_error("Failed to instantiate enemy as Enemy.")
-		return
+		return false
 
 	enemy.definition = enemy_def
 
@@ -66,6 +72,7 @@ func _spawn_enemy() -> void:
 	enemy.died.connect(_on_enemy_died.bind(enemy))
 	enemy.target = _player
 	_enemies_parent.add_child(enemy)
+	return true
 
 func _on_enemy_damage_taken(amount: int, world_position: Vector2) -> void:
 	enemy_damage_taken.emit(amount, world_position)

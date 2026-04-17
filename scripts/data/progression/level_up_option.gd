@@ -28,26 +28,33 @@ func _init(
 	upgrade_id = new_upgrade_id
 
 static func make_new_weapon(
-	ability_id: StringName,
-	title: String,
-	description: String,
-	icon: Texture2D
+	option_ability_id: StringName,
+	option_title: String,
+	option_description: String,
+	option_icon: Texture2D
 ) -> LevelUpOption:
-	return LevelUpOption.new(TYPE_NEW_WEAPON, title, description, icon, ability_id, &"")
+	return LevelUpOption.new(TYPE_NEW_WEAPON, option_title, option_description, option_icon, option_ability_id, &"")
 
 static func make_weapon_upgrade(
-	ability_id: StringName,
-	upgrade_id: StringName,
-	title: String,
-	description: String,
-	icon: Texture2D
+	option_ability_id: StringName,
+	option_upgrade_id: StringName,
+	option_title: String,
+	option_description: String,
+	option_icon: Texture2D
 ) -> LevelUpOption:
-	return LevelUpOption.new(TYPE_WEAPON_UPGRADE, title, description, icon, ability_id, upgrade_id)
+	return LevelUpOption.new(
+		TYPE_WEAPON_UPGRADE,
+		option_title,
+		option_description,
+		option_icon,
+		option_ability_id,
+		option_upgrade_id
+	)
 
 static func make_player_upgrade(
-	upgrade_id: StringName,
-	title: String,
-	description: String,
-	icon: Texture2D
+	option_upgrade_id: StringName,
+	option_title: String,
+	option_description: String,
+	option_icon: Texture2D
 ) -> LevelUpOption:
-	return LevelUpOption.new(TYPE_PLAYER_UPGRADE, title, description, icon, &"", upgrade_id)
+	return LevelUpOption.new(TYPE_PLAYER_UPGRADE, option_title, option_description, option_icon, &"", option_upgrade_id)

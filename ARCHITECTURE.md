@@ -1,18 +1,21 @@
-# Survivors Game – Architekturübersicht
+# Survivors Game – Architekturübersicht (Post-Refactor)
 
 ## 1. Systemübersicht
 
 ```mermaid
 graph TB
-    subgraph CORE["Core"]
-        MAIN["main.gd (Orchestrator)"]
+    subgraph CORE["Core Orchestration"]
+        MAIN["main.gd"]
+        ES["EnemySpawner"]
+        LUC["LevelUpController"]
+        HUD["GameHud"]
     end
 
     subgraph PLAYER["Player Subsystem"]
         P["Player (player.gd)"]
         PWS["PlayerWeaponSystem"]
         PP["PlayerProgression"]
-        WPM["WeaponProgressionModel"]
+        APM["AbilityProgressionModel"]
         PUI["PlayerUIController"]
         PHB["PlayerHealthBar"]
         PMB["PlayerManaBar"]
@@ -25,7 +28,7 @@ graph TB
     end
 
     subgraph ENEMIES["Enemies"]
-        G["Ghoul / Crawler / Eye"]
+        E["Enemy (ghoul/crawler/eye scenes)"]
     end
 
     subgraph PROJECTILES["Projectiles"]
@@ -33,11 +36,11 @@ graph TB
     end
 
     subgraph PICKUPS["Pickups"]
-        XOM["XPOrbManager (Pool)"]
+        XOM["XPOrbManager"]
         XO["XPOrb"]
     end
 
-    subgraph UI["UI"]
+    subgraph UI["UI Components"]
         XPB["XPProgressBar"]
         LUP["LevelUpPopup"]
         ABB["ActionButtonBar"]
@@ -54,40 +57,49 @@ graph TB
     end
 
     DB -->|extends| P
-    DB -->|extends| G
+    DB -->|extends| E
+
+    MAIN --> ES
+    MAIN --> LUC
+    MAIN --> HUD
+    MAIN --> XOM
+    MAIN --> P
 
     P --> PWS
     P --> PP
     P --> PUI
-    PWS --> WPM
-    PUI --> PHB
-    PUI --> PMB
     P --> DAI
 
-    WPM -.->|loads| AD
-    WPM -.->|loads| UD
-    G -.->|reads| ED
-    MAIN -.->|reads| WD
-    MAIN -.->|reads| LPROG
-    P -.->|reads| PD
+    PWS --> APM
+    LUC --> APM
+    HUD --> APM
 
+    PUI --> PHB
+    PUI --> PMB
+
+    ES -->|instantiates| E
+    E -->|apply_damage| P
     PWS -->|instantiates| PROJ
-    PROJ -->|apply_damage| G
+    PROJ -->|apply_damage| E
 
     MAIN -->|spawn_orb| XOM
     XOM --> XO
     XO -->|collect_xp| P
 
-    HR --> G
+    HR --> E
     HR --> P
 
-    MAIN --> G
-    MAIN --> XOM
-    MAIN --> LUP
-    MAIN --> ABB
-    MAIN --> XPB
-    MAIN --> FDN
-    MAIN --> P
+    APM -.->|loads| AD
+    APM -.->|loads| UD
+    E -.->|reads| ED
+    ES -.->|reads| WD
+    P -.->|reads| PD
+    PP -.->|reads| LPROG
+
+    HUD --> XPB
+    HUD --> ABB
+    HUD --> FDN
+    LUC --> LUP
 ```
 
 ---
@@ -96,177 +108,191 @@ graph TB
 
 ```mermaid
 flowchart LR
+    PP(["PlayerProgression"])
     P(["Player"])
     PWS(["PlayerWeaponSystem"])
-    G(["Enemy"])
-    XO(["XPOrb"])
-    LUP(["LevelUpPopup"])
-    MAIN(["main.gd"])
     PUI(["PlayerUIController"])
-    PHB(["HealthBar"])
-    PMB(["ManaBar"])
-    ABB(["ActionButtonBar"])
-    FDN(["FloatingDamageNumber"])
+    LUC(["LevelUpController"])
+    LUP(["LevelUpPopup"])
+    APM(["AbilityProgressionModel"])
+    ES(["EnemySpawner"])
+    HUD(["GameHud"])
+    MAIN(["main.gd"])
+    XO(["XPOrb"])
     XOM(["XPOrbManager"])
 
-    P -->|"died()"| MAIN
+    PP -->|"xp_changed(cur, req, lvl)"| P
+    PP -->|"leveled_up(level)"| P
+
     P -->|"health_changed(cur, max)"| PUI
     P -->|"mana_changed(cur, max)"| PUI
-    P -->|"xp_changed(cur, req, lvl)"| MAIN
-    P -->|"leveled_up(level)"| MAIN
+    P -->|"mana_preview_changed(active, preview_cost, max)"| PUI
+    P -->|"xp_changed(cur, req, lvl)"| HUD
+    P -->|"leveled_up(level)"| LUC
+    P -->|"died()"| MAIN
 
-    PUI --> PHB
-    PUI --> PMB
-
-    PWS -->|"weapon_slots_changed()"| MAIN
-    PWS -->|"charging_state_changed(bool)"| PMB
+    PWS -->|"charging_state_changed(bool)"| PUI
     PWS -->|"shoot_animation_requested(dir)"| P
 
-    G -->|"damage_taken(amount, pos)"| MAIN
-    G -->|"died()"| MAIN
+    ES -->|"enemy_damage_taken(amount, pos)"| HUD
+    ES -->|"enemy_died(enemy)"| HUD
+    ES -->|"enemy_died(enemy)"| MAIN
 
-    XO -->|"collected(orb, value)"| XOM
+    LUP -->|"option_selected(option)"| LUC
+    LUC -->|"apply_option(option)"| APM
+
+    APM -->|"weapon_unlocked(slot, ability)"| HUD
+    APM -->|"weapon_upgraded(ability, upgrade)"| HUD
+
+    XO -->|"collected(orb, amount)"| XOM
     XOM -->|"collect_xp(amount)"| P
-
-    LUP -->|"option_selected(option)"| MAIN
-
-    MAIN -->|"spawn FloatingDamageNumber"| FDN
-    MAIN -->|"refresh icons"| ABB
-    MAIN -->|"show Game Over"| MAIN
 ```
 
 ---
 
-## 3. Level-Up Datenfluss
+## 3. Spawn-, Kampf- und XP-Datenfluss
 
 ```mermaid
 sequenceDiagram
-    participant XO as XPOrb
+    participant T as WaveSpawnTimer
+    participant MAIN as main.gd
+    participant ES as EnemySpawner
+    participant WD as WaveDefinition
+    participant E as Enemy
+    participant HUD as GameHud
     participant XOM as XPOrbManager
-    participant PL as PlayerProgression
-    participant MAIN as main.gd
-    participant LUP as LevelUpPopup
-    participant WPM as WeaponProgressionModel
-    participant PWS as PlayerWeaponSystem
+    participant XO as XPOrb
     participant P as Player
+    participant PP as PlayerProgression
 
-    XO->>XOM: collected(orb, value)
-    XOM->>PL: add_xp(value)
-    PL-->>MAIN: leveled_up(level)
-    MAIN->>WPM: get_unlockable_weapon_options()
-    MAIN->>WPM: get_weapon_upgrade_options()
-    MAIN->>P: get_utility_upgrade_options()
-    MAIN->>LUP: present_options(3 options)
-    LUP-->>MAIN: option_selected(option)
+    T->>MAIN: timeout()
+    MAIN->>ES: on_wave_tick()
+    ES->>WD: get_total_enemy_count()
+    ES->>WD: get_wave_size(wave_index)
+    ES->>WD: pick_enemy_for_spawn(rng, spawned_count)
+    ES->>E: instantiate + add_child + set target
 
-    alt TYPE_NEW_WEAPON
-        MAIN->>PWS: unlock_weapon_in_next_free_slot(id)
-    else TYPE_WEAPON_UPGRADE
-        MAIN->>PWS: apply_weapon_upgrade(ability_id, upgrade_id)
-    else TYPE_PLAYER_UPGRADE
-        MAIN->>P: apply_utility_upgrade(upgrade_id)
-    end
+    E-->>ES: damage_taken(amount, world_position)
+    ES-->>HUD: enemy_damage_taken(amount, world_position)
+    HUD->>HUD: spawn FloatingDamageNumber
 
-    PWS-->>MAIN: weapon_slots_changed()
-    MAIN->>ABB: set_weapon_slot_icon(slot, icon)
+    E-->>ES: died()
+    ES-->>MAIN: enemy_died(enemy)
+    ES-->>HUD: enemy_died(enemy)
+    MAIN->>XOM: spawn_orb(enemy.global_position, enemy.xp_drop_value)
+
+    XO-->>XOM: collected(orb, amount)
+    XOM->>P: collect_xp(amount)
+    P->>PP: add_xp(amount)
+    PP-->>P: xp_changed / leveled_up
+    P-->>HUD: xp_changed
 ```
 
 ---
 
-## 4. Kampf- & Schadensfluss
+## 4. Level-Up Datenfluss
 
 ```mermaid
 sequenceDiagram
-    participant IN as Input
-    participant PWS as PlayerWeaponSystem
+    participant PP as PlayerProgression
     participant P as Player
-    participant PROJ as Projectile
-    participant G as Ghoul
-    participant MAIN as main.gd
+    participant LUC as LevelUpController
+    participant APM as AbilityProgressionModel
+    participant LUP as LevelUpPopup
+    participant HUD as GameHud
 
-    IN->>PWS: action_pressed (fire)
-    PWS->>P: consume_mana(cost)
-    PWS->>PROJ: instantiate + configure
-    PWS-->>P: shoot_animation_requested(dir)
+    PP-->>P: leveled_up(level)
+    P-->>LUC: leveled_up(level)
+    LUC->>APM: get_unlockable_weapon_options(level)
+    LUC->>APM: get_weapon_upgrade_options()
+    LUC->>APM: get_utility_upgrade_options()
+    LUC->>LUP: present_options(level, options)
+    Note over LUC,LUP: Tree paused while popup is active
 
-    PROJ->>G: body_entered → apply_damage(dmg, pos)
-    G-->>MAIN: damage_taken(amount, pos)
-    MAIN->>MAIN: spawn FloatingDamageNumber
+    LUP-->>LUC: option_selected(option)
+    LUC->>APM: apply_option(option)
 
-    alt HP <= 0
-        G-->>MAIN: died()
-        MAIN->>XOM: spawn_orb(pos, xp_value)
-        G->>G: queue_free()
+    alt new weapon
+        APM-->>HUD: weapon_unlocked(slot_index, ability_id)
+    else weapon upgrade
+        APM-->>HUD: weapon_upgraded(ability_id, upgrade_id)
+    else utility upgrade
+        APM->>P: utility handler (Player) anwenden
     end
+
+    HUD->>HUD: refresh action bar icons
+    Note over LUC,LUP: Tree resumed after selection
 ```
 
 ---
 
-## 5. Vererbungs- & Kompositionshierarchie
+## 5. Vererbungs- und Kompositionshierarchie
 
 ```mermaid
 classDiagram
     class DamageableBody2D {
         +apply_damage(amount, pos)
-        +apply_knockback(dir, force)
+        +apply_knockback(source_pos, distance)
     }
 
     class Player {
-        -_health float
-        -_mana float
-        -_is_dashing bool
-        -_is_ki_charging bool
         +collect_xp(amount)
-        +apply_utility_upgrade(id)
-        +get_power_level() int
+        +get_progression_model() AbilityProgressionModel
     }
 
-    class Ghoul {
-        -_hp float
-        -target Node2D
+    class Enemy {
         +definition EnemyDefinition
+        +target DamageableBody2D
     }
 
     class PlayerWeaponSystem {
-        -_weapon_slots Array
-        -_model WeaponProgressionModel
-        +unlock_weapon_in_next_free_slot(id)
-        +apply_weapon_upgrade(ability_id, upgrade_id)
+        +attach_progression_model(model)
+        +physics_update(delta)
         +is_charging() bool
     }
 
-    class WeaponProgressionModel {
-        -_ability_states Dict
-        +get_ability_state(id) WeaponAbilityState
-        +get_current_cost(id) float
-        +get_charged_damage(id) float
-    }
-
-    class WeaponAbilityState {
-        +ability_id String
-        +is_unlocked bool
-        +upgrade_counts Dict
+    class AbilityProgressionModel {
+        +get_slot_icon(slot) Texture2D
+        +get_unlockable_weapon_options(level) Array
+        +get_weapon_upgrade_options() Array
+        +get_utility_upgrade_options() Array
+        +apply_option(option) bool
     }
 
     class PlayerProgression {
-        -_level int
-        -_xp_in_level float
         +add_xp(amount)
         +get_level() int
     }
 
+    class EnemySpawner {
+        +setup(player, wave, rng, enemies_parent)
+        +on_wave_tick() bool
+    }
+
+    class LevelUpController {
+        +setup(player, progression, popup, rng)
+        +flush_and_resume()
+    }
+
+    class GameHud {
+        +setup(player, progression, spawner, ...)
+        +get_kill_count() int
+    }
+
     class XPOrbManager {
-        -_pool Array
-        +spawn_orb(pos, value)
+        +setup(player)
+        +spawn_orb(pos, xp)
         +clear_orbs()
     }
 
     DamageableBody2D <|-- Player
-    DamageableBody2D <|-- Ghoul
+    DamageableBody2D <|-- Enemy
     Player *-- PlayerWeaponSystem
     Player *-- PlayerProgression
-    PlayerWeaponSystem *-- WeaponProgressionModel
-    WeaponProgressionModel *-- WeaponAbilityState
+    PlayerWeaponSystem --> AbilityProgressionModel
+    LevelUpController --> AbilityProgressionModel
+    EnemySpawner --> Enemy
+    GameHud --> EnemySpawner
     XPOrbManager *-- XPOrb
 ```
 
@@ -274,17 +300,17 @@ classDiagram
 
 ## 6. Ressourcen-Hierarchie
 
-```
+```text
 res://resources/
 ├── balance/
-│   ├── player/         → PlayerDefinition.tres   (HP, Mana, Dash-Stats)
-│   ├── enemies/        → EnemyDefinition.tres     (HP, Damage, Speed)
-│   ├── waves/          → WaveDefinition.tres      (Spawn-Regeln, Stages)
-│   └── progression/    → LevelProgression.tres    (XP-Kurve)
+│   ├── player_default.tres          -> PlayerDefinition (HP/Mana/Movement/Utility Upgrades)
+│   ├── enemies/*.tres               -> EnemyDefinition (Combat/Movement/Rewards)
+│   ├── waves/default_run.tres       -> WaveDefinition + WaveStage-Verteilung
+│   └── level_progression_default.tres -> LevelProgression (XP-Kurve)
 └── progression/
-    ├── abilities/      → AbilityDefinition.tres   (Damage, Cost, Pierce…)
-    ├── upgrades/       → UpgradeDefinition.tres   (Wert, Max-Stacks)
-    └── icons/          → Texture-Atlas .tres
+    ├── abilities/*.tres             -> AbilityDefinition (Weapon/Utility-Abilities)
+    ├── upgrades/**/*.tres            -> UpgradeDefinition (Weapon + Utility)
+    └── icons/*.tres                 -> Icon-Ressourcen
 ```
 
 ---
@@ -293,15 +319,20 @@ res://resources/
 
 | Signal | Emittiert von | Empfangen von | Effekt |
 |---|---|---|---|
-| `health_changed(cur, max)` | Player | PlayerUIController | HealthBar aktualisieren |
-| `mana_changed(cur, max)` | Player | PlayerUIController | ManaBar aktualisieren |
-| `xp_changed(cur, req, lvl)` | PlayerProgression | main.gd | XPProgressBar + Label |
-| `leveled_up(level)` | PlayerProgression | main.gd | Level-Up Popup öffnen |
-| `died()` | Player | main.gd | Game Over zeigen |
-| `weapon_slots_changed()` | PlayerWeaponSystem | main.gd | ActionButtonBar Icons refresh |
-| `charging_state_changed(bool)` | PlayerWeaponSystem | PlayerUIController | ManaBar Vorschau |
-| `shoot_animation_requested(dir)` | PlayerWeaponSystem | Player | Schussanimation abspielen |
-| `damage_taken(amount, pos)` | Ghoul/Enemy | main.gd | FloatingDamageNumber spawnen |
-| `died()` | Ghoul/Enemy | main.gd | XP Orb spawnen |
-| `collected(orb, value)` | XPOrb | XPOrbManager | `player.collect_xp()` aufrufen |
-| `option_selected(option)` | LevelUpPopup | main.gd | Upgrade anwenden |
+| `xp_changed(current, required, level)` | `PlayerProgression` | `Player` | Player spiegelt XP-Status nach außen |
+| `leveled_up(new_level)` | `PlayerProgression` | `Player` | Player reicht Level-Up weiter |
+| `health_changed(current, max)` | `Player` | `PlayerUIController` | HealthBar aktualisieren |
+| `mana_changed(current, max)` | `Player` | `PlayerUIController` | ManaBar aktualisieren |
+| `mana_preview_changed(active, preview_cost, max)` | `Player` | `PlayerUIController` | Mana-Vorschau aktualisieren |
+| `xp_changed(current, required, level)` | `Player` | `GameHud` | XPProgressBar + Level-Label aktualisieren |
+| `leveled_up(new_level)` | `Player` | `LevelUpController` | Level-Up Queue/Pause-Flow starten |
+| `died()` | `Player` | `main.gd` | Spawn stoppen, Cleanup, Game Over anzeigen |
+| `shoot_animation_requested(dir)` | `PlayerWeaponSystem` | `Player` | Schussanimation abspielen |
+| `charging_state_changed(is_charging)` | `PlayerWeaponSystem` | `PlayerUIController` | ManaBar Charge-Preview anzeigen/verstecken |
+| `enemy_damage_taken(amount, world_position)` | `EnemySpawner` | `GameHud` | FloatingDamageNumber erzeugen |
+| `enemy_died(enemy)` | `EnemySpawner` | `GameHud`, `main.gd` | Kill-Counter + XP-Orb-Spawn |
+| `option_selected(option)` | `LevelUpPopup` | `LevelUpController` | Option anwenden und Spiel fortsetzen |
+| `weapon_unlocked(slot_index, ability_id)` | `AbilityProgressionModel` | `GameHud` | ActionBar-Icons aktualisieren |
+| `weapon_upgraded(ability_id, upgrade_id)` | `AbilityProgressionModel` | `GameHud` | ActionBar-Icons aktualisieren |
+| `utility_applied(upgrade_id)` | `AbilityProgressionModel` | *(aktuell kein Listener)* | Event für potenzielle zukünftige UI-Hooks |
+| `collected(orb, amount)` | `XPOrb` | `XPOrbManager` | XP einsammeln + Orb recyceln |
