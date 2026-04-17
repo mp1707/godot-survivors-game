@@ -17,8 +17,7 @@ const AUDIO_VARIANT_ENERGY_BALL: StringName = &"energy_ball"
 @export var display_name: String
 
 @export var action_bar_icon: Texture2D
-@export var level_up_icon: Texture2D
-# Optional explicit icon for ability-bound upgrades. Falls back to `level_up_icon`.
+# Icon used for level-up and upgrade options.
 @export var upgrade_icon: Texture2D
 
 @export var starts_unlocked: bool = false

@@ -30,6 +30,3 @@ class_name PlayerDefinition
 
 @export_group("Pickups")
 @export var xp_magnet_radius: float = 80.0
-
-@export_group("Utility Upgrades")
-@export var utility_upgrades: Array[UpgradeDefinition] = []

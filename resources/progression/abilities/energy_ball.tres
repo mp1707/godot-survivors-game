@@ -11,7 +11,6 @@ script = ExtResource("1_0axbq")
 id = &"energy_ball"
 display_name = "Energy-Ball"
 action_bar_icon = ExtResource("2_j2gmr")
-level_up_icon = ExtResource("2_j2gmr")
 upgrade_icon = ExtResource("2_j2gmr")
 unlock_level = 13
 unlock_description = "Langsam, stark, durchdringt unbegrenzt viele Enemies."

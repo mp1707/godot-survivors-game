@@ -8,18 +8,6 @@ signal xp_changed(current: int, required: int, level: int)
 signal leveled_up(new_level: int)
 signal died()
 
-const UPGRADE_DASH_COOLDOWN: StringName = &"dash_cooldown"
-const UPGRADE_DASH_DISTANCE: StringName = &"dash_distance"
-const UPGRADE_DASH_INVULNERABLE: StringName = &"dash_invulnerable"
-const UPGRADE_DASH_PHASE: StringName = &"dash_phase"
-const UPGRADE_CHARGE_KI_REGEN: StringName = &"charge_ki_regen"
-const UPGRADE_CHARGE_KI_KNOCKBACK: StringName = &"charge_ki_knockback"
-const UPGRADE_CHARGE_KI_AOE_DAMAGE: StringName = &"charge_ki_aoe_damage"
-
-const DASH_ABILITY_RESOURCE_PATH: String = "res://resources/progression/abilities/dash.tres"
-const CHARGE_KI_ABILITY_RESOURCE_PATH: String = "res://resources/progression/abilities/charge_ki.tres"
-const DASH_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/player.png")
-const CHARGE_KI_ICON_FALLBACK_ATLAS: Texture2D = preload("res://art/character/aura.png")
 const ENEMY_COLLISION_LAYER_MASK: int = 1 << 2
 
 @export var definition: PlayerDefinition
@@ -57,15 +45,6 @@ var dash_afterimage_tint: Color = Color.WHITE
 @onready var _progression: PlayerProgression = $Progression as PlayerProgression
 @onready var _dash_afterimage_vfx: DashAfterimageVfx = $DashAfterimageVfx as DashAfterimageVfx
 @onready var _attack_timer: Timer = $AttackTimer as Timer
-
-@onready var _dash_upgrade_icon: Texture2D = _load_icon_with_fallback(
-	DASH_ABILITY_RESOURCE_PATH,
-	_make_atlas_icon(DASH_ICON_FALLBACK_ATLAS, Rect2(32, 0, 16, 16))
-)
-@onready var _charge_ki_upgrade_icon: Texture2D = _load_icon_with_fallback(
-	CHARGE_KI_ABILITY_RESOURCE_PATH,
-	_make_atlas_icon(CHARGE_KI_ICON_FALLBACK_ATLAS, Rect2(0, 0, 32, 32))
-)
 
 var _shoot_anim_time_left: float = 0.0
 var _health: int = 0
@@ -124,24 +103,14 @@ func _setup_progression_model() -> bool:
 		push_error("Player: progression_catalog is missing.")
 		return false
 	_progression_model = AbilityProgressionModel.new()
-	_progression_model.initialize(PlayerWeaponSystem.SLOT_ACTIONS.size(), progression_catalog, definition)
+	_progression_model.initialize(PlayerWeaponSystem.SLOT_ACTIONS.size(), progression_catalog)
 	var weapon_upgrade_applier: WeaponUpgradeApplier = WeaponUpgradeApplier.new()
 	var utility_upgrade_applier: UtilityUpgradeApplier = UtilityUpgradeApplier.new()
 	utility_upgrade_applier.setup(self)
 	_progression_model.set_weapon_upgrade_applier(weapon_upgrade_applier)
 	_progression_model.set_utility_upgrade_applier(utility_upgrade_applier)
-	_configure_utility_upgrade_icons()
 	_weapon_system.attach_progression_model(_progression_model)
 	return true
-
-func _configure_utility_upgrade_icons() -> void:
-	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_COOLDOWN, _dash_upgrade_icon)
-	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_DISTANCE, _dash_upgrade_icon)
-	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_INVULNERABLE, _dash_upgrade_icon)
-	_progression_model.set_utility_fallback_icon(UPGRADE_DASH_PHASE, _dash_upgrade_icon)
-	_progression_model.set_utility_fallback_icon(UPGRADE_CHARGE_KI_REGEN, _charge_ki_upgrade_icon)
-	_progression_model.set_utility_fallback_icon(UPGRADE_CHARGE_KI_KNOCKBACK, _charge_ki_upgrade_icon)
-	_progression_model.set_utility_fallback_icon(UPGRADE_CHARGE_KI_AOE_DAMAGE, _charge_ki_upgrade_icon)
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
@@ -556,35 +525,6 @@ func get_xp_magnet_radius() -> float:
 
 func set_xp_magnet_radius(new_radius: float) -> void:
 	xp_magnet_radius = max(new_radius, 0.0)
-
-func _make_atlas_icon(atlas_texture: Texture2D, region: Rect2) -> Texture2D:
-	var atlas: AtlasTexture = AtlasTexture.new()
-	atlas.atlas = atlas_texture
-	atlas.region = region
-	return atlas
-
-func _load_icon_with_fallback(ability_resource_path: String, fallback: Texture2D) -> Texture2D:
-	if ResourceLoader.exists(ability_resource_path):
-		var ability_definition: Resource = load(ability_resource_path)
-		if ability_definition != null:
-			var upgrade_icon: Texture2D = ability_definition.get("upgrade_icon") as Texture2D
-			if _is_valid_icon(upgrade_icon):
-				return upgrade_icon
-			var level_up_icon: Texture2D = ability_definition.get("level_up_icon") as Texture2D
-			if _is_valid_icon(level_up_icon):
-				return level_up_icon
-			var action_bar_icon: Texture2D = ability_definition.get("action_bar_icon") as Texture2D
-			if _is_valid_icon(action_bar_icon):
-				return action_bar_icon
-	return fallback
-
-func _is_valid_icon(icon: Texture2D) -> bool:
-	if icon == null:
-		return false
-	var atlas_icon: AtlasTexture = icon as AtlasTexture
-	if atlas_icon != null and atlas_icon.atlas == null:
-		return false
-	return true
 
 func _on_progression_xp_changed(current: int, required: int, level: int) -> void:
 	xp_changed.emit(current, required, level)

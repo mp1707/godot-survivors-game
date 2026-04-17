@@ -30,6 +30,6 @@
 
 ## Data Integrity
 
-- Fehlende Ability-/Upgrade-IDs brechen im Debug sichtbar ab (fail-fast) statt silent fallback.
+- Fehlende Ability-/Upgrade-IDs brechen im Debug sichtbar ab (fail-fast) statt silent ignore.
 - Keine implizite Directory-Discovery fuer Progression-Definitionen.
 - Run-Balancing laesst sich ueber zentrale Run-Resource tauschen.

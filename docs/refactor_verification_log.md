@@ -46,7 +46,7 @@
   - neue Daten-/Runtime-Typen: `UpgradeEffect`, `WeaponUpgradeApplier`, `UtilityUpgradeApplier`.
   - `AbilityProgressionModel` delegiert Waffen-/Utility-Anwendung an Applier statt Handler-Registry.
   - `Player` enthaelt nur noch fachliche Utility-Stat-Operationen, keine Upgrade-ID-Matchlogik.
-  - Upgrade-Resources unter `resources/progression/upgrades/**` auf `effects` migriert; Legacy-Felder bleiben als kompatibler Fallback bestehen.
+  - Upgrade-Resources unter `resources/progression/upgrades/**` vollstaendig auf `effects` migriert; Legacy-Felder entfernt.
 
 ## Phase 6
 
@@ -63,3 +63,11 @@
   - `main.gd` exportiert nur noch `run_balance` und verteilt Daten an Player/Progression/Spawner.
   - `scenes/main.tscn` referenziert nur `resources/balance/runs/default_run_balance.tres` fuer Balancing-Setup.
   - zentrale Run-Resource verknuepft PlayerDefinition, LevelProgression, WaveDefinition, SpawnPacingDefinition und ProgressionCatalog.
+
+## Post-Refactor Cleanup (Legacy/Fallback Removal)
+
+- Ergebnis: Legacy- und defensive Fallback-Pfade in Progression/Upgrade/UI entfernt.
+- Verifikation:
+  - Code-Suche (`rg`) findet in `scripts/` und `resources/` keine Legacy-Felder (`upgrade_type`, `numeric_value`, `min_clamp`, `max_clamp`) und keine Fallback-Strings mehr.
+  - alle Upgrade-Resources in `resources/progression/upgrades/**` enthalten `effects`.
+  - `ActionButtonBar` laedt Dash/Charge-Icons strikt aus Ability-Resources (kein mehrstufiger Icon-Fallback).

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="2_effect_script"]
+[ext_resource type="Texture2D" uid="uid://5oox7cpie737" path="res://resources/progression/icons/dash_atlas.tres" id="3_icon"]
 
 [sub_resource type="Resource" id="UpgradeEffect_dash_phase"]
 script = ExtResource("2_effect_script")
@@ -12,9 +13,8 @@ operation = &"set_true"
 [resource]
 script = ExtResource("1_script")
 id = &"dash_phase"
-upgrade_type = &"player_utility_flag"
 max_stacks = 1
 title = "Dash: Phase"
 description = "Dash durch Enemies"
+icon = ExtResource("3_icon")
 effects = Array[ExtResource("2_effect_script")]([SubResource("UpgradeEffect_dash_phase")])
-domain = &"utility"

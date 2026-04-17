@@ -17,14 +17,14 @@ func setup(player: Player) -> void:
 func apply_upgrade(definition: UpgradeDefinition) -> bool:
 	if _player == null or definition == null:
 		return false
+	if definition.effects.is_empty():
+		push_error("UtilityUpgradeApplier: upgrade '%s' has no effects." % String(definition.id))
+		return false
 
-	if not definition.effects.is_empty():
-		for effect: UpgradeEffect in definition.effects:
-			if not _apply_effect(effect):
-				return false
-		return true
-
-	return _apply_legacy_upgrade(definition)
+	for effect: UpgradeEffect in definition.effects:
+		if not _apply_effect(effect):
+			return false
+	return true
 
 func _apply_effect(effect: UpgradeEffect) -> bool:
 	if effect == null:
@@ -61,24 +61,5 @@ func _apply_effect(effect: UpgradeEffect) -> bool:
 			if effect.operation != UpgradeEffect.OP_ADD and effect.operation != UpgradeEffect.OP_CLAMP_ADD:
 				return false
 			return _player.adjust_ki_release_aoe_damage(effect.value, effect.min_value, effect.max_value)
-		_:
-			return false
-
-func _apply_legacy_upgrade(definition: UpgradeDefinition) -> bool:
-	match definition.id:
-		STAT_DASH_COOLDOWN:
-			return _player.adjust_dash_cooldown(definition.numeric_value, definition.min_clamp, definition.max_clamp)
-		STAT_DASH_DISTANCE:
-			return _player.adjust_dash_distance(definition.numeric_value, definition.min_clamp, definition.max_clamp)
-		STAT_DASH_INVULNERABLE:
-			return _player.unlock_dash_invulnerable()
-		STAT_DASH_PHASE:
-			return _player.unlock_dash_phase()
-		STAT_CHARGE_KI_REGEN:
-			return _player.adjust_charge_ki_regen(definition.numeric_value, definition.min_clamp, definition.max_clamp)
-		STAT_CHARGE_KI_KNOCKBACK:
-			return _player.adjust_ki_release_knockback(definition.numeric_value, definition.min_clamp, definition.max_clamp)
-		STAT_CHARGE_KI_AOE_DAMAGE:
-			return _player.adjust_ki_release_aoe_damage(definition.numeric_value, definition.min_clamp, definition.max_clamp)
 		_:
 			return false

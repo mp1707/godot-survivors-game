@@ -37,8 +37,8 @@ func _ready() -> void:
 	_apply_slot_icon_state(_action_1_icon, _slot_enabled[0])
 	_apply_slot_icon_state(_action_2_icon, _slot_enabled[1])
 	_apply_slot_icon_state(_action_3_icon, _slot_enabled[2])
-	set_dash_icon(_load_ability_action_bar_icon(DASH_ABILITY_RESOURCE_PATH, _dash_icon.texture))
-	set_charge_icon(_load_ability_action_bar_icon(CHARGE_KI_ABILITY_RESOURCE_PATH, _charge_icon.texture))
+	set_dash_icon(_load_ability_action_bar_icon(DASH_ABILITY_RESOURCE_PATH))
+	set_charge_icon(_load_ability_action_bar_icon(CHARGE_KI_ABILITY_RESOURCE_PATH))
 	_apply_lighting()
 
 func _process(delta: float) -> void:
@@ -84,26 +84,21 @@ func _apply_slot_icon_state(icon: TextureRect, enabled: bool) -> void:
 		return
 	icon.visible = enabled
 
-func _load_ability_action_bar_icon(resource_path: String, fallback: Texture2D) -> Texture2D:
+func _load_ability_action_bar_icon(resource_path: String) -> Texture2D:
 	if not ResourceLoader.exists(resource_path):
-		return fallback
-	var ability_definition: Resource = load(resource_path)
+		push_error("ActionButtonBar: missing ability resource '%s'." % resource_path)
+		return null
+	var ability_definition: AbilityDefinition = load(resource_path) as AbilityDefinition
 	if ability_definition == null:
-		return fallback
+		push_error("ActionButtonBar: invalid ability resource '%s'." % resource_path)
+		return null
 
-	var action_bar_icon: Texture2D = ability_definition.get("action_bar_icon") as Texture2D
+	var action_bar_icon: Texture2D = ability_definition.action_bar_icon
 	if _is_valid_icon(action_bar_icon):
 		return action_bar_icon
 
-	var level_up_icon: Texture2D = ability_definition.get("level_up_icon") as Texture2D
-	if _is_valid_icon(level_up_icon):
-		return level_up_icon
-
-	var upgrade_icon: Texture2D = ability_definition.get("upgrade_icon") as Texture2D
-	if _is_valid_icon(upgrade_icon):
-		return upgrade_icon
-
-	return fallback
+	push_error("ActionButtonBar: ability '%s' has invalid action_bar_icon." % String(ability_definition.id))
+	return null
 
 func _is_valid_icon(icon: Texture2D) -> bool:
 	if icon == null:

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ProgressionCatalog" load_steps=29 format=3]
+[gd_resource type="Resource" script_class="ProgressionCatalog" load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/progression/progression_catalog.gd" id="1_catalog"]
 [ext_resource type="Script" path="res://scripts/data/progression/ability_definition.gd.gd" id="2_ability_script"]
@@ -21,8 +21,6 @@
 [ext_resource type="Resource" path="res://resources/progression/upgrades/lifetime.tres" id="27_upgrade_lifetime"]
 [ext_resource type="Resource" path="res://resources/progression/upgrades/reflect.tres" id="28_upgrade_reflect"]
 [ext_resource type="Resource" path="res://resources/progression/upgrades/charge_speed.tres" id="29_upgrade_charge_speed"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/ki_blast_damage.tres" id="30_upgrade_ki_blast_damage"]
-[ext_resource type="Resource" path="res://resources/progression/upgrades/ki_blast_bounce.tres" id="31_upgrade_ki_blast_bounce"]
 [ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_cooldown.tres" id="32_upgrade_dash_cooldown"]
 [ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_distance.tres" id="33_upgrade_dash_distance"]
 [ext_resource type="Resource" path="res://resources/progression/upgrades/utility/dash_invulnerable.tres" id="34_upgrade_dash_invulnerable"]
@@ -34,4 +32,4 @@
 [resource]
 script = ExtResource("1_catalog")
 abilities = Array[ExtResource("2_ability_script")]([ExtResource("10_ability_ki_blast"), ExtResource("11_ability_charged_blast"), ExtResource("12_ability_barrier"), ExtResource("13_ability_energy_ball"), ExtResource("14_ability_dash"), ExtResource("15_ability_charge_ki")])
-upgrades = Array[ExtResource("3_upgrade_script")]([ExtResource("20_upgrade_cost"), ExtResource("21_upgrade_damage"), ExtResource("22_upgrade_pierce"), ExtResource("23_upgrade_speed"), ExtResource("24_upgrade_bounce"), ExtResource("25_upgrade_size"), ExtResource("26_upgrade_absorb"), ExtResource("27_upgrade_lifetime"), ExtResource("28_upgrade_reflect"), ExtResource("29_upgrade_charge_speed"), ExtResource("30_upgrade_ki_blast_damage"), ExtResource("31_upgrade_ki_blast_bounce"), ExtResource("32_upgrade_dash_cooldown"), ExtResource("33_upgrade_dash_distance"), ExtResource("34_upgrade_dash_invulnerable"), ExtResource("35_upgrade_dash_phase"), ExtResource("36_upgrade_charge_ki_regen"), ExtResource("37_upgrade_charge_ki_knockback"), ExtResource("38_upgrade_charge_ki_aoe_damage")])
+upgrades = Array[ExtResource("3_upgrade_script")]([ExtResource("20_upgrade_cost"), ExtResource("21_upgrade_damage"), ExtResource("22_upgrade_pierce"), ExtResource("23_upgrade_speed"), ExtResource("24_upgrade_bounce"), ExtResource("25_upgrade_size"), ExtResource("26_upgrade_absorb"), ExtResource("27_upgrade_lifetime"), ExtResource("28_upgrade_reflect"), ExtResource("29_upgrade_charge_speed"), ExtResource("32_upgrade_dash_cooldown"), ExtResource("33_upgrade_dash_distance"), ExtResource("34_upgrade_dash_invulnerable"), ExtResource("35_upgrade_dash_phase"), ExtResource("36_upgrade_charge_ki_regen"), ExtResource("37_upgrade_charge_ki_knockback"), ExtResource("38_upgrade_charge_ki_aoe_damage")])

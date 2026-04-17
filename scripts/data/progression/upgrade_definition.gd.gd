@@ -6,7 +6,6 @@ const DOMAIN_UTILITY: StringName = &"utility"
 
 @export var id: StringName
 @export var ability_id: StringName
-@export var upgrade_type: StringName
 @export var max_stacks: int = -1
 @export var title: String
 @export_multiline var description: String
@@ -14,26 +13,25 @@ const DOMAIN_UTILITY: StringName = &"utility"
 @export var icon: Texture2D
 @export var effects: Array[UpgradeEffect] = []
 
-# Explicit domain marker. If left empty, the domain is inferred from upgrade_type.
-@export var domain: StringName = &""
-
-# Numeric payload for data-driven utility upgrades.
-# Ignored by weapon-upgrade pipeline, which uses dedicated step fields on AbilityDefinition.
-@export_group("Numeric Payload")
-@export var numeric_value: float = 0.0
-@export var min_clamp: float = -INF
-@export var max_clamp: float = INF
-
 func get_domain() -> StringName:
-	if domain != &"":
-		return domain
+	var has_player_target: bool = false
+	var has_weapon_target: bool = false
+
 	for effect: UpgradeEffect in effects:
 		if effect == null:
 			continue
 		if effect.target_domain == UpgradeEffect.TARGET_PLAYER:
-			return DOMAIN_UTILITY
-		if effect.target_domain == UpgradeEffect.TARGET_WEAPON_STATE:
-			return DOMAIN_WEAPON
-	if upgrade_type == &"player_utility" or upgrade_type == &"player_utility_flag":
+			has_player_target = true
+		elif effect.target_domain == UpgradeEffect.TARGET_WEAPON_STATE:
+			has_weapon_target = true
+
+	if has_player_target and has_weapon_target:
+		push_error("UpgradeDefinition '%s' mixes player and weapon effects. Split into separate upgrades." % String(id))
+		return &""
+	if has_player_target:
 		return DOMAIN_UTILITY
-	return DOMAIN_WEAPON
+	if has_weapon_target:
+		return DOMAIN_WEAPON
+
+	push_error("UpgradeDefinition '%s' has no valid effects." % String(id))
+	return &""

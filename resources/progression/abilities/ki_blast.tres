@@ -10,7 +10,6 @@ script = ExtResource("1_aqfev")
 id = &"ki_blast"
 display_name = "Ki-Blast"
 action_bar_icon = ExtResource("2_h8t8x")
-level_up_icon = ExtResource("2_h8t8x")
 upgrade_icon = ExtResource("2_h8t8x")
 starts_unlocked = true
 start_slot_index = 0

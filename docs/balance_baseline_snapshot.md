@@ -49,13 +49,13 @@ Weapon upgrade IDs:
 - `cost`, `damage`, `pierce`, `speed`, `bounce`, `size`, `absorb`, `lifetime`, `reflect`, `charge_speed`
 
 Utility upgrade IDs:
-- `dash_cooldown` (`numeric_value=-1`, `min_clamp=1`, max_stacks 4)
-- `dash_distance` (`numeric_value=5`)
+- `dash_cooldown` (effect: `add -1.0`, `min_value=1.0`, max_stacks 4)
+- `dash_distance` (effect: `add 5.0`)
 - `dash_invulnerable` (flag, max_stacks 1)
 - `dash_phase` (flag, max_stacks 1)
-- `charge_ki_regen` (`numeric_value=2`)
-- `charge_ki_knockback` (`numeric_value=10`)
-- `charge_ki_aoe_damage` (`numeric_value=1`)
+- `charge_ki_regen` (effect: `add 2.0`)
+- `charge_ki_knockback` (effect: `add 10.0`)
+- `charge_ki_aoe_damage` (effect: `add 1.0`)
 
 ## Erwartete Level-Up Kandidaten (vor Random-Pick)
 

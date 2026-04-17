@@ -11,5 +11,4 @@ value = 1.0
 [resource]
 script = ExtResource("1_script")
 id = &"speed"
-upgrade_type = &"speed"
 effects = Array[ExtResource("2_effect_script")]([SubResource("UpgradeEffect_speed")])

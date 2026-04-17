@@ -1,19 +1,20 @@
 extends RefCounted
 class_name WeaponUpgradeApplier
 
-func apply_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition, fallback_upgrade_id: StringName) -> bool:
-	if state == null:
+func apply_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> bool:
+	if state == null or definition == null:
 		return false
-	if definition != null and not definition.effects.is_empty():
-		return _apply_effects(state, definition.effects)
-	return _apply_legacy_upgrade(state, _resolve_upgrade_type(definition, fallback_upgrade_id))
+	if definition.effects.is_empty():
+		push_error("WeaponUpgradeApplier: upgrade '%s' has no effects." % String(definition.id))
+		return false
+	return _apply_effects(state, definition.effects)
 
-func get_stack_count_for_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition, fallback_upgrade_id: StringName) -> int:
-	if state == null:
+func get_stack_count_for_upgrade(state: WeaponAbilityState, definition: UpgradeDefinition) -> int:
+	if state == null or definition == null:
 		return 0
-	if definition != null and not definition.effects.is_empty():
-		return _stack_count_from_effects(state, definition.effects)
-	return _legacy_stack_count(state, _resolve_upgrade_type(definition, fallback_upgrade_id))
+	if definition.effects.is_empty():
+		return 0
+	return _stack_count_from_effects(state, definition.effects)
 
 func _apply_effects(state: WeaponAbilityState, effects: Array[UpgradeEffect]) -> bool:
 	for effect: UpgradeEffect in effects:
@@ -87,59 +88,3 @@ func _stack_count_from_effects(state: WeaponAbilityState, effects: Array[Upgrade
 			TYPE_FLOAT:
 				return maxi(int(round(float(current))), 0)
 	return 0
-
-func _apply_legacy_upgrade(state: WeaponAbilityState, upgrade_type: StringName) -> bool:
-	match upgrade_type:
-		&"cost":
-			state.cost_upgrade_count += 1
-		&"damage":
-			state.damage_upgrade_count += 1
-		&"pierce":
-			state.pierce_upgrade_count += 1
-		&"speed":
-			state.speed_upgrade_count += 1
-		&"bounce":
-			state.bounce_upgrade_count += 1
-		&"size":
-			state.size_upgrade_count += 1
-		&"absorb":
-			state.barrier_absorb_upgrade_count += 1
-		&"lifetime":
-			state.barrier_lifetime_upgrade_count += 1
-		&"reflect":
-			state.barrier_reflect_unlocked = true
-		&"charge_speed":
-			state.charge_speed_upgrade_count += 1
-		_:
-			return false
-	return true
-
-func _legacy_stack_count(state: WeaponAbilityState, upgrade_type: StringName) -> int:
-	match upgrade_type:
-		&"cost":
-			return state.cost_upgrade_count
-		&"damage":
-			return state.damage_upgrade_count
-		&"pierce":
-			return state.pierce_upgrade_count
-		&"speed":
-			return state.speed_upgrade_count
-		&"bounce":
-			return state.bounce_upgrade_count
-		&"size":
-			return state.size_upgrade_count
-		&"absorb":
-			return state.barrier_absorb_upgrade_count
-		&"lifetime":
-			return state.barrier_lifetime_upgrade_count
-		&"reflect":
-			return 1 if state.barrier_reflect_unlocked else 0
-		&"charge_speed":
-			return state.charge_speed_upgrade_count
-		_:
-			return 0
-
-func _resolve_upgrade_type(definition: UpgradeDefinition, fallback_upgrade_id: StringName) -> StringName:
-	if definition != null and definition.upgrade_type != &"":
-		return definition.upgrade_type
-	return fallback_upgrade_id

@@ -106,7 +106,7 @@ Verantwortung:
 Verantwortung:
 
 - WeaponSystem instanziert Projektil und uebergibt Ability-Stats + `ProjectileDefinition`
-- Projektil-Script enthaelt nur technische Fallbacks; Balancewerte kommen aus Daten
+- Projektil-Script liest Balancewerte ausschliesslich aus `ProjectileDefinition`
 
 ## 4. Upgrade-System
 
@@ -131,7 +131,7 @@ Verantwortung:
 Prinzip:
 
 - neue Upgrades werden primaer als Daten (`effects`) angelegt
-- Legacy-Felder (`upgrade_type`, `numeric_value`) bleiben als kompatibler Fallback
+- `effects` sind verpflichtend; Legacy-Felder wurden entfernt
 
 ## 5. Verantwortlichkeitsgrenzen
 

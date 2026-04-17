@@ -9,6 +9,5 @@ id = &"dash"
 progression_domain = &"player_utility"
 display_name = "Dash"
 action_bar_icon = ExtResource("1_c1mgu")
-level_up_icon = ExtResource("1_c1mgu")
 upgrade_icon = ExtResource("1_c1mgu")
 metadata/_custom_type_script = "uid://c8b6af4npusis"

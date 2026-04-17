@@ -11,7 +11,6 @@ script = ExtResource("1_kslqc")
 id = &"charged_ki_blast"
 display_name = "Charged-Ki-Blast"
 action_bar_icon = ExtResource("2_jc2iu")
-level_up_icon = ExtResource("2_jc2iu")
 upgrade_icon = ExtResource("2_jc2iu")
 unlock_level = 5
 unlock_description = "Aufladbarer Blast mit hohem Burst-Damage."

@@ -8,7 +8,6 @@ script = ExtResource("1_1t1qh")
 id = &"barrier"
 display_name = "Barrier"
 action_bar_icon = ExtResource("2_7faba")
-level_up_icon = ExtResource("2_7faba")
 upgrade_icon = ExtResource("2_7faba")
 unlock_level = 9
 unlock_description = "Absorbiert Schaden und kann spaeter reflektieren."

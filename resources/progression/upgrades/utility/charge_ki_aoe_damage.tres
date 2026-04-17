@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://430faltn2517" path="res://scripts/data/progression/upgrade_definition.gd.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://dv8wqcfpsibsm" path="res://scripts/data/progression/upgrade_effect.gd" id="2_effect_script"]
+[ext_resource type="Texture2D" uid="uid://c65lqxfixb3kx" path="res://resources/progression/icons/charge_ki_atlas.tres" id="3_icon"]
 
 [sub_resource type="Resource" id="UpgradeEffect_charge_ki_aoe_damage"]
 script = ExtResource("2_effect_script")
@@ -12,9 +13,7 @@ value = 1.0
 [resource]
 script = ExtResource("1_script")
 id = &"charge_ki_aoe_damage"
-upgrade_type = &"player_utility"
 title = "Charge-Ki: AOE"
 description = "Release-AOE-Damage +1"
+icon = ExtResource("3_icon")
 effects = Array[ExtResource("2_effect_script")]([SubResource("UpgradeEffect_charge_ki_aoe_damage")])
-domain = &"utility"
-numeric_value = 1.0

@@ -67,10 +67,8 @@ Ablauf:
 
 Regel:
 
-- Wenn `effects` gesetzt sind: datengetriebene Anwendung.
-- Wenn `effects` leer sind: Legacy-Fallback (`upgrade_type`/`numeric_value`).
-
-Damit bleibt Migration robust, ohne Big-Bang.
+- `effects` sind verpflichtend und werden immer datengetrieben angewendet.
+- Legacy-Felder (`upgrade_type`, `numeric_value`, `min_clamp`, `max_clamp`) existieren nicht mehr.
 
 ## 4. Utility-Upgrades (Player)
 

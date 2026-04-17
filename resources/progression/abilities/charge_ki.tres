@@ -9,6 +9,5 @@ id = &"charge_ki"
 progression_domain = &"player_utility"
 display_name = "Charge-Ki"
 action_bar_icon = ExtResource("1_qmqq8")
-level_up_icon = ExtResource("1_qmqq8")
 upgrade_icon = ExtResource("1_qmqq8")
 metadata/_custom_type_script = "uid://c8b6af4npusis"
