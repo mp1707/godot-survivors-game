@@ -11,6 +11,7 @@ action_bar_icon = ExtResource("2_7faba")
 upgrade_icon = ExtResource("2_7faba")
 unlock_level = 9
 unlock_description = "Absorbiert Schaden und kann spaeter reflektieren."
+base_cooldown_seconds = 2.0
 behavior = &"barrier"
 base_cost = 30
 cost_upgrade_step = 2

@@ -22,6 +22,7 @@ flowchart TB
     subgraph Runtime
         MAIN["main.gd"]
         PLAYER["Player"]
+        CD["AbilityCooldownRuntime"]
         SPW["EnemySpawner"]
         LUC["LevelUpController"]
         HUD["GameHud"]
@@ -40,6 +41,7 @@ flowchart TB
 
     RB --> MAIN
     MAIN --> PLAYER
+    PLAYER --> CD
     MAIN --> SPW
     MAIN --> LUC
     MAIN --> HUD
@@ -75,7 +77,8 @@ sequenceDiagram
 Der Player ist ein Orchestrator; Mechanik liegt in Komponenten.
 
 - `PlayerVitals`: HP, Mana, Invuln, XP-Magnetradius.
-- `DashController`: Dash-Status, Cooldown, Kollision/Phase, Afterimages.
+- `AbilityCooldownRuntime`: Global Cooldown (GCD) + ability-spezifische Cooldowns.
+- `DashController`: Dash-Status, Kollision/Phase, Afterimages; Cooldown-Gating ueber Runtime.
 - `KiChargeController`: Charge-Status, Regen-Boost, Release-AOE/Knockback.
 - `BarrierController`: Absorb/Lifetime/Reflect vor Vitals-Schaden.
 - `PlayerWeaponSystem`: Weapon-Slot-Input, Charge-Flow, Projektilspawns.
@@ -85,11 +88,15 @@ Der Player ist ein Orchestrator; Mechanik liegt in Komponenten.
 flowchart LR
     Input["InputMap Actions"] --> Player["Player"]
     Player --> Vitals["PlayerVitals"]
+    Player --> Cooldowns["AbilityCooldownRuntime"]
     Player --> Dash["DashController"]
     Player --> Charge["KiChargeController"]
     Player --> Barrier["BarrierController"]
     Player --> Weapon["PlayerWeaponSystem"]
     Player --> Anim["PlayerAnimationController"]
+    Cooldowns --> Dash
+    Cooldowns --> Charge
+    Cooldowns --> Weapon
     Weapon --> ProjectileParent["Projectiles Node"]
     Dash --> Move["CharacterBody2D move_and_slide"]
     Player --> Move
@@ -105,7 +112,7 @@ Die Player-Loop ist explizit sequenziell. Prioritaeten:
 ```mermaid
 flowchart TD
     A["Player physics tick"] --> B["Vitals invuln tick"]
-    B --> C["Dash cooldown tick"]
+    B --> C["AbilityCooldownRuntime tick (GCD + local)"]
     C --> D["Barrier lifetime tick"]
     D --> E["HitReaction physics step"]
     E --> F{"Dash start"}
@@ -124,6 +131,8 @@ Abilities (Weapon + Utility) laufen im selben Model (`AbilityProgressionModel`) 
 
 - Weapon-Channel: Slots `action1..3`, Unlocks im Run moeglich.
 - Utility-Channel: feste Utility-Slots mit `input_action` und `utility_slot_index`.
+- Basis-Cooldown ist datengetrieben pro Ability (`AbilityDefinition.base_cooldown_seconds`).
+- Aktivierung ist einheitlich: `can_activate(ability_id)` vor Cast und `commit_activation(ability_id)` bei erfolgreicher Aktivierung.
 - Upgrades sind ability-gebunden (`UpgradeDefinition.ability_id`).
 
 ```mermaid
@@ -138,6 +147,7 @@ classDiagram
       activation_channel
       input_action
       utility_slot_index
+      base_cooldown_seconds
       upgrade_ids
     }
     class AbilityState {
@@ -164,10 +174,19 @@ classDiagram
     class AbilityProgressionModel {
       weapon_slots
       utility_slots
+      get_ability_base_cooldown()
+      adjust_ability_base_cooldown()
       get_level_up_options()
       apply_option()
       apply_weapon_upgrade()
       apply_utility_upgrade()
+    }
+    class AbilityCooldownRuntime {
+      tick()
+      can_activate()
+      commit_activation()
+      get_effective_remaining()
+      get_effective_ratio()
     }
 
     ProgressionCatalog --> AbilityDefinition
@@ -176,6 +195,7 @@ classDiagram
     UpgradeDefinition --> UpgradeEffect
     AbilityProgressionModel --> AbilityState
     AbilityProgressionModel --> UpgradeDefinition
+    AbilityProgressionModel --> AbilityCooldownRuntime
 ```
 
 ## 6. Level-Up Pipeline
@@ -266,7 +286,8 @@ flowchart LR
 Zwei getrennte UI-Flows laufen parallel:
 
 - `PlayerUIController`: Health/Mana/ManaPreview direkt am Player.
-- `GameHud`: Kills, XP, PowerLevel, ActionButtonBar, FloatingDamageNumbers.
+- `GameHud`: Kills, XP, PowerLevel, ActionButtonBar (inkl. Cooldown-Overlay), FloatingDamageNumbers.
+- `ActionButtonBar`: Overlay-Fuellung laeuft pro Slot von oben nach unten und zeigt `AbilityCooldownRuntime.get_effective_ratio(ability_id)`.
 
 ```mermaid
 flowchart TB
@@ -274,10 +295,12 @@ flowchart TB
     Weapon["PlayerWeaponSystem signals"] --> PUI
 
     Player --> Hud["GameHud"]
+    Player --> Cooldowns["AbilityCooldownRuntime"]
     Progression["AbilityProgressionModel signals"] --> Hud
     Spawner["EnemySpawner signals"] --> Hud
 
     Hud --> ActionBar["ActionButtonBar"]
+    Cooldowns --> ActionBar
     Hud --> XPBar["XPProgressBar"]
     Hud --> Score["ScoreLabel"]
     Hud --> Damage["FloatingDamageNumber instances"]
@@ -291,6 +314,7 @@ Die wichtigste Integritaet wird vor Run-Start abgesichert:
   - doppelte/ungueltige Ability- und Upgrade-IDs,
   - gueltige Ability-Icons,
   - Utility-Aktivierungsdaten (`input_action`, `utility_slot_index`, eindeutige Utility-Slots),
+  - nicht-negative Ability-Cooldowns (`base_cooldown_seconds >= 0`),
   - Ability-Upgrade-Links inkl. Domain-Konsistenz,
   - ability-gebundene Utility-Upgrades.
 
@@ -300,6 +324,7 @@ Wenn Validierung fehlschlaegt, stoppt `main.gd` den Aufbau frueh.
 Die Architektur ist auf neue Inhalte ausgelegt:
 
 - Neue Ability: `AbilityDefinition` + optional `ProjectileDefinition` + Catalog-Eintrag.
+- Cooldown-Balancing: `base_cooldown_seconds` direkt in der Ability-Ressource.
 - Neues Upgrade: `UpgradeDefinition.effects` + Catalog-Eintrag + `upgrade_ids` an Ability.
 - Neues Utility-Statziel: neuer `stat_key` + Mapping in `UtilityUpgradeApplier`.
 - Neue Enemy-Variante: `EnemyDefinition` + `WaveStage`-Eintrag.

@@ -70,6 +70,17 @@ anchor_bottom = 1.0
 layout_mode = 2
 texture = SubResource("AtlasTexture_kcsnd")
 
+[node name="CooldownOverlay" type="ColorRect" parent="ButtonRow/1Button/IconPanel" unique_id=190007231]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.45)
+
 [node name="KeyLabel" type="Label" parent="ButtonRow/1Button" unique_id=1401843199]
 layout_mode = 2
 text = "1"
@@ -91,6 +102,17 @@ anchor_bottom = 1.0
 
 [node name="Icon" type="TextureRect" parent="ButtonRow/2Button/IconPanel/CenterContainer" unique_id=790827239]
 layout_mode = 2
+
+[node name="CooldownOverlay" type="ColorRect" parent="ButtonRow/2Button/IconPanel" unique_id=428640022]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.45)
 
 [node name="KeyLabel" type="Label" parent="ButtonRow/2Button" unique_id=1662976071]
 layout_mode = 2
@@ -115,6 +137,17 @@ anchor_bottom = 1.0
 visible = false
 layout_mode = 2
 
+[node name="CooldownOverlay" type="ColorRect" parent="ButtonRow/3Button/IconPanel" unique_id=220757157]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.45)
+
 [node name="KeyLabel" type="Label" parent="ButtonRow/3Button" unique_id=35387389]
 layout_mode = 2
 text = "3"
@@ -136,6 +169,17 @@ anchor_bottom = 1.0
 
 [node name="Icon" type="TextureRect" parent="ButtonRow/SpaceButton/IconPanel/CenterContainer" unique_id=768859593]
 layout_mode = 2
+
+[node name="CooldownOverlay" type="ColorRect" parent="ButtonRow/SpaceButton/IconPanel" unique_id=620959085]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.45)
 
 [node name="KeyLabel" type="Label" parent="ButtonRow/SpaceButton" unique_id=819887975]
 layout_mode = 2
@@ -159,6 +203,17 @@ anchor_bottom = 1.0
 [node name="Icon" type="TextureRect" parent="ButtonRow/RButton/IconPanel/CenterContainer" unique_id=653716250]
 layout_mode = 2
 texture = SubResource("AtlasTexture_aura_icon")
+
+[node name="CooldownOverlay" type="ColorRect" parent="ButtonRow/RButton/IconPanel" unique_id=1668945387]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.45)
 
 [node name="KeyLabel" type="Label" parent="ButtonRow/RButton" unique_id=2013700775]
 layout_mode = 2

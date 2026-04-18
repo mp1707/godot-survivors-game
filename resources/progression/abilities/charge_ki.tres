@@ -14,5 +14,6 @@ upgrade_icon = ExtResource("1_qmqq8")
 starts_unlocked = true
 utility_slot_index = 1
 input_action = &"charging"
+base_cooldown_seconds = 0.0
 upgrade_ids = Array[StringName]([&"charge_ki_regen", &"charge_ki_knockback", &"charge_ki_aoe_damage"])
 metadata/_custom_type_script = "uid://c8b6af4npusis"

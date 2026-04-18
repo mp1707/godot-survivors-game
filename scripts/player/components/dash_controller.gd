@@ -5,7 +5,6 @@ const ENEMY_COLLISION_LAYER_MASK: int = 1 << 2
 
 var dash_distance: float = 0.0
 var dash_speed: float = 0.0
-var dash_cooldown: float = 0.0
 var dash_afterimage_interval: float = 0.0
 var dash_afterimage_lifetime: float = 0.0
 var dash_afterimage_alpha: float = 0.0
@@ -15,20 +14,20 @@ var _is_dashing: bool = false
 var _direction: Vector2 = Vector2.ZERO
 var _distance_left: float = 0.0
 var _afterimage_timer: float = 0.0
-var _cooldown_left: float = 0.0
 var _invulnerable: bool = false
 var _phase_through_enemies: bool = false
 var _input_action: StringName = &"dash"
+var _ability_id: StringName = &"dash"
 
 var _player: CharacterBody2D = null
 var _vfx: DashAfterimageVfx = null
 var _sprite: AnimatedSprite2D = null
 var _base_collision_mask: int = 0
+var _cooldown_runtime: AbilityCooldownRuntime
 
 func configure(definition: PlayerDefinition) -> void:
 	dash_distance = definition.dash_distance
 	dash_speed = definition.dash_speed
-	dash_cooldown = definition.dash_cooldown
 	dash_afterimage_interval = definition.dash_afterimage_interval
 	dash_afterimage_lifetime = definition.dash_afterimage_lifetime
 	dash_afterimage_alpha = definition.dash_afterimage_alpha
@@ -40,16 +39,17 @@ func setup(player: CharacterBody2D, vfx: DashAfterimageVfx, sprite: AnimatedSpri
 	_sprite = sprite
 	_base_collision_mask = player.collision_mask
 
-func tick_cooldown(delta: float) -> void:
-	if _cooldown_left > 0.0:
-		_cooldown_left = maxf(_cooldown_left - delta, 0.0)
+func attach_cooldown_runtime(runtime: AbilityCooldownRuntime, ability_id: StringName) -> void:
+	_cooldown_runtime = runtime
+	if ability_id != &"":
+		_ability_id = ability_id
 
 func try_start(input_direction: Vector2) -> bool:
 	if _input_action == &"" or not InputMap.has_action(_input_action):
 		return false
 	if not Input.is_action_just_pressed(_input_action):
 		return false
-	if _cooldown_left > 0.0:
+	if _cooldown_runtime != null and not _cooldown_runtime.can_activate(_ability_id):
 		return false
 	var dir: Vector2 = input_direction.normalized()
 	if dir.length_squared() <= 0.0001:
@@ -59,7 +59,8 @@ func try_start(input_direction: Vector2) -> bool:
 	_direction = dir
 	_distance_left = dash_distance
 	_afterimage_timer = _afterimage_interval()
-	_cooldown_left = dash_cooldown
+	if _cooldown_runtime != null:
+		_cooldown_runtime.commit_activation(_ability_id)
 	_apply_collision_mask()
 	_spawn_afterimage()
 	return true
@@ -109,10 +110,6 @@ func blocks_damage() -> bool:
 
 func phases_through_enemies() -> bool:
 	return _phase_through_enemies
-
-func adjust_cooldown(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
-	dash_cooldown = _clamped_add(dash_cooldown, delta, min_value, max_value)
-	return true
 
 func adjust_distance(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
 	dash_distance = _clamped_add(dash_distance, delta, min_value, max_value)

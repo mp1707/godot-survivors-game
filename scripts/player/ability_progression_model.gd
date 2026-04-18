@@ -272,6 +272,25 @@ func get_ability_state(ability_id: StringName) -> AbilityState:
 		return null
 	return _abilities[ability_id] as AbilityState
 
+func get_ability_base_cooldown(ability_id: StringName) -> float:
+	var state: AbilityState = get_ability_state(ability_id)
+	if state == null:
+		return 0.0
+	return maxf(state.base_cooldown_seconds, 0.0)
+
+func adjust_ability_base_cooldown(
+	ability_id: StringName,
+	delta: float,
+	min_value: float = -INF,
+	max_value: float = INF
+) -> bool:
+	var state: AbilityState = get_ability_state(ability_id)
+	if state == null:
+		return false
+	var clamped_min: float = maxf(min_value, 0.0)
+	state.base_cooldown_seconds = _clamped_add(state.base_cooldown_seconds, delta, clamped_min, max_value)
+	return true
+
 func get_current_cost(state: AbilityState) -> int:
 	return max(state.base_cost - (state.cost_upgrade_count * state.cost_upgrade_step), state.min_cost)
 
@@ -647,3 +666,11 @@ func _increment_utility_upgrade_stack(ability_id: StringName, upgrade_id: String
 	if _utility_upgrade_stacks.has(stack_key):
 		current = int(_utility_upgrade_stacks[stack_key])
 	_utility_upgrade_stacks[stack_key] = current + 1
+
+func _clamped_add(base_value: float, delta: float, min_value: float, max_value: float) -> float:
+	var result: float = base_value + delta
+	if not is_inf(min_value):
+		result = maxf(result, min_value)
+	if not is_inf(max_value):
+		result = minf(result, max_value)
+	return result

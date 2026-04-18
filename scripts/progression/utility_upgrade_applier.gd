@@ -16,10 +16,12 @@ const HANDLER_KIND_NUMERIC: StringName = &"numeric"
 const HANDLER_KIND_SET_TRUE: StringName = &"set_true"
 
 var _player: Player
+var _progression_model: AbilityProgressionModel
 var _handlers: Dictionary = {}
 
-func setup(player: Player) -> void:
+func setup(player: Player, progression_model: AbilityProgressionModel) -> void:
 	_player = player
+	_progression_model = progression_model
 	_handlers = _build_handler_registry()
 
 func apply_upgrade(ability_id: StringName, definition: UpgradeDefinition) -> bool:
@@ -46,7 +48,7 @@ func _build_handler_registry() -> Dictionary:
 	return {
 		_make_handler_key(ABILITY_DASH, STAT_DASH_COOLDOWN): {
 			"kind": HANDLER_KIND_NUMERIC,
-			"callable": Callable(dash, "adjust_cooldown")
+			"callable": Callable(self, "_adjust_dash_cooldown")
 		},
 		_make_handler_key(ABILITY_DASH, STAT_DASH_DISTANCE): {
 			"kind": HANDLER_KIND_NUMERIC,
@@ -73,6 +75,11 @@ func _build_handler_registry() -> Dictionary:
 			"callable": Callable(ki_charge, "adjust_release_aoe")
 		}
 	}
+
+func _adjust_dash_cooldown(delta: float, min_value: float = -INF, max_value: float = INF) -> bool:
+	if _progression_model == null:
+		return false
+	return _progression_model.adjust_ability_base_cooldown(ABILITY_DASH, delta, min_value, max_value)
 
 func _build_planned_calls(ability_id: StringName, effects: Array[UpgradeEffect], out_calls: Array[Dictionary]) -> bool:
 	for effect: UpgradeEffect in effects:

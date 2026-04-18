@@ -14,6 +14,7 @@ action_bar_icon = ExtResource("2_jc2iu")
 upgrade_icon = ExtResource("2_jc2iu")
 unlock_level = 5
 unlock_description = "Aufladbarer Blast mit hohem Burst-Damage."
+base_cooldown_seconds = 2.0
 is_chargeable = true
 projectile_scene = ExtResource("3_proj")
 projectile_definition = ExtResource("5_projectile_def")

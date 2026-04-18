@@ -14,6 +14,7 @@ action_bar_icon = ExtResource("2_j2gmr")
 upgrade_icon = ExtResource("2_j2gmr")
 unlock_level = 13
 unlock_description = "Langsam, stark, durchdringt unbegrenzt viele Enemies."
+base_cooldown_seconds = 3.0
 is_chargeable = true
 projectile_scene = ExtResource("3_proj")
 projectile_definition = ExtResource("5_projectile_def")

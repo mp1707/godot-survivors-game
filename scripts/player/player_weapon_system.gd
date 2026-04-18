@@ -8,6 +8,7 @@ const SLOT_ACTIONS: Array[StringName] = [&"action1", &"action2", &"action3"]
 
 var _progression_model: AbilityProgressionModel
 var _projectiles_parent: Node = null
+var _cooldowns: AbilityCooldownRuntime
 
 var _charging_ability_id: StringName = &""
 var _charge_time: float = 0.0
@@ -31,6 +32,9 @@ func attach_progression_model(model: AbilityProgressionModel) -> void:
 
 func attach_projectile_parent(parent: Node) -> void:
 	_projectiles_parent = parent
+
+func attach_cooldown_runtime(cooldowns: AbilityCooldownRuntime) -> void:
+	_cooldowns = cooldowns
 
 func physics_update(delta: float) -> void:
 	if _progression_model == null:
@@ -79,6 +83,8 @@ func _handle_weapon_input(delta: float) -> void:
 		var state: AbilityState = _progression_model.get_ability_state(ability_id)
 		if state == null:
 			continue
+		if _cooldowns != null and not _cooldowns.can_activate(ability_id):
+			continue
 
 		if state.is_chargeable:
 			var charge_cost: int = _progression_model.get_current_cost(state)
@@ -87,7 +93,8 @@ func _handle_weapon_input(delta: float) -> void:
 			_begin_charge(state)
 			return
 
-		_activate_instant_weapon(state)
+		if _activate_instant_weapon(state):
+			_commit_activation(state.ability_id)
 		return
 
 func _update_charge_flow(delta: float) -> void:
@@ -110,36 +117,43 @@ func _update_charge_flow(delta: float) -> void:
 			_finish_charge()
 			return
 
-		_fire_charge_weapon(state)
+		if _fire_charge_weapon(state):
+			_commit_activation(state.ability_id)
 		_finish_charge()
 
-func _activate_instant_weapon(state: AbilityState) -> void:
+func _activate_instant_weapon(state: AbilityState) -> bool:
 	var mana_cost: int = _progression_model.get_current_cost(state)
 	if not _player.consume_mana(mana_cost):
-		return
+		return false
 
 	match state.behavior:
 		AbilityDefinition.BEHAVIOR_PROJECTILE:
-			_fire_projectile_weapon(state, _progression_model.get_current_min_damage(state), false)
+			if not _fire_projectile_weapon(state, _progression_model.get_current_min_damage(state), false):
+				return false
 			_play_release_audio_for_state(state)
+			return true
 		AbilityDefinition.BEHAVIOR_BARRIER:
 			_player.activate_barrier(
 				_progression_model.get_current_barrier_lifetime(state),
 				_progression_model.get_current_barrier_absorb(state),
 				state.barrier_reflect_unlocked
 			)
+			return true
+	return false
 
-func _fire_charge_weapon(state: AbilityState) -> void:
+func _fire_charge_weapon(state: AbilityState) -> bool:
 	if state.behavior != AbilityDefinition.BEHAVIOR_PROJECTILE:
-		return
+		return false
 
 	var damage: int = _progression_model.get_charged_damage(state, _charge_time)
-	_fire_projectile_weapon(state, damage, true)
+	if not _fire_projectile_weapon(state, damage, true):
+		return false
 	_play_release_audio_for_state(state)
+	return true
 
-func _fire_projectile_weapon(state: AbilityState, damage: int, from_charge: bool) -> void:
+func _fire_projectile_weapon(state: AbilityState, damage: int, from_charge: bool) -> bool:
 	if state.projectile_scene == null:
-		return
+		return false
 
 	var dir: Vector2 = _get_mouse_aim_direction()
 	if dir == Vector2.ZERO:
@@ -150,7 +164,7 @@ func _fire_projectile_weapon(state: AbilityState, damage: int, from_charge: bool
 
 	var projectile: Area2D = state.projectile_scene.instantiate() as Area2D
 	if projectile == null:
-		return
+		return false
 
 	projectile.global_position = _get_spawn_position(state, dir, from_charge)
 	projectile.direction = dir
@@ -173,8 +187,9 @@ func _fire_projectile_weapon(state: AbilityState, damage: int, from_charge: bool
 	if _projectiles_parent == null:
 		push_error("PlayerWeaponSystem: projectile parent is not attached.")
 		projectile.queue_free()
-		return
+		return false
 	_projectiles_parent.add_child(projectile)
+	return true
 
 func _begin_charge(state: AbilityState) -> void:
 	_charging_ability_id = state.ability_id
@@ -300,3 +315,8 @@ func _play_loop_if_stopped(player: AudioStreamPlayer) -> void:
 func _stop_if_playing(player: AudioStreamPlayer) -> void:
 	if player != null and player.playing:
 		player.stop()
+
+func _commit_activation(ability_id: StringName) -> void:
+	if _cooldowns == null or ability_id == &"":
+		return
+	_cooldowns.commit_activation(ability_id)

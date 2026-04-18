@@ -17,6 +17,11 @@ const DISABLED_PANEL_BRIGHTNESS: float = 0.55
 @onready var _action_3_icon: TextureRect = $"ButtonRow/3Button/IconPanel/CenterContainer/Icon" as TextureRect
 @onready var _dash_icon: TextureRect = $"ButtonRow/SpaceButton/IconPanel/CenterContainer/Icon" as TextureRect
 @onready var _charge_icon: TextureRect = $"ButtonRow/RButton/IconPanel/CenterContainer/Icon" as TextureRect
+@onready var _action_1_overlay: ColorRect = $"ButtonRow/1Button/IconPanel/CooldownOverlay" as ColorRect
+@onready var _action_2_overlay: ColorRect = $"ButtonRow/2Button/IconPanel/CooldownOverlay" as ColorRect
+@onready var _action_3_overlay: ColorRect = $"ButtonRow/3Button/IconPanel/CooldownOverlay" as ColorRect
+@onready var _dash_overlay: ColorRect = $"ButtonRow/SpaceButton/IconPanel/CooldownOverlay" as ColorRect
+@onready var _charge_overlay: ColorRect = $"ButtonRow/RButton/IconPanel/CooldownOverlay" as ColorRect
 
 var _action_1_light: float = 0.0
 var _action_2_light: float = 0.0
@@ -27,6 +32,10 @@ var _charge_light: float = 0.0
 var _slot_enabled: Array[bool] = [true, false, false]
 var _utility_slot_enabled: Array[bool] = [false, false]
 var _utility_slot_actions: Array[StringName] = [&"", &""]
+var _weapon_ability_ids: Array[StringName] = [&"", &"", &""]
+var _utility_ability_ids: Array[StringName] = [&"", &""]
+
+var _cooldown_runtime: AbilityCooldownRuntime
 
 func _ready() -> void:
 	_center_panel_pivot(_action_1_panel)
@@ -37,8 +46,13 @@ func _ready() -> void:
 	_apply_slot_icon_state(_action_1_icon, _slot_enabled[0])
 	_apply_slot_icon_state(_action_2_icon, _slot_enabled[1])
 	_apply_slot_icon_state(_action_3_icon, _slot_enabled[2])
-	set_utility_slot(0, null, &"")
-	set_utility_slot(1, null, &"")
+	set_utility_slot(0, &"", null, &"")
+	set_utility_slot(1, &"", null, &"")
+	_set_overlay_ratio(_action_1_overlay, 0.0)
+	_set_overlay_ratio(_action_2_overlay, 0.0)
+	_set_overlay_ratio(_action_3_overlay, 0.0)
+	_set_overlay_ratio(_dash_overlay, 0.0)
+	_set_overlay_ratio(_charge_overlay, 0.0)
 	_apply_lighting()
 
 func _process(delta: float) -> void:
@@ -56,36 +70,49 @@ func _process(delta: float) -> void:
 		delta
 	)
 	_apply_lighting()
+	_apply_cooldown_overlays()
 
-func set_weapon_slot_icon(slot_index: int, icon: Texture2D) -> void:
+func set_cooldown_runtime(runtime: AbilityCooldownRuntime) -> void:
+	_cooldown_runtime = runtime
+
+func set_weapon_slot(slot_index: int, ability_id: StringName, icon: Texture2D) -> void:
+	var is_enabled: bool = _is_valid_icon(icon)
 	match slot_index:
 		0:
 			_action_1_icon.texture = icon
-			_slot_enabled[0] = icon != null
+			_slot_enabled[0] = is_enabled
+			_weapon_ability_ids[0] = ability_id
 			_apply_slot_icon_state(_action_1_icon, _slot_enabled[0])
 		1:
 			_action_2_icon.texture = icon
-			_slot_enabled[1] = icon != null
+			_slot_enabled[1] = is_enabled
+			_weapon_ability_ids[1] = ability_id
 			_apply_slot_icon_state(_action_2_icon, _slot_enabled[1])
 		2:
 			_action_3_icon.texture = icon
-			_slot_enabled[2] = icon != null
+			_slot_enabled[2] = is_enabled
+			_weapon_ability_ids[2] = ability_id
 			_apply_slot_icon_state(_action_3_icon, _slot_enabled[2])
 		_:
 			return
 	_apply_lighting()
 
+func set_weapon_slot_icon(slot_index: int, icon: Texture2D) -> void:
+	if slot_index < 0 or slot_index >= _weapon_ability_ids.size():
+		return
+	set_weapon_slot(slot_index, _weapon_ability_ids[slot_index], icon)
+
 func set_dash_icon(icon: Texture2D) -> void:
-	set_utility_slot(0, icon, _utility_slot_actions[0])
+	set_utility_slot(0, _utility_ability_ids[0], icon, _utility_slot_actions[0])
 
 func set_charge_icon(icon: Texture2D) -> void:
-	set_utility_slot(1, icon, _utility_slot_actions[1])
+	set_utility_slot(1, _utility_ability_ids[1], icon, _utility_slot_actions[1])
 
 func set_utility_icons(dash_icon: Texture2D, charge_icon: Texture2D) -> void:
-	set_utility_slot(0, dash_icon, _utility_slot_actions[0])
-	set_utility_slot(1, charge_icon, _utility_slot_actions[1])
+	set_utility_slot(0, _utility_ability_ids[0], dash_icon, _utility_slot_actions[0])
+	set_utility_slot(1, _utility_ability_ids[1], charge_icon, _utility_slot_actions[1])
 
-func set_utility_slot(slot_index: int, icon: Texture2D, action_name: StringName) -> void:
+func set_utility_slot(slot_index: int, ability_id: StringName, icon: Texture2D, action_name: StringName) -> void:
 	var target_icon: TextureRect = null
 	match slot_index:
 		0:
@@ -100,6 +127,7 @@ func set_utility_slot(slot_index: int, icon: Texture2D, action_name: StringName)
 	var is_enabled: bool = _is_valid_icon(icon)
 	target_icon.visible = is_enabled
 	_utility_slot_enabled[slot_index] = is_enabled
+	_utility_ability_ids[slot_index] = ability_id
 	_utility_slot_actions[slot_index] = action_name
 	_apply_lighting()
 
@@ -140,3 +168,34 @@ func _apply_panel_light(panel: Panel, amount: float, enabled: bool) -> void:
 
 func _center_panel_pivot(panel: Panel) -> void:
 	panel.pivot_offset = panel.custom_minimum_size * 0.5
+
+func _apply_cooldown_overlays() -> void:
+	_apply_slot_cooldown_overlay(_action_1_overlay, _slot_enabled[0], _weapon_ability_ids[0])
+	_apply_slot_cooldown_overlay(_action_2_overlay, _slot_enabled[1], _weapon_ability_ids[1])
+	_apply_slot_cooldown_overlay(_action_3_overlay, _slot_enabled[2], _weapon_ability_ids[2])
+	_apply_slot_cooldown_overlay(_dash_overlay, _utility_slot_enabled[0], _utility_ability_ids[0])
+	_apply_slot_cooldown_overlay(_charge_overlay, _utility_slot_enabled[1], _utility_ability_ids[1])
+
+func _apply_slot_cooldown_overlay(overlay: ColorRect, enabled: bool, ability_id: StringName) -> void:
+	if overlay == null or not enabled or ability_id == &"" or _cooldown_runtime == null:
+		_set_overlay_ratio(overlay, 0.0)
+		return
+	_set_overlay_ratio(overlay, _cooldown_runtime.get_effective_ratio(ability_id))
+
+func _set_overlay_ratio(overlay: ColorRect, ratio: float) -> void:
+	if overlay == null:
+		return
+	var clamped_ratio: float = clampf(ratio, 0.0, 1.0)
+	if clamped_ratio <= 0.0:
+		overlay.visible = false
+		return
+	overlay.visible = true
+	var panel_height: float = overlay.get_parent_area_size().y
+	overlay.anchor_left = 0.0
+	overlay.anchor_right = 1.0
+	overlay.anchor_top = 0.0
+	overlay.anchor_bottom = 0.0
+	overlay.offset_left = 0.0
+	overlay.offset_right = 0.0
+	overlay.offset_top = panel_height * (1.0 - clamped_ratio)
+	overlay.offset_bottom = panel_height

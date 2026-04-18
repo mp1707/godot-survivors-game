@@ -17,6 +17,8 @@ var _is_charging: bool = false
 var _player: Node2D = null
 var _vitals: PlayerVitals = null
 var _input_action: StringName = &"charging"
+var _ability_id: StringName = &"charge_ki"
+var _cooldown_runtime: AbilityCooldownRuntime
 
 @onready var _aura_sprite: AnimatedSprite2D = get_node_or_null(aura_sprite_path) as AnimatedSprite2D
 @onready var _charge_loop_player: AudioStreamPlayer = get_node_or_null(charge_loop_player_path) as AudioStreamPlayer
@@ -30,14 +32,18 @@ func setup(player: Node2D, vitals: PlayerVitals) -> void:
 	_vitals = vitals
 	_set_loop_playing(false)
 
+func attach_cooldown_runtime(runtime: AbilityCooldownRuntime, ability_id: StringName) -> void:
+	_cooldown_runtime = runtime
+	if ability_id != &"":
+		_ability_id = ability_id
+
 func update(delta: float, can_charge: bool) -> bool:
 	var was_charging: bool = _is_charging
-	if _input_action == &"" or not InputMap.has_action(_input_action):
-		_is_charging = false
-	else:
-		_is_charging = can_charge and Input.is_action_pressed(_input_action)
+	_is_charging = _compute_is_charging(can_charge)
 
 	if was_charging and not _is_charging and _input_action != &"" and InputMap.has_action(_input_action) and Input.is_action_just_released(_input_action):
+		if _cooldown_runtime != null:
+			_cooldown_runtime.commit_activation(_ability_id)
 		_on_release()
 
 	if was_charging != _is_charging:
@@ -89,6 +95,19 @@ func set_input_action(action_name: StringName) -> void:
 
 func get_input_action() -> StringName:
 	return _input_action
+
+func _compute_is_charging(can_charge: bool) -> bool:
+	if _input_action == &"" or not InputMap.has_action(_input_action):
+		return false
+	if not can_charge:
+		return false
+	if not Input.is_action_pressed(_input_action):
+		return false
+	if _is_charging:
+		return true
+	if _cooldown_runtime == null:
+		return true
+	return _cooldown_runtime.can_activate(_ability_id)
 
 func _on_release() -> void:
 	released.emit()

@@ -26,6 +26,7 @@ func validate() -> bool:
 		ability_ids[ability.id] = ability
 		_validate_ability_icons(ability)
 		_validate_ability_activation(ability, utility_slot_indices)
+		_validate_ability_cooldown(ability)
 
 	for upgrade: UpgradeDefinition in upgrades:
 		if upgrade == null:
@@ -103,6 +104,13 @@ func _validate_ability_activation(ability: AbilityDefinition, utility_slot_indic
 		_record_error(
 			"ProgressionCatalog: utility ability '%s' references unknown input action '%s'."
 			% [String(ability.id), String(ability.input_action)]
+		)
+
+func _validate_ability_cooldown(ability: AbilityDefinition) -> void:
+	if ability.base_cooldown_seconds < 0.0:
+		_record_error(
+			"ProgressionCatalog: ability '%s' has invalid base_cooldown_seconds %.3f."
+			% [String(ability.id), ability.base_cooldown_seconds]
 		)
 
 func _validate_ability_upgrade_link(ability: AbilityDefinition, definition: UpgradeDefinition) -> void:

@@ -28,6 +28,7 @@ const AUDIO_VARIANT_ENERGY_BALL: StringName = &"energy_ball"
 @export var start_slot_index: int = -1
 @export var utility_slot_index: int = -1
 @export var input_action: StringName = &""
+@export var base_cooldown_seconds: float = 0.0
 @export var unlock_level: int = 1
 @export_multiline var unlock_description: String = ""
 

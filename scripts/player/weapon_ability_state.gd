@@ -11,6 +11,7 @@ var starts_unlocked: bool = false
 var preferred_slot_index: int = -1
 var utility_slot_index: int = -1
 var input_action: StringName = &""
+var base_cooldown_seconds: float = 0.0
 var unlock_level: int = 0
 var unlock_description: String = ""
 var activation_channel: StringName = AbilityDefinition.ACTIVATION_CHANNEL_WEAPON_SLOT
@@ -80,6 +81,7 @@ func apply_definition(definition: AbilityDefinition) -> void:
 	preferred_slot_index = definition.start_slot_index
 	utility_slot_index = definition.utility_slot_index
 	input_action = definition.input_action
+	base_cooldown_seconds = maxf(definition.base_cooldown_seconds, 0.0)
 	unlock_level = definition.unlock_level
 	unlock_description = definition.unlock_description
 	activation_channel = definition.activation_channel

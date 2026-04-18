@@ -3,6 +3,7 @@ class_name Player
 
 const DASH_ABILITY_ID: StringName = &"dash"
 const CHARGE_KI_ABILITY_ID: StringName = &"charge_ki"
+const GLOBAL_COOLDOWN_SECONDS: float = 1.0
 
 signal health_changed(current: int, max: int)
 signal mana_changed(current: float, max: int)
@@ -31,6 +32,7 @@ var max_health: int = 0
 @onready var _animation: PlayerAnimationController = $Animation as PlayerAnimationController
 
 var _progression_model: AbilityProgressionModel
+var _ability_cooldowns: AbilityCooldownRuntime
 
 func _ready() -> void:
 	if not _apply_definition():
@@ -78,12 +80,17 @@ func _setup_progression_model() -> bool:
 		return false
 	_progression_model = AbilityProgressionModel.new()
 	_progression_model.initialize(PlayerWeaponSystem.SLOT_ACTIONS.size(), progression_catalog)
+	_ability_cooldowns = AbilityCooldownRuntime.new()
+	_ability_cooldowns.setup(_progression_model, GLOBAL_COOLDOWN_SECONDS)
 	var weapon_upgrade_applier: WeaponUpgradeApplier = WeaponUpgradeApplier.new()
 	var utility_upgrade_applier: UtilityUpgradeApplier = UtilityUpgradeApplier.new()
-	utility_upgrade_applier.setup(self)
+	utility_upgrade_applier.setup(self, _progression_model)
 	_progression_model.set_weapon_upgrade_applier(weapon_upgrade_applier)
 	_progression_model.set_utility_upgrade_applier(utility_upgrade_applier)
 	_weapon_system.attach_progression_model(_progression_model)
+	_weapon_system.attach_cooldown_runtime(_ability_cooldowns)
+	_dash.attach_cooldown_runtime(_ability_cooldowns, DASH_ABILITY_ID)
+	_ki_charge.attach_cooldown_runtime(_ability_cooldowns, CHARGE_KI_ABILITY_ID)
 	_configure_utility_input_actions()
 	return true
 
@@ -106,7 +113,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_vitals.tick_invuln(delta)
-	_dash.tick_cooldown(delta)
+	if _ability_cooldowns != null:
+		_ability_cooldowns.tick(delta)
 	_barrier.tick(delta)
 	_hit_reaction.physics_step(delta)
 
@@ -201,6 +209,9 @@ func set_xp_magnet_radius(new_radius: float) -> void:
 
 func get_progression_model() -> AbilityProgressionModel:
 	return _progression_model
+
+func get_ability_cooldown_runtime() -> AbilityCooldownRuntime:
+	return _ability_cooldowns
 
 func attach_projectile_parent(parent: Node) -> void:
 	_weapon_system.attach_projectile_parent(parent)

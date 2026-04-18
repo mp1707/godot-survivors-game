@@ -43,6 +43,8 @@ func setup(
 	if _spawner != null:
 		_spawner.enemy_damage_taken.connect(_on_enemy_damage_taken)
 		_spawner.enemy_died.connect(_on_enemy_died)
+	if _action_button_bar != null and _player != null:
+		_action_button_bar.set_cooldown_runtime(_player.get_ability_cooldown_runtime())
 
 	_update_score_label()
 	_refresh_xp_ui()
@@ -73,14 +75,17 @@ func _refresh_action_bar_weapon_icons() -> void:
 	if _action_button_bar == null or _progression == null:
 		return
 	for slot_index: int in range(3):
-		_action_button_bar.set_weapon_slot_icon(slot_index, _progression.get_slot_icon(slot_index))
+		var ability_id: StringName = _progression.get_slot_ability_id(slot_index)
+		_action_button_bar.set_weapon_slot(slot_index, ability_id, _progression.get_slot_icon(slot_index))
 
 func _refresh_action_bar_utility_icons() -> void:
 	if _action_button_bar == null or _progression == null:
 		return
 	for slot_index: int in range(UTILITY_SLOT_COUNT):
+		var ability_id: StringName = _progression.get_utility_slot_ability_id(slot_index)
 		_action_button_bar.set_utility_slot(
 			slot_index,
+			ability_id,
 			_progression.get_utility_slot_icon(slot_index),
 			_progression.get_utility_slot_action(slot_index)
 		)

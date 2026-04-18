@@ -14,5 +14,6 @@ upgrade_icon = ExtResource("1_c1mgu")
 starts_unlocked = true
 utility_slot_index = 0
 input_action = &"dash"
+base_cooldown_seconds = 5.0
 upgrade_ids = Array[StringName]([&"dash_cooldown", &"dash_distance", &"dash_invulnerable", &"dash_phase"])
 metadata/_custom_type_script = "uid://c8b6af4npusis"
